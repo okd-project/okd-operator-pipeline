@@ -1,0 +1,37 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: trigger-template-dev
+spec:
+  params:
+  - name: repo-url
+    description: The git repository url
+  - name: repo-name
+    description: The repo name
+  - name: bundle-version
+    description: bundle version (v0.0.1)
+  - name: base-image-registry
+    description: base image registry
+  
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: $(tt.params.repo-name)-
+    spec:
+      pipelineRef:
+        name: pipeline-dev
+      params:
+      - name: repo-url
+        value: $(tt.params.repo-url)  
+      - name: repo-name
+        value: $(tt.params.repo-name)
+      - name: bundle-version
+        value: $(tt.params.bundle-version)
+      - name: base-image-registry
+        value: $(tt.params.base-image-registry)
+        
+      workspaces:
+      - name: shared-workspace
+        persistentVolumeClaim:
+          claimName: pipeline-pvc-dev

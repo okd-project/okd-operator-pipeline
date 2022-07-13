@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: operator-pipeline 
+  labels:
+    cost-tenancy: Dedicated
+    dept: CFE
+    org: redhat
+    network-share: redhat
+    product: operator-pipeline

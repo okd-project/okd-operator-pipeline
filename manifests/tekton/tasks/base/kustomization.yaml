@@ -1,0 +1,8 @@
+namePrefix: 
+
+bases:
+  - container-all.yaml
+  - bundle-all.yaml
+
+
+

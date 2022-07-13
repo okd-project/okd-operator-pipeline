@@ -1,0 +1,86 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: pipeline-dev
+spec:
+  params:
+  - name: repo-url 
+    description: The repo url
+    type: string
+  - name: repo-name 
+    description: The repo name
+    type: string
+  
+  workspaces:
+    - name: shared-workspace
+
+  resources:
+    - name: git-source
+      type: git
+    - name: build-image
+      type: image
+   
+  tasks:
+  - name: fetch-repository
+    params:
+      - name: url
+        value: $(params.repo-url)
+      - name: deleteExisting
+        value: 'true'
+      - name: revision
+        value: main
+      - name: subdirectory
+        value: $(params.repo-name)
+    taskRef:
+      kind: ClusterTask
+      name: git-clone
+    workspaces:
+      - name: output
+        workspace: shared-workspace
+       
+  - name: verify
+    runAfter: [fetch-repository]
+    taskRef:
+      name: verify
+    params:
+      - name: repo-name
+        value: $(params.repo-name)
+    workspaces:
+      - name: output
+        workspace: shared-workspace
+        
+  - name: unit-test
+    runAfter: [verify]
+    taskRef:
+      name: unit-test
+    params:
+      - name: repo-name
+        value: $(params.repo-name)
+    workspaces:
+      - name: output
+        workspace: shared-workspace
+        
+  - name: build
+    runAfter: [unit-test]
+    taskRef:
+      name: build
+    params:
+      - name: repo-name
+        value: $(params.repo-name)
+      
+    workspaces:
+      - name: output
+        workspace: shared-workspace
+        
+  - name: container-build
+    runAfter: [build]
+    taskRef:
+      name: container-build
+    params:
+      - name: repo-name
+        value: $(params.repo-name)
+      - name: IMAGE_REG_BASE
+        value: 'quay.io/luigizuccarelli/'
+    workspaces:
+      - name: output
+        workspace: shared-workspace

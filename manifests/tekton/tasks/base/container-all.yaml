@@ -1,0 +1,165 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: container-all 
+spec:
+  params:
+  - name: repo-name
+    description: The name of the operator repo
+    type: string
+  - name: base-image-registry
+    description: base registry image to push to
+    type: string
+  - name: bundle-version
+    description: baundle version
+    type: string
+ 
+  workspaces:
+    - name: src
+      
+  steps: 
+  - name: verify
+    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    onError: continue
+    script: |
+      #!/usr/bin/env bash
+      #
+      # We have set an on error continue as some operators
+      # will fail code linting. 
+      # 
+      # Some operators may not have the make recipe 'verify' 
+      # We will create an 'on the fly' golangco-lint config file
+
+      set -euxo pipefail
+
+      cat << EOF >> golangci.yaml
+      run:
+        concurrency: 4
+        timeout: 5m
+        issues-exit-code: 1
+        tests: true
+        build-tags:
+          - e2e
+        skip-dirs:
+          - vendor
+        skip-dirs-use-default: true
+        modules-download-mode: vendor
+        allow-parallel-runners: false
+
+      output:
+        format: tab
+        print-issued-lines: true
+        print-linter-name: true
+        uniq-by-line: true
+        path-prefix: ""
+        sort-results: false
+
+      linters:
+        disable-all: true
+        enable:
+          - deadcode
+          - errcheck
+          - gofmt
+          - goimports
+          - gosimple
+          - govet
+          - ineffassign
+          - misspell
+          - staticcheck
+          - structcheck
+          - typecheck
+          - unused
+          - varcheck
+          - gosec
+        fast: false
+
+      linters-settings:
+        goimports:
+        # TODO
+        # local-prefixes: github.com/openshift/$(params.repo-name)
+      EOF
+      golangci-lint run -c golangci.yaml --deadline=30m
+    workingDir: /workspace/src/$(params.repo-name)
+    securityContext:
+      runAsUser: 0
+    volumeMounts:
+    - name: build-cache
+      mountPath: /home/1001
+    - name: build-cache
+      mountPath: /root
+  
+  - name: unit-test
+    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    workingDir: /workspace/src/$(params.repo-name)
+    resources:
+    command: ["make"]
+    args: ["test"]
+    securityContext:
+      runAsUser: 0
+    volumeMounts:
+    - name: build-cache
+      mountPath: /home/1001
+    - name: build-cache
+      mountPath: /root
+
+  - name: build
+    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    workingDir: /workspace/src/$(params.repo-name)
+    resources:
+        limits:
+          cpu: 400m
+          memory: 2000Mi
+        requests:
+          cpu: 400m
+          memory: 2000Mi
+    command: ["make"]
+    args: ["build-operator"]
+    securityContext:
+      runAsUser: 0
+    volumeMounts:
+    - name: build-cache
+      mountPath: /home/1001
+    - name: build-cache
+      mountPath: /root
+
+  - name: runtime-docker
+    workingDir: /workspace/src/$(params.repo-name)
+    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    script: |
+      #!/usr/bin/env bash
+      set -euxo pipefail
+      touch runtime.Dockerfile
+      echo "creating runtime Dockerfile"
+      echo "FROM registry.access.redhat.com/ubi8/ubi-micro:8.5" >> runtime.Dockerfile
+      echo "WORKDIR /" >> runtime.Dockerfile
+      echo "COPY bin/$(params.repo-name) ." >> runtime.Dockerfile
+      echo "USER 65532:65532" >> runtime.Dockerfile
+      echo "ENTRYPOINT [\"/$(params.repo-name)\"]" >> runtime.Dockerfile
+      cat runtime.Dockerfile
+      # move dockerignore as it blocks bin directory
+      mv .dockerignore .bakdockerignore
+    securityContext:
+      runAsUser: 0
+    volumeMounts:
+    - name: docker-config
+      mountPath: /kaniko/.docker/
+
+  - name: container-build-and-push
+    workingDir: /workspace/src/$(params.repo-name)
+    image:  gcr.io/kaniko-project/executor:latest
+    command: ["/kaniko/executor"]
+    args: ["--dockerfile=/workspace/src/$(params.repo-name)/runtime.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name):$(params.bundle-version)"]
+    securityContext:
+      runAsUser: 0
+    volumeMounts:
+    - name: docker-config
+      mountPath: /kaniko/.docker/
+
+  volumes:
+  - name: docker-config
+    configMap:
+      name: docker-config
+  - name: build-cache
+    persistentVolumeClaim:
+      claimName: build-cache-pvc-dev
+

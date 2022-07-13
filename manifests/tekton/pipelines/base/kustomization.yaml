@@ -1,0 +1,7 @@
+namePrefix: 
+
+bases:
+  - pipeline-dev-all.yaml
+
+
+

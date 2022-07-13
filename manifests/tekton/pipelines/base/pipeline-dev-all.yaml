@@ -1,0 +1,69 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: pipeline-dev-all
+spec:
+  params:
+  - name: repo-url 
+    description: The repo url
+    type: string
+  - name: repo-name 
+    description: The repo name
+    type: string
+  - name: base-image-registry 
+    description: The base image registry
+    type: string
+  - name: bundle-version 
+    description: The bundle version
+    type: string
+  
+  workspaces:
+    - name: shared-workspace
+
+  tasks:
+  - name: fetch-repository
+    params:
+      - name: url
+        value: $(params.repo-url)
+      - name: deleteExisting
+        value: 'true'
+      - name: revision
+        value: main
+      - name: subdirectory
+        value: $(params.repo-name)
+    taskRef:
+      kind: ClusterTask
+      name: git-clone
+    workspaces:
+      - name: src
+        workspace: shared-workspace
+       
+  - name: container-all
+    runAfter: [fetch-repository]
+    taskRef:
+      name: container-all
+    params:
+      - name: repo-name
+        value: $(params.repo-name)
+      - name: base-image-registry
+        value: $(params.base-image-registry)
+      - name: bundle-version
+        value: $(params.bundle-version)
+    workspaces:
+      - name: src
+        workspace: shared-workspace
+
+  - name: bundle-all
+    runAfter: [container-all]
+    taskRef:
+      name: bundle-all
+    params:
+      - name: repo-name
+        value: $(params.repo-name)
+      - name: base-image-registry
+        value: $(params.base-image-registry)
+      - name: bundle-version
+        value: $(params.bundle-version)
+    workspaces:
+      - name: src
+        workspace: shared-workspace
