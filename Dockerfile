@@ -16,6 +16,7 @@ ENV OPM_VERSION v1.23.2
 ENV OPM_BIN /usr/bin/opm
 ENV OS linux
 ENV ARCH amd64
+ENV GOLANGCI_LINT_VERSION v1.46.2
 
 RUN curl -fsSLo ${OPERATOR_SDK_BIN} "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_${OS}_${ARCH}" \
     && chmod 0755 $OPERATOR_SDK_BIN
@@ -31,6 +32,8 @@ RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
     && echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - \
     && tar -C /usr/local -xzf golang.tar.gz \
     && rm golang.tar.gz
+
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s ${GOLANGCI_LINT_VERSION}
 
 ENV PATH $PATH:/bin:/usr/local/go/bin:/usr/bin/
 ENV GOPATH /home/1001

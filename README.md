@@ -72,7 +72,7 @@ Install the operator tekton pipeline with kustomize
 Execute the following commands
 
 ```bash
-git clone git@github.com:luigizuccarelli/tekton-operator-pipeline.git
+git clone git@github.com:okd-project/pipelines.git
 cd tekton-operator-pipeline
 # assume you logged into your kubernetes cluster
 kubectl apply -k environments/overlays/cicd
@@ -113,7 +113,7 @@ podman push push quay.io/<id>/go-bundle-tools:v0.0.1
 # remember to update the tasks in manifests/tekton/tasks/base to reflect the changed image
 ```
 
-## NEXT STEPS
+## Next Steps
 
 We are currently implementing a simple golang webhook so that the pipeline can be triggered remotely.
 It will interface with the tekton eventListener (see manifests/tekton/triggers/base).
@@ -189,5 +189,3 @@ The folder structure is as follows :
                               --- pipeline-dev.yaml
                               --- pipeline-dev-all.yaml
 ```
-            
-
