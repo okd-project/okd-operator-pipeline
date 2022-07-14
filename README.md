@@ -66,16 +66,18 @@ This example uses an NFS provisioner for an on-prem kubernetes cluster
 
 Skip this step if you already have storage (persistent volumes and persistent volume claims and provisioner) setup
 
+**NB** Before executing the provisioner, change the fields that relate to your specific
+NFS setup i.e server name (ip) and path in the file environments/overlays/nfs-provisioner/patch_nfs_details.yaml
+
 ```bash
 # execute for kustomize
 cd pipelines
-k apply -k environments/overlays/nfs-provisioner
+kubectl apply -k environments/overlays/nfs-provisioner
 ```
 
 **NB** Update the build-cache-pvc.yaml and pipeline-pvc.yaml files with the correct StorageClassName
 
 ```bash
-cd environments/overlays/cicd/pvc
 # update storageClassName (set by provisioner if used)
 # assume the provisioner has a storageClass called standard
 find environments/overlays/cicd/pvc/. -type f -name '*pvc*' | xargs sed -i 's/nfs-client/standard/g'
@@ -118,11 +120,12 @@ tkn pipeline start pipeline-dev-all \
 The dockerfile includes the base ubi image with all the relevant tools to compile and build the bundles. 
 The versions of most components have been updated to use the latest (please update and re-create as needed)
 
-To build the image simple execute
+To build the image simply execute
 
 ```bash
-podman build -t quay.io/<id>/go-bundle-tools:v0.0.1 .
-podman push push quay.io/<id>/go-bundle-tools:v0.0.1
+# change the tag i.e (v1.0.0) for different versioning
+podman build -t quay.io/<id>/go-bundle-tools:v1.0.0 .
+podman push push quay.io/<id>/go-bundle-tools:v1.0.0
 
 # remember to update the tasks in manifests/tekton/tasks/base to reflect the changed image
 ```
@@ -153,17 +156,17 @@ The folder structure is as follows :
       |     --- overlays
       |           |
       |           --- cicd
-      |                 |
-      |                 --- namespace
-      |                 |     |
-      |                 |     --- namespace.yaml
-      |                 --- shared
-      |                 |     |
-      |                 |     --- pipeline-pvc.yaml
-      |                 |     --- build-cache-pvc.yaml
-      |                 |
-      |                 --- kustermization.yaml
-      |
+      |           |     |
+      |           |      --- namespace
+      |           |     |     |
+      |           |     |     --- namespace.yaml
+      |           |     --- pvc
+      |           |     |     |
+      |           |     |     --- pipeline-pvc.yaml
+      |           |     |     --- build-cache-pvc.yaml
+      |           |     |
+      |           |     --- kustermization.yaml
+      |           |
       |           --- nfs-provisioner
       |                 |
       |                 --- kustomization.yaml

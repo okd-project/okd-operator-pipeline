@@ -19,7 +19,7 @@ spec:
       
   steps: 
   - name: verify
-    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.0
     onError: continue
     script: |
       #!/usr/bin/env bash
@@ -89,7 +89,7 @@ spec:
       mountPath: /root
   
   - name: unit-test
-    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.0
     workingDir: /workspace/src/$(params.repo-name)
     resources:
     command: ["make"]
@@ -103,7 +103,7 @@ spec:
       mountPath: /root
 
   - name: build
-    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.0
     workingDir: /workspace/src/$(params.repo-name)
     resources:
         limits:
@@ -124,7 +124,7 @@ spec:
 
   - name: runtime-docker
     workingDir: /workspace/src/$(params.repo-name)
-    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.0
     script: |
       #!/usr/bin/env bash
       set -euxo pipefail

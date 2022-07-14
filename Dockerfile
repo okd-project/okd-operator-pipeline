@@ -47,7 +47,6 @@ RUN mkdir -p /home/1001/src /home/1001/bin /home/1001/pkg /go/build \
 RUN chown -R 1001:1001 /home/1001 \
     && chown -R 1001:1001 /go
 
-COPY controller-gen /usr/bin
 COPY uid_entrypoint.sh /go/
 
 WORKDIR /go

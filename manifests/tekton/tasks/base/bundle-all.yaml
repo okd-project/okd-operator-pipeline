@@ -19,7 +19,7 @@ spec:
       
   steps: 
   - name: bundle
-    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.0
     workingDir: /workspace/src/$(params.repo-name)
     command: ["make"]
     args: ["bundle","OPERATOR_SDK_BIN=/usr/bin/operator-sdk","KUSTOMIZE=/usr/bin/kustomize","IMG=$(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version)"]
@@ -32,7 +32,7 @@ spec:
       mountPath: /root
 
   - name: bundle-dockerfile-check
-    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.0
     workingDir: /workspace/src/$(params.repo-name)
     script: |
       #!/usr/bin/env bash
@@ -63,7 +63,7 @@ spec:
       mountPath: /kaniko/.docker/
       
   - name: index-image-build
-    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.0
     workingDir: /workspace/src/$(params.repo-name)
     script: |
       #!/usr/bin/env bash
@@ -90,7 +90,7 @@ spec:
       mountPath: /kaniko/.docker/
 
   - name: catalog-image-build
-    image: quay.io/luzuccar/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.0
     workingDir: /workspace/src/$(params.repo-name)
     script: |
       #!/usr/bin/env bash
