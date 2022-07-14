@@ -2,14 +2,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 bases:
   - ../../../manifests/tekton/rbac/base
-  - ../../../manifests/tekton/secrets/base
 #  - ../../../manifests/tekton/triggers/base
   - ../../../manifests/tekton/tasks/base
   - ../../../manifests/tekton/pipelines/base
-#  - ../../../manifests/apps/golang-gitwebhook-service/base
 resources:
   - namespace/namespace.yaml
-  - shared/pipeline-pvc.yaml
-  - shared/build-cache-pvc.yaml
+  - pvc/pipeline-pvc.yaml
+  - pvc/build-cache-pvc.yaml
 namespace: operator-pipeline
 

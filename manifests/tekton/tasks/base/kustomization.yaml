@@ -1,6 +1,7 @@
 namePrefix: 
 
 bases:
+  - git-clone.yaml
   - container-all.yaml
   - bundle-all.yaml
 

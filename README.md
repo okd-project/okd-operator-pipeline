@@ -54,30 +54,45 @@ The verification was done on an on-prem kubernetes 5 node cluster (intel i5's wi
 
 Install the tekton cli and tekton resources before continuing (see https://tekton.dev/docs/pipelines/install)
 
-Skip this step if you already have storage (persistent volumes and persistent volume claims and provisioner) setup
+Clone the repository
+
+```bash
+git clone git@github.com:okd-project/pipelines.git
+```
+
+Install the storage provisioner 
 
 This example uses an NFS provisioner for an on-prem kubernetes cluster 
 
-Install the nfs-provisioner 
+Skip this step if you already have storage (persistent volumes and persistent volume claims and provisioner) setup
 
 ```bash
 # execute for kustomize
+cd pipelines
 k apply -k environments/overlays/nfs-provisioner
 ```
 
-Ensure that you have storage setup correctly. 
+**NB** Update the build-cache-pvc.yaml and pipeline-pvc.yaml files with the correct StorageClassName
+
+```bash
+cd environments/overlays/cicd/pvc
+# update storageClassName (set by provisioner if used)
+# assume the provisioner has a storageClass called standard
+find environments/overlays/cicd/pvc/. -type f -name '*pvc*' | xargs sed -i 's/nfs-client/standard/g'
+```
 
 Install the operator tekton pipeline with kustomize
 
 Execute the following commands
 
 ```bash
-git clone git@github.com:okd-project/pipelines.git
-cd tekton-operator-pipeline
 # assume you logged into your kubernetes cluster
 kubectl apply -k environments/overlays/cicd
+
 # check that all resources have deployed
 kubectl get all -n operator-pipeline
+kubectl get pvc -n operator-pipeline
+
 # once all pods are in the RUNNING status create a configmap as follows
 # this assumes you have the correct credentials and have logged into the registry to push images to
 kubectl create configmap docker-config --from-file=/$HOME/.docker/config.json -n operator-pipeline
@@ -106,7 +121,6 @@ The versions of most components have been updated to use the latest (please upda
 To build the image simple execute
 
 ```bash
-
 podman build -t quay.io/<id>/go-bundle-tools:v0.0.1 .
 podman push push quay.io/<id>/go-bundle-tools:v0.0.1
 
