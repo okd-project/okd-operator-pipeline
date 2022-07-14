@@ -48,7 +48,9 @@ The pipeline admin will be required to copy the $HOME/.cache/go-build, $HOME/.ca
 
 We found that mounting both .cache and pkg directories improved performance dramatically (i.e from 30m to about 6min for the comlpete run)
 
-The verification was done on an on-prem kubernetes 5 node cluster (intel i5's with 16G of ram). We are currently verifying on 'kind' and 'microshift'
+The verification was done on an on-prem kubernetes 5 node cluster (intel i5's with 16G of ram) and Kind (Kubernetes in Docker). 
+
+We are currently verifying 'microshift' and Code Ready Containers for local development
 
 ## Installation
 
@@ -64,7 +66,7 @@ Install the storage provisioner
 
 This example uses an NFS provisioner for an on-prem kubernetes cluster 
 
-Skip this step if you already have storage (persistent volumes and persistent volume claims and provisioner) setup
+Skip this step (go to Install the operator tekton pipeline section) if you already have storage (persistent volumes and persistent volume claims and provisioner) setup
 
 **NB** Before executing the provisioner, change the fields that relate to your specific
 NFS setup i.e server name (ip) and path in the file environments/overlays/nfs-provisioner/patch_nfs_details.yaml
@@ -75,6 +77,77 @@ cd pipelines
 kubectl apply -k environments/overlays/nfs-provisioner
 ```
 
+The next example is a storage setup for Kind (Kubernetes in Docker)
+Kind uses a default provisioner (rancher.io/local-path).
+
+First create 2 pv's as follows 
+
+Change the storage size as required but remember to update the pvc's (environments/overlays/cicd/pvc)
+
+```bash
+# first label the node
+kubectl label node <node-name> name=cp
+# check the labels
+kubectl get nodes -o wide --show-labels
+
+# create the pv's
+cat << EOF >> pv-pipeline.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pipeline-pv
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: standard
+  local:
+    path: /tmp
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: name
+          operator: In
+          values:
+          - cp
+EOF
+
+kubectl apply -f pv-pipeline.yaml
+
+cat << EOF >> pv-build-cache.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: build-cache-pv
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: standard
+  local:
+    path: /tmp
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: name
+          operator: In
+          values:
+          - cp
+EOF
+
+kubectl apply -f pv-build-cache.yaml
+# check the pv's
+kubectl get pv
+```
+
 **NB** Update the build-cache-pvc.yaml and pipeline-pvc.yaml files with the correct StorageClassName
 
 ```bash
@@ -82,7 +155,6 @@ kubectl apply -k environments/overlays/nfs-provisioner
 # assume the provisioner has a storageClass called standard
 find environments/overlays/cicd/pvc/. -type f -name '*pvc*' | xargs sed -i 's/nfs-client/standard/g'
 ```
-
 Install the operator tekton pipeline with kustomize
 
 Execute the following commands
