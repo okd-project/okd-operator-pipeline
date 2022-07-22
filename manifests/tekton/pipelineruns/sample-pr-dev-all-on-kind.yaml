@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  namespace: operator-pipeline
+  name: my-dev-all
+spec:
+  podTemplate:
+    nodeSelector:
+      kubernetes.io/hostname: kind-control-plane
+  params:
+  - name: base-image-registry
+    value: quay.io/skhoury
+  - name: bundle-version
+    value: v0.0.1
+  - name: repo-name
+    value: node-observability-operator
+  - name: repo-url
+    value: https://github.com/openshift/node-observability-operator
+  pipelineRef:
+    name: pipeline-dev-all
+
+  workspaces:
+  - name: shared-workspace
+    volumeClaimTemplate:
+      spec:
+        storageClassName: standard
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

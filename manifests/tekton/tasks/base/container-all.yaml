@@ -15,7 +15,11 @@ spec:
     type: string
  
   workspaces:
-    - name: src
+  - name: src
+  - name: build-cache-root
+    mountPath: /root
+  - name: build-cache-home
+    mountPath: /home/1001
       
   steps: 
   - name: verify
@@ -82,11 +86,6 @@ spec:
     workingDir: /workspace/src/$(params.repo-name)
     securityContext:
       runAsUser: 0
-    volumeMounts:
-    - name: build-cache
-      mountPath: /home/1001
-    - name: build-cache
-      mountPath: /root
   
   - name: unit-test
     image: quay.io/okd/go-bundle-tools:v1.0.0
@@ -96,11 +95,6 @@ spec:
     args: ["test"]
     securityContext:
       runAsUser: 0
-    volumeMounts:
-    - name: build-cache
-      mountPath: /home/1001
-    - name: build-cache
-      mountPath: /root
 
   - name: build
     image: quay.io/okd/go-bundle-tools:v1.0.0
@@ -116,11 +110,6 @@ spec:
     args: ["build-operator"]
     securityContext:
       runAsUser: 0
-    volumeMounts:
-    - name: build-cache
-      mountPath: /home/1001
-    - name: build-cache
-      mountPath: /root
 
   - name: runtime-docker
     workingDir: /workspace/src/$(params.repo-name)
@@ -159,7 +148,4 @@ spec:
   - name: docker-config
     configMap:
       name: docker-config
-  - name: build-cache
-    persistentVolumeClaim:
-      claimName: build-cache-pvc-dev
 

@@ -18,7 +18,7 @@ spec:
     type: string
   
   workspaces:
-    - name: shared-workspace
+  - name: shared-workspace
 
   tasks:
   - name: fetch-repository
@@ -50,6 +50,10 @@ spec:
       - name: bundle-version
         value: $(params.bundle-version)
     workspaces:
+      - name: build-cache-home
+        workspace: shared-workspace
+      - name: build-cache-root
+        workspace: shared-workspace
       - name: src
         workspace: shared-workspace
 
@@ -66,4 +70,8 @@ spec:
         value: $(params.bundle-version)
     workspaces:
       - name: src
+        workspace: shared-workspace
+      - name: build-cache-home
+        workspace: shared-workspace
+      - name: build-cache-root
         workspace: shared-workspace

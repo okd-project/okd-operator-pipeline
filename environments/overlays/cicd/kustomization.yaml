@@ -7,7 +7,5 @@ bases:
   - ../../../manifests/tekton/pipelines/base
 resources:
   - namespace/namespace.yaml
-  - pvc/pipeline-pvc.yaml
-  - pvc/build-cache-pvc.yaml
 namespace: operator-pipeline
 
