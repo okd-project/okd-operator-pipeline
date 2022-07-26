@@ -9,7 +9,7 @@ spec:
       kubernetes.io/hostname: kind-control-plane
   params:
   - name: base-image-registry
-    value: quay.io/skhoury
+    value: quay.io/username
   - name: bundle-version
     value: v0.0.1
   - name: repo-name
