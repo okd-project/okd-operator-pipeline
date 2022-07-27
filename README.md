@@ -81,85 +81,6 @@ cd pipelines
 kubectl apply -k environments/overlays/nfs-provisioner
 ```
 
-The next example is a storage setup for Kind (Kubernetes in Docker)
-Kind uses a default provisioner (rancher.io/local-path).
-
-First create 2 pv's as follows 
-
-Change the storage size as required but remember to update the pvc's (environments/overlays/cicd/pvc)
-
-```bash
-# first label the node
-kubectl label node <node-name> name=cp
-# check the labels
-kubectl get nodes -o wide --show-labels
-
-# create the pv's
-cat << EOF >> pv-pipeline.yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pipeline-pv
-spec:
-  capacity:
-    storage: 5Gi
-  volumeMode: Filesystem
-  accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: standard
-  local:
-    path: /tmp
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: name
-          operator: In
-          values:
-          - cp
-EOF
-
-kubectl apply -f pv-pipeline.yaml
-
-cat << EOF >> pv-build-cache.yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: build-cache-pv
-spec:
-  capacity:
-    storage: 2Gi
-  volumeMode: Filesystem
-  accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: standard
-  local:
-    path: /tmp
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: name
-          operator: In
-          values:
-          - cp
-EOF
-
-kubectl apply -f pv-build-cache.yaml
-# check the pv's
-kubectl get pv
-```
-
-**NB** Update the build-cache-pvc.yaml and pipeline-pvc.yaml files with the correct StorageClassName
-
-```bash
-# update storageClassName (set by provisioner if used)
-# assume the provisioner has a storageClass called standard
-find environments/overlays/cicd/pvc/. -type f -name '*pvc*' | xargs sed -i 's/nfs-client/standard/g'
-```
-
 ### Install the operator tekton pipeline with kustomize
 
 __Note__: For Kind clusters, or when using VolumeClaimTemplate, start by commenting the following lines from the `resources` list in `environments/overlays/cicd/kustomization.yaml`:
@@ -199,7 +120,8 @@ tkn pipeline start pipeline-dev-all \
 --param repo-name=node-observability-operator \
 --param base-image-registry=quay.io/<your-repo-id> \
 --param bundle-version=v0.0.1 \
---workspace name=shared-workspace,claimName=pipeline-pvc-dev
+--workspace name=shared-workspace,claimName=pipeline-pvc-dev \
+-n operator-pipeline
 ```
 
 ### Option 2 - Kind clusters, or without existing PVCs
@@ -211,7 +133,8 @@ tkn pipeline start pipeline-dev-all \
 --param repo-name=node-observability-operator \
 --param base-image-registry=quay.io/<your-repo-id> \
 --param bundle-version=v0.0.1 \
---workspace name=shared-workspace,volumeClaimTemplateFile=workspace-template.yaml
+--workspace name=shared-workspace,volumeClaimTemplateFile=manifests/tekton/pipelineruns/workspace-template.yaml \
+-n operator-pipeline
 ```
 
 
