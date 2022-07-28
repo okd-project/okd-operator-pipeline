@@ -12,3 +12,5 @@ spec:
     value: $(body.version)
   - name: base-image-registry
     value: $(body.imageregistry)
+  - name: storage-class-name
+    value: $(body.storageclassname)

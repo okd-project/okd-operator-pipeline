@@ -12,6 +12,8 @@ spec:
     description: bundle version (v0.0.1)
   - name: base-image-registry
     description: base image registry
+  - name: storage-class-name
+    description: StorageClass used for PVCs
   
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
@@ -33,5 +35,11 @@ spec:
         
       workspaces:
       - name: shared-workspace
-        persistentVolumeClaim:
-          claimName: pipeline-pvc-dev
+        volumeClaimTemplate:
+          spec:
+            storageClassName: $(tt.params.storage-class-name)
+            accessModes:
+            - ReadWriteOnce
+            resources: 
+              requests:
+                storage: 1Gi

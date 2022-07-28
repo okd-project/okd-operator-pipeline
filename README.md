@@ -54,19 +54,23 @@ We are currently verifying 'microshift' and Code Ready Containers for local deve
 
 ## Installation
 
+During the installation, some of the steps are specific to a regular Kubernetes cluster, while others are specific to Kind clusters. 
+
+### Install Tekton Operator
+
 Install the tekton cli and tekton resources before continuing (see https://tekton.dev/docs/pipelines/install)
 
-Clone the repository
+### Clone the repository
 
 ```bash
 git clone git@github.com:okd-project/pipelines.git
 ```
 
-Install the storage provisioner 
+### Install the storage provisioner (All clusters)
 
 This example uses an NFS provisioner for an on-prem kubernetes cluster 
 
-Skip this step (go to Install the operator tekton pipeline section) if you already have storage (persistent volumes and persistent volume claims and provisioner) setup
+Skip this step (go to [Install the operator tekton pipeline with kustomize](###install-the-operator-tekton-pipeline-with-kustomize)) if you already have storage (storageClass and provisioner) setup, as it is the case on Kind clusters for example, with the `standard` storageClass.
 
 **NB** Before executing the provisioner, change the fields that relate to your specific
 NFS setup i.e server name (ip) and path in the file environments/overlays/nfs-provisioner/patch_nfs_details.yaml
@@ -77,85 +81,15 @@ cd pipelines
 kubectl apply -k environments/overlays/nfs-provisioner
 ```
 
-The next example is a storage setup for Kind (Kubernetes in Docker)
-Kind uses a default provisioner (rancher.io/local-path).
+### Install the operator tekton pipeline with kustomize
 
-First create 2 pv's as follows 
-
-Change the storage size as required but remember to update the pvc's (environments/overlays/cicd/pvc)
-
-```bash
-# first label the node
-kubectl label node <node-name> name=cp
-# check the labels
-kubectl get nodes -o wide --show-labels
-
-# create the pv's
-cat << EOF >> pv-pipeline.yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pipeline-pv
-spec:
-  capacity:
-    storage: 5Gi
-  volumeMode: Filesystem
-  accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: standard
-  local:
-    path: /tmp
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: name
-          operator: In
-          values:
-          - cp
-EOF
-
-kubectl apply -f pv-pipeline.yaml
-
-cat << EOF >> pv-build-cache.yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: build-cache-pv
-spec:
-  capacity:
-    storage: 2Gi
-  volumeMode: Filesystem
-  accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: standard
-  local:
-    path: /tmp
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: name
-          operator: In
-          values:
-          - cp
-EOF
-
-kubectl apply -f pv-build-cache.yaml
-# check the pv's
-kubectl get pv
+__Note__: For Kind clusters, or when using VolumeClaimTemplate, start by commenting the following lines from the `resources` list in `environments/overlays/cicd/kustomization.yaml`:
+```yaml
+resources:
+  - namespace/namespace.yaml
+#  - pvc/pipeline-pvc.yaml
+#  - pvc/build-cache-pvc.yaml
 ```
-
-**NB** Update the build-cache-pvc.yaml and pipeline-pvc.yaml files with the correct StorageClassName
-
-```bash
-# update storageClassName (set by provisioner if used)
-# assume the provisioner has a storageClass called standard
-find environments/overlays/cicd/pvc/. -type f -name '*pvc*' | xargs sed -i 's/nfs-client/standard/g'
-```
-Install the operator tekton pipeline with kustomize
 
 Execute the following commands
 
@@ -165,6 +99,7 @@ kubectl apply -k environments/overlays/cicd
 
 # check that all resources have deployed
 kubectl get all -n operator-pipeline
+# If not running on Kind, also check PVCs are available
 kubectl get pvc -n operator-pipeline
 
 # once all pods are in the RUNNING status create a configmap as follows
@@ -174,6 +109,8 @@ kubectl create configmap docker-config --from-file=/$HOME/.docker/config.json -n
 
 ## Usage
 
+### Option 1 - On clusters with existing PVCs
+
 Execute the following to start a pipeline run
 
 ```bash
@@ -181,11 +118,25 @@ Execute the following to start a pipeline run
 tkn pipeline start pipeline-dev-all \
 --param repo-url=https://github.com/openshift/node-observability-operator \
 --param repo-name=node-observability-operator \
---param base-image-registry=quay.io/<your-repo-id>
---param bundle-version=v0.0.1
---workspace name=shared-workspace,claimName=pipeline-pvc-dev
-
+--param base-image-registry=quay.io/<your-repo-id> \
+--param bundle-version=v0.0.1 \
+--workspace name=shared-workspace,claimName=pipeline-pvc-dev \
+-n operator-pipeline
 ```
+
+### Option 2 - Kind clusters, or without existing PVCs
+
+```bash
+# example (using the node-observability-operator)
+tkn pipeline start pipeline-dev-all \
+--param repo-url=https://github.com/openshift/node-observability-operator \
+--param repo-name=node-observability-operator \
+--param base-image-registry=quay.io/<your-repo-id> \
+--param bundle-version=v0.0.1 \
+--workspace name=shared-workspace,volumeClaimTemplateFile=manifests/tekton/pipelineruns/workspace-template.yaml \
+-n operator-pipeline
+```
+
 
 ## Dockerfile
 
@@ -277,4 +228,9 @@ The folder structure is as follows :
                               |    
                               --- pipeline-dev.yaml
                               --- pipeline-dev-all.yaml
+                              --- kustomization.yaml
+                  --- pipelineruns
+                        |
+                        --- sample-pr-dev-all-on-kind.yaml
+                        --- workspace-template.yaml
 ```
