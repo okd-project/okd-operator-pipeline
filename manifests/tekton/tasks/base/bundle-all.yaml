@@ -2,6 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: bundle-all 
+  namespace: okd-team
 spec:
   params:
   - name: repo-name
@@ -17,7 +18,7 @@ spec:
   workspaces:
   - name: src
   - name: build-cache-root
-    mountPath: /root
+    mountPath: /home/1001
   - name: build-cache-home
     mountPath: /home/1001
       
@@ -27,8 +28,6 @@ spec:
     workingDir: /workspace/src/$(params.repo-name)
     command: ["make"]
     args: ["bundle","OPERATOR_SDK_BIN=/usr/bin/operator-sdk","KUSTOMIZE=/usr/bin/kustomize","IMG=$(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version)"]
-    securityContext:
-      runAsUser: 0
 
   - name: bundle-dockerfile-check
     image: quay.io/okd/go-bundle-tools:v1.0.0
@@ -41,17 +40,12 @@ spec:
         echo "copying Dockerfile.bundle to bundle.Dockerfile for kaniko build"
         cp  Dockerfile.bundle bundle.Dockerfile
       fi
-    securityContext:
-      runAsUser: 0
-
   
   - name: bundle-image-push
     workingDir: /workspace/src/$(params.repo-name)
     image:  gcr.io/kaniko-project/executor:latest
     command: ["/kaniko/executor"]
     args: ["--dockerfile=/workspace/src/$(params.repo-name)/bundle.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version)"]
-    securityContext:
-      runAsUser: 0
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/
@@ -64,16 +58,12 @@ spec:
       echo "executing opm generate index dockerfile"
       /usr/bin/opm index add --bundles $(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version) --generate --out-dockerfile "index.Dockerfile"
       cat index.Dockerfile
-    securityContext:
-      runAsUser: 0
  
   - name: index-image-push
     workingDir: /workspace/src/$(params.repo-name)
     image:  gcr.io/kaniko-project/executor:latest
     command: ["/kaniko/executor"]
     args: ["--dockerfile=/workspace/src/$(params.repo-name)/index.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-index:$(params.bundle-version)"]
-    securityContext:
-      runAsUser: 0
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/
@@ -103,16 +93,12 @@ spec:
       
       opm validate catalog
       cat catalog.Dockerfile
-    securityContext:
-      runAsUser: 0
 
   - name: catalog-image-push
     workingDir: /workspace/src/$(params.repo-name)
     image:  gcr.io/kaniko-project/executor:latest
     command: ["/kaniko/executor"]
     args: ["--dockerfile=/workspace/src/$(params.repo-name)/catalog.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-catalog:$(params.bundle-version)"]
-    securityContext:
-      runAsUser: 0
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/

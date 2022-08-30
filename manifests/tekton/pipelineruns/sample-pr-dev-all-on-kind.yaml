@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  namespace: operator-pipeline
+  namespace: okd-team
   name: my-dev-all
 spec:
   podTemplate:

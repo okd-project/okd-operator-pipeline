@@ -1,9 +1,0 @@
-namePrefix: 
-
-bases:
-  - trigger-binding-dev.yaml
-  - trigger-event-listener-dev.yaml
-  - trigger-template-dev.yaml
-
-
-

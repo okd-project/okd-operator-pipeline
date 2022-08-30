@@ -5,7 +5,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: serviceaccount-dev
-  namespace: sandbox-lzuccarelli
+  namespace: okd-team
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
