@@ -37,7 +37,7 @@ The pipeline uses 2 tasks (with steps)
   - catalog-image-push 
 
 The reason for the separation into 2 tasks is that the *container-all* task can be re-used
-to build operands (i.e in the node-oberrvability-operator we have an operand (agent) that is required)
+to build operands (i.e in the node-observability-operator we have an operand (agent) that is required)
 
 A custom golang image is used with the relevant dependencies to execute the various make recipes
 
@@ -63,7 +63,8 @@ Install the tekton cli and tekton resources before continuing (see https://tekto
 ### Clone the repository
 
 ```bash
-git clone git@github.com:okd-project/pipelines.git
+git clone git@github.com:okd-project/okd-operator-pipeline.git
+
 ```
 
 ### Install the storage provisioner (All clusters)
@@ -104,14 +105,15 @@ kubectl get pvc -n operator-pipeline
 
 # once all pods are in the RUNNING status create a configmap as follows
 # this assumes you have the correct credentials and have logged into the registry to push images to
-kubectl create configmap docker-config --from-file=/$HOME/.docker/config.json -n operator-pipeline
+kubectl create configmap docker-config --from-file=/$HOME/.docker/config.json -n okd-team
 ```
 
 ## Usage
 
 ### Option 1 - On clusters with existing PVCs
 
-Execute the following to start a pipeline run
+Execute the following to start a pipeline run, this will re-use the claim "pipeline-pvc-dev" for
+future builds, it will re-use the .cache and pkg dirs to speed up builds
 
 ```bash
 # example (using the node-observability-operator)
@@ -121,7 +123,7 @@ tkn pipeline start pipeline-dev-all \
 --param base-image-registry=quay.io/<your-repo-id> \
 --param bundle-version=v0.0.1 \
 --workspace name=shared-workspace,claimName=pipeline-pvc-dev \
--n operator-pipeline
+-n okd-team
 ```
 
 ### Option 2 - Kind clusters, or without existing PVCs
@@ -134,7 +136,7 @@ tkn pipeline start pipeline-dev-all \
 --param base-image-registry=quay.io/<your-repo-id> \
 --param bundle-version=v0.0.1 \
 --workspace name=shared-workspace,volumeClaimTemplateFile=manifests/tekton/pipelineruns/workspace-template.yaml \
--n operator-pipeline
+-n okd-team
 ```
 
 
@@ -180,9 +182,6 @@ The folder structure is as follows :
       |           |
       |           --- cicd
       |           |     |
-      |           |      --- namespace
-      |           |     |     |
-      |           |     |     --- namespace.yaml
       |           |     --- pvc
       |           |     |     |
       |           |     |     --- pipeline-pvc.yaml
@@ -207,13 +206,6 @@ The folder structure is as follows :
                   |           --- container-all.yaml
                   |           --- bundle-all.yaml
                   |
-                  --- triggers
-                  |     |
-                  |     --- base
-                  |           |             
-                  |           --- trigger-binding-dev.yaml
-                  |           --- trigger-event-listener-dev.yaml
-                  |           --- trigger-template-dev.yaml
                   --- rbac
                   |     |
                   |     --- base

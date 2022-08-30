@@ -5,9 +5,9 @@ LABEL maintainer="luzuccar@redhat.com"
 # gcc for cgo
 RUN dnf install -y git gcc make diffutils && rm -rf /var/lib/apt/lists/*
 
-ENV GOLANG_VERSION 1.18.3
+ENV GOLANG_VERSION 1.18.5
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
-ENV GOLANG_DOWNLOAD_SHA256 956f8507b302ab0bb747613695cdae10af99bbd39a90cae522b7c0302cc27245
+ENV GOLANG_DOWNLOAD_SHA256 9e5de37f9c49942c601b191ac5fba404b868bfc21d446d6960acc12283d6e5f2 
 
 ENV OPERATOR_SDK_VERSION v1.22.0
 ENV OPERATOR_SDK_BIN /usr/bin/operator-sdk
@@ -38,14 +38,18 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
 ENV PATH $PATH:/bin:/usr/local/go/bin:/usr/bin/
 ENV GOPATH /home/1001
 ENV GOCACHE /root/.cache/go-build
-ENV GOENV /root/.config/go/env
+env GOLANGCI_LINT_CACHE /root/.cache/golangci-lint
+ENV GOENV /home/1001/.config/go/env
 
-RUN mkdir -p /home/1001/src /home/1001/bin /home/1001/pkg /go/build \
+RUN mkdir -p /home/1001/src /home/1001/bin /home/1001/pkg /go/build /root/.cache /root/.local /.local \
     && chmod -R 0777 /go  \
-    && chmod -R 0777 /home/1001/ 
+    && chmod -R 0777 /home/1001/ \
+    && chmod -R 0777 /root/.cache \
+    && chmod -R 0777 /root/.local \
+    && chmod -R 0777 /.local
 
-RUN chown -R 1001:1001 /home/1001 \
-    && chown -R 1001:1001 /go
+RUN chown -R 1001:root /home/1001 \
+    && chown -R 1001:root /go
 
 COPY uid_entrypoint.sh /go/
 

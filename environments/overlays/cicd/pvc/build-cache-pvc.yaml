@@ -2,6 +2,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: build-cache-pvc-dev
+  namespace: okd-team
 spec:
   accessModes:
     - ReadWriteOnce

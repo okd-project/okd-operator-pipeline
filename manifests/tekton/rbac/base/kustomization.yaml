@@ -3,4 +3,4 @@ bases:
   - edit.yaml
   - view.yaml
   
-namespace: golang-cicd
+namespace: okd-team

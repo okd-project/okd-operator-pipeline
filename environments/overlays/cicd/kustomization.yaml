@@ -2,12 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 bases:
   - ../../../manifests/tekton/rbac/base
-#  - ../../../manifests/tekton/triggers/base
   - ../../../manifests/tekton/tasks/base
   - ../../../manifests/tekton/pipelines/base
-resources:
-  - namespace/namespace.yaml
-  - pvc/pipeline-pvc.yaml
-  - pvc/build-cache-pvc.yaml
-namespace: operator-pipeline
+namespace: okd-team
 

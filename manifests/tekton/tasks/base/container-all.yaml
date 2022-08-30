@@ -2,6 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: container-all 
+  namespace: okd-team
 spec:
   params:
   - name: repo-name
@@ -17,13 +18,14 @@ spec:
   workspaces:
   - name: src
   - name: build-cache-root
-    mountPath: /root
+    mountPath: /home/1001
   - name: build-cache-home
     mountPath: /home/1001
       
   steps: 
   - name: verify
     image: quay.io/okd/go-bundle-tools:v1.0.0
+    imagePullPolicy: Always
     onError: continue
     script: |
       #!/usr/bin/env bash
@@ -84,8 +86,6 @@ spec:
       EOF
       golangci-lint run -c golangci.yaml --deadline=30m
     workingDir: /workspace/src/$(params.repo-name)
-    securityContext:
-      runAsUser: 0
   
   - name: unit-test
     image: quay.io/okd/go-bundle-tools:v1.0.0
@@ -93,8 +93,6 @@ spec:
     resources:
     command: ["make"]
     args: ["test"]
-    securityContext:
-      runAsUser: 0
 
   - name: build
     image: quay.io/okd/go-bundle-tools:v1.0.0
@@ -108,8 +106,6 @@ spec:
           memory: 2000Mi
     command: ["make"]
     args: ["build-operator"]
-    securityContext:
-      runAsUser: 0
 
   - name: runtime-docker
     workingDir: /workspace/src/$(params.repo-name)
@@ -127,8 +123,6 @@ spec:
       cat runtime.Dockerfile
       # move dockerignore as it blocks bin directory
       mv .dockerignore .bakdockerignore
-    securityContext:
-      runAsUser: 0
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/
@@ -138,8 +132,6 @@ spec:
     image:  gcr.io/kaniko-project/executor:latest
     command: ["/kaniko/executor"]
     args: ["--dockerfile=/workspace/src/$(params.repo-name)/runtime.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name):$(params.bundle-version)"]
-    securityContext:
-      runAsUser: 0
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/
