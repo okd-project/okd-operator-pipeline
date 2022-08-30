@@ -105,7 +105,7 @@ kubectl get pvc -n operator-pipeline
 
 # once all pods are in the RUNNING status create a configmap as follows
 # this assumes you have the correct credentials and have logged into the registry to push images to
-kubectl create configmap docker-config --from-file=/$HOME/.docker/config.json -n operator-pipeline
+kubectl create configmap docker-config --from-file=/$HOME/.docker/config.json -n okd-team
 ```
 
 ## Usage
@@ -113,7 +113,7 @@ kubectl create configmap docker-config --from-file=/$HOME/.docker/config.json -n
 ### Option 1 - On clusters with existing PVCs
 
 Execute the following to start a pipeline run, this will re-use the claim "pipeline-pvc-dev" for
-future builds, it will re-use the .cache and pkd dirs to speed up builds
+future builds, it will re-use the .cache and pkg dirs to speed up builds
 
 ```bash
 # example (using the node-observability-operator)
