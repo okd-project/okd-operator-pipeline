@@ -1,5 +1,6 @@
 spec:
-  storageClassName: ocs-external-storagecluster-ceph-rbd 
+  #storageClassName: ocs-external-storagecluster-ceph-rbd 
+  storageClassName: standard 
   accessModes:
   - ReadWriteOnce
   resources:

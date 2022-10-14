@@ -258,3 +258,6 @@ spec:
 
         printf "%s" "${RESULT_SHA}" > "$(results.commit.path)"
         printf "%s" "${PARAM_URL}" > "$(results.url.path)"
+
+        chown 1001:1001 -R ${WORKSPACE_OUTPUT_PATH}
+        chmod -R 0777 ${WORKSPACE_OUTPUT_PATH}

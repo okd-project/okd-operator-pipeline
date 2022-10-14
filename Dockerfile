@@ -36,20 +36,15 @@ RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s ${GOLANGCI_LINT_VERSION}
 
 ENV PATH $PATH:/bin:/usr/local/go/bin:/usr/bin/
-ENV GOPATH /home/1001
-ENV GOCACHE /root/.cache/go-build
-env GOLANGCI_LINT_CACHE /root/.cache/golangci-lint
-ENV GOENV /home/1001/.config/go/env
+ENV GOPATH /go
+ENV GOCACHE /go/.cache/go-build
+env GOLANGCI_LINT_CACHE /go/.cache/golangci-lint
+ENV GOENV /go/.config/go/env
 
-RUN mkdir -p /home/1001/src /home/1001/bin /home/1001/pkg /go/build /root/.cache /root/.local /.local \
-    && chmod -R 0777 /go  \
-    && chmod -R 0777 /home/1001/ \
-    && chmod -R 0777 /root/.cache \
-    && chmod -R 0777 /root/.local \
-    && chmod -R 0777 /.local
+RUN mkdir -p /go/src /go/bin /go/pkg /go/build /go/.cache /go/.local \
+    && chmod -R 0777 /go
 
-RUN chown -R 1001:root /home/1001 \
-    && chown -R 1001:root /go
+RUN chown -R 1001:1001 /go
 
 COPY uid_entrypoint.sh /go/
 

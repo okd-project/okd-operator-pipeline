@@ -18,13 +18,13 @@ spec:
   workspaces:
   - name: src
   - name: build-cache-root
-    mountPath: /home/1001
+    mountPath: /go/.cache
   - name: build-cache-home
-    mountPath: /home/1001
+    mountPath: /root
       
   steps: 
   - name: verify
-    image: quay.io/okd/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.1
     imagePullPolicy: Always
     onError: continue
     script: |
@@ -35,6 +35,9 @@ spec:
       # 
       # Some operators may not have the make recipe 'verify' 
       # We will create an 'on the fly' golangco-lint config file
+      #
+      pwd
+      ls -la
 
       set -euxo pipefail
 
@@ -88,28 +91,28 @@ spec:
     workingDir: /workspace/src/$(params.repo-name)
   
   - name: unit-test
-    image: quay.io/okd/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.1
     workingDir: /workspace/src/$(params.repo-name)
     resources:
     command: ["make"]
     args: ["test"]
 
   - name: build
-    image: quay.io/okd/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.1
     workingDir: /workspace/src/$(params.repo-name)
     resources:
         limits:
-          cpu: 400m
-          memory: 2000Mi
+          cpu: 800m
+          memory: 4000Mi
         requests:
-          cpu: 400m
-          memory: 2000Mi
+          cpu: 800m
+          memory: 4000Mi
     command: ["make"]
     args: ["build-operator"]
 
   - name: runtime-docker
     workingDir: /workspace/src/$(params.repo-name)
-    image: quay.io/okd/go-bundle-tools:v1.0.0
+    image: quay.io/okd/go-bundle-tools:v1.0.1
     script: |
       #!/usr/bin/env bash
       set -euxo pipefail

@@ -78,30 +78,27 @@ NFS setup i.e server name (ip) and path in the file environments/overlays/nfs-pr
 
 ```bash
 # execute for kustomize
-cd pipelines
+cd okd-operator-pipeline
 kubectl apply -k environments/overlays/nfs-provisioner
 ```
 
 ### Install the operator tekton pipeline with kustomize
 
-__Note__: For Kind clusters, or when using VolumeClaimTemplate, start by commenting the following lines from the `resources` list in `environments/overlays/cicd/kustomization.yaml`:
-```yaml
-resources:
-  - namespace/namespace.yaml
-#  - pvc/pipeline-pvc.yaml
-#  - pvc/build-cache-pvc.yaml
-```
 
 Execute the following commands
 
 ```bash
-# assume you logged into your kubernetes cluster
+cd okd-operator-pipeline
+# create the okd-team namespace (if not already created)
+kubectl create ns okd-team
+
+# assume you are logged into your kubernetes cluster
 kubectl apply -k environments/overlays/cicd
 
 # check that all resources have deployed
-kubectl get all -n operator-pipeline
+kubectl get all -n okd-team
 # If not running on Kind, also check PVCs are available
-kubectl get pvc -n operator-pipeline
+kubectl get pvc -n okd-team
 
 # once all pods are in the RUNNING status create a configmap as follows
 # this assumes you have the correct credentials and have logged into the registry to push images to
@@ -169,60 +166,131 @@ curl -d'{"repourl":"https://github.com/<id>/<repo>","bundleversion":"v0.0.1","im
 
 The trigger-webhook will then format and post the required "bindings" to the tekton eventListener
 
+## Troubleshooting 
 
-## Pipelinefolder structure
+This is specifc for **kind** local dev clusters
+
+Create a config file for the kind cluster
+
+```bash
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4 
+nodes:
+- role: control-plane
+  extraMounts:
+  - hostPath: /data
+    containerPath: /var/local-path-provisioner 
+```
+
+Ensure the hostPath directory is created
+
+```bash
+mkdir /data
+```
+
+We have created some utility yaml files in the directory *manifests/tekton/utility/base*
+
+The pvc-local.yaml will create a local path persistent volume (to be used for local testing). This is a manual setup for local debugging, it will allow the user to copy and change
+setting as needed.
+
+If needed use the debug-pod.yaml to deploy a *busybox* container to debug the mounted pv.
+
+Create the pvc 
+
+```bash
+
+kubectl apply -f manifests/tekton/utility/base/pvc-local.yaml
+
+# copy your local go-build cache to the pv directory (as set in the config.yaml file for the Kind cluster)
+# note the privisioner will create a random path in the form of 'pvc-xxx_namespace_pvcname'
+cp -r $HOME/.cache/go-build /data/pvc-xxx_okd-team_local-volume-pvc/.cache/
+# copy the golangci-lint cache to the pv directory
+cp -r $HOME/.cache/golangci-lint /data/pvc-xxx_okd-team_local-volume-pvc/.cache/
+
+```
+
+Use the following command line to re-use the PVC and PV for all future pipelineruns
+
+```bash
+tkn pipeline start pipeline-dev-all \
+--param repo-url=<url-to-github-repo> \
+--param repo-name=<repo-name> \
+--param base-image-registry=quay.io/<your-repo-id> \
+--param bundle-version=<bundle-version> \
+--workspace name=shared-workspace,claimName=local-volume-pvc \
+-n okd-team
+```
+
+**Mounting the go-build and golangci-lint cache files**
+
+- If you are experiencing problems with mounting the cache directories
+in the container to speed up linting and building, try doing the following (this is specifically for SELinux enabled OS's)
+
+```bash
+# check chcon settings
+ls -LZ <pv-directory-for-cache>/.cache/go-build
+# it should have the following settings 
+# system_u:object_r:container_file_t:s0
+# update if not
+sudo chcon -R system_u:object_r:container_file_t:s0 <pv-directory-for-cache>/.cache/go-build
+# repeat for golangci-lint
+
+```
+- In fact if you have any problems with mounting any other directory check the SELinux
+settings and apply the *system_u:object_r:container_file_t:s0* via chcon
+
+## Pipeline folder structure
 
 The folder structure is as follows :
 
 ```bash
-
-      --- environments
-      |     |
-      |     --- overlays
-      |           |
-      |           --- cicd
-      |           |     |
-      |           |     --- pvc
-      |           |     |     |
-      |           |     |     --- pipeline-pvc.yaml
-      |           |     |     --- build-cache-pvc.yaml
-      |           |     |
-      |           |     --- kustermization.yaml
-      |           |
-      |           --- nfs-provisioner
-      |                 |
-      |                 --- kustomization.yaml
-      |                 --- namespace.yaml
-      |                 --- patch_nfs_details.yaml
-      |
-      --- manifests
-            |
-            --- tekton
-                  |
-                  --- tasks
-                  |     |
-                  |     --- base
-                  |           |
-                  |           --- container-all.yaml
-                  |           --- bundle-all.yaml
-                  |
-                  --- rbac
-                  |     |
-                  |     --- base
-                  |           |    
-                  |           --- admin.yaml
-                  |           --- edit.yaml
-                  |           --- view.yaml
-                  |           --- kustermization.yaml
-                  --- pipelines
-                        |
-                        --- base
-                              |    
-                              --- pipeline-dev.yaml
-                              --- pipeline-dev-all.yaml
-                              --- kustomization.yaml
-                  --- pipelineruns
-                        |
-                        --- sample-pr-dev-all-on-kind.yaml
-                        --- workspace-template.yaml
+.
+├── Dockerfile
+├── environments
+│   └── overlays
+│       ├── cicd
+│       │   ├── kustomization.yaml
+│       │   └── pvc
+│       │       ├── build-cache-pvc.yaml
+│       │       └── pipeline-pvc.yaml
+│       └── nfs-provisioner
+│           ├── kustomization.yaml
+│           ├── namespace.yaml
+│           └── patch_nfs_details.yaml
+├── LICENSE
+├── manifests
+│   └── tekton
+│       ├── pipelineruns
+│       │   ├── sample-pr-dev-all-on-kind.yaml
+│       │   └── workspace-template.yaml
+│       ├── pipelines
+│       │   └── base
+│       │       ├── kustomization.yaml
+│       │       ├── pipeline-dev-all.yaml
+│       │       └── pipeline-dev.yaml
+│       ├── rbac
+│       │   └── base
+│       │       ├── admin.yaml
+│       │       ├── edit.yaml
+│       │       ├── kustomization.yaml
+│       │       └── view.yaml
+│       ├── rolebindings
+│       │   └── base
+│       │       ├── binding-dev-openshift.yaml
+│       │       ├── binding-dev.yaml
+│       │       └── role-dev.yaml
+│       ├── tasks
+│       │   └── base
+│       │       ├── bundle-all.yaml
+│       │       ├── container-all.yaml
+│       │       ├── git-clone.yaml
+│       │       └── kustomization.yaml
+│       └── utility
+│           └── base
+│               ├── debug-pod.yaml
+│               ├── pvc-local.yaml
+│               ├── pvc.yaml
+│               └── pv.yaml
+├── README.md
+└── uid_entrypoint.sh
 ```
