@@ -55,6 +55,8 @@ spec:
         workspace: shared-workspace
       - name: src
         workspace: shared-workspace
+      - name: build-pkg
+        workspace: shared-workspace
 
   - name: bundle-all
     runAfter: [container-all]
