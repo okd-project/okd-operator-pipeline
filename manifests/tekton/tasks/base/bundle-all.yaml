@@ -19,8 +19,6 @@ spec:
   - name: src
   - name: build-cache-root
     mountPath: /go/.cache
-  - name: build-cache-home
-    mountPath: /root
       
   steps: 
   - name: bundle

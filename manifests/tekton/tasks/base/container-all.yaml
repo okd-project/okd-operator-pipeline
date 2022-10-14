@@ -19,8 +19,6 @@ spec:
   - name: src
   - name: build-cache-root
     mountPath: /go/.cache
-  - name: build-cache-home
-    mountPath: /root
       
   steps: 
   - name: verify
@@ -102,11 +100,11 @@ spec:
     workingDir: /workspace/src/$(params.repo-name)
     resources:
         limits:
-          cpu: 800m
-          memory: 4000Mi
+          cpu: 400m
+          memory: 2000Mi
         requests:
-          cpu: 800m
-          memory: 4000Mi
+          cpu: 400m
+          memory: 2000Mi
     command: ["make"]
     args: ["build-operator"]
 

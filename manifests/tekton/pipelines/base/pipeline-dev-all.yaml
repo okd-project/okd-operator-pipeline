@@ -51,8 +51,6 @@ spec:
       - name: bundle-version
         value: $(params.bundle-version)
     workspaces:
-      - name: build-cache-home
-        workspace: shared-workspace
       - name: build-cache-root
         workspace: shared-workspace
       - name: src
@@ -71,8 +69,6 @@ spec:
         value: $(params.bundle-version)
     workspaces:
       - name: src
-        workspace: shared-workspace
-      - name: build-cache-home
         workspace: shared-workspace
       - name: build-cache-root
         workspace: shared-workspace
