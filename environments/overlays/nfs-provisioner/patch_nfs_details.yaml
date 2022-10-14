@@ -11,11 +11,11 @@ spec:
         - name: nfs-client-provisioner
           env:
             - name: NFS_SERVER
-              value: 192.168.8.114
+              value: ${SERVER_IP}
             - name: NFS_PATH
-              value: /home/lzuccarelli/srv/nfs4
+              value: ${SERVER_PATH}
       volumes:
         - name: nfs-client-root
           nfs:
-            server: 192.168.8.114
-            path: /home/lzuccarelli/srv/nfs4
+            server: ${SERVER_IP}
+            path: ${SERVER_PATH}
