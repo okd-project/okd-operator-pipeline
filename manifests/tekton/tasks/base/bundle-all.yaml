@@ -23,12 +23,26 @@ spec:
   steps: 
   - name: bundle
     image: quay.io/okd/go-bundle-tools:v1.0.1
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     workingDir: /workspace/src/$(params.repo-name)
     command: ["make"]
     args: ["bundle","OPERATOR_SDK_BIN=/usr/bin/operator-sdk","KUSTOMIZE=/usr/bin/kustomize","IMG=$(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version)"]
 
   - name: bundle-dockerfile-check
     image: quay.io/okd/go-bundle-tools:v1.0.1
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     workingDir: /workspace/src/$(params.repo-name)
     script: |
       #!/usr/bin/env bash
@@ -42,6 +56,13 @@ spec:
   - name: bundle-image-push
     workingDir: /workspace/src/$(params.repo-name)
     image:  gcr.io/kaniko-project/executor:latest
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     command: ["/kaniko/executor"]
     args: ["--dockerfile=/workspace/src/$(params.repo-name)/bundle.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version)"]
     volumeMounts:
@@ -50,6 +71,13 @@ spec:
       
   - name: index-image-build
     image: quay.io/okd/go-bundle-tools:v1.0.1
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     workingDir: /workspace/src/$(params.repo-name)
     script: |
       #!/usr/bin/env bash
@@ -60,6 +88,13 @@ spec:
   - name: index-image-push
     workingDir: /workspace/src/$(params.repo-name)
     image:  gcr.io/kaniko-project/executor:latest
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     command: ["/kaniko/executor"]
     args: ["--dockerfile=/workspace/src/$(params.repo-name)/index.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-index:$(params.bundle-version)"]
     volumeMounts:
@@ -68,6 +103,13 @@ spec:
 
   - name: catalog-image-build
     image: quay.io/okd/go-bundle-tools:v1.0.1
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     workingDir: /workspace/src/$(params.repo-name)
     script: |
       #!/usr/bin/env bash
@@ -95,6 +137,13 @@ spec:
   - name: catalog-image-push
     workingDir: /workspace/src/$(params.repo-name)
     image:  gcr.io/kaniko-project/executor:latest
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     command: ["/kaniko/executor"]
     args: ["--dockerfile=/workspace/src/$(params.repo-name)/catalog.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-catalog:$(params.bundle-version)"]
     volumeMounts:

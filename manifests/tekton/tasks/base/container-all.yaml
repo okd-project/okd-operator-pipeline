@@ -26,6 +26,13 @@ spec:
   - name: verify
     image: quay.io/okd/go-bundle-tools:v1.0.1
     imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 800m
+        memory: 2000Mi
+      requests:
+        cpu: 800m
+        memory: 2000Mi
     onError: continue
     script: |
       #!/usr/bin/env bash
@@ -87,11 +94,18 @@ spec:
         # TODO
         # local-prefixes: github.com/openshift/$(params.repo-name)
       EOF
-      golangci-lint run -c golangci.yaml --deadline=30m
+      golangci-lint run -c golangci.yaml --deadline=5m --verbose
     workingDir: /workspace/src/$(params.repo-name)
   
   - name: unit-test
     image: quay.io/okd/go-bundle-tools:v1.0.1
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     workingDir: /workspace/src/$(params.repo-name)
     resources:
     command: ["make"]
@@ -113,6 +127,13 @@ spec:
   - name: runtime-docker
     workingDir: /workspace/src/$(params.repo-name)
     image: quay.io/okd/go-bundle-tools:v1.0.1
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     script: |
       #!/usr/bin/env bash
       set -euxo pipefail
@@ -133,6 +154,13 @@ spec:
   - name: container-build-and-push
     workingDir: /workspace/src/$(params.repo-name)
     image:  gcr.io/kaniko-project/executor:latest
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
     command: ["/kaniko/executor"]
     args: ["--dockerfile=/workspace/src/$(params.repo-name)/runtime.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name):$(params.bundle-version)"]
     volumeMounts:
