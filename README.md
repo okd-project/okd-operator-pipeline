@@ -193,7 +193,7 @@ We have created some utility yaml files in the directory *manifests/tekton/utili
 The pvc-local.yaml will create a local path persistent volume (to be used for local testing). This is a manual setup for local debugging, it will allow the user to copy and change
 setting as needed.
 
-If needed use the debug-pod.yaml to deploy a *busybox* container to debug the mounted pv.
+If needed use the debug-pod.yaml to deploy a *ubi-init* container to debug the mounted pv.
 
 Create the pvc 
 
@@ -221,6 +221,40 @@ tkn pipeline start pipeline-dev-all \
 -n okd-team
 ```
 
+
+To create a re-usable PVC use the following (this example is for operate-first)
+
+```bash
+# find the storage class on your cluster before executing this command
+# for operate-first the storage class is ocs-external-storagecluster-ceph-rbd 
+sed -e 's|${STORAGE_CLASS}|ocs-external-storagecluster-ceph-rbd|g' manifests/tekton/utility/base/pvc.yaml | kubectl apply -f - 
+
+# create the debug pod so that you can rsync the local go-build and golangci-lint caches to the PVC
+sed -e 's|${PVC_NAME}|manual-pvc|g' manifests/tekton/utility/base/debug-pod.yaml | kubectl apply -f -
+
+# once the pod has been created execute the following command
+# this will push the golang-build and golangci-lint cache to the PVC just created in the previous step
+oc rsync /<local-dirctory-for-go-build-and-golangci-lint-cache>/ debugs-pod:/tmp
+
+# verify that the cache on the PVC on the debug-pod
+oc exec -it debug-pod -- bash
+$ ls -la /tmp
+$ drwxrwxrwx. 1      101000      101000 1052 Oct 14 14:36 go-build
+$ drwxrwxrwx. 1      101000      101000 1052 Oct 14 14:36 golangci-lint 
+
+# delete the pod once completed
+oc delete pod debug-pod
+
+# use the following command line to start the pipeline 
+# the default name for the PVC is called 'manual-pvc' (feel free to change it)
+tkn pipeline start pipeline-dev-all \
+--param repo-url=<url-to-github-repo> \
+--param repo-name=<repo-name> \
+--param base-image-registry=quay.io/<your-repo-id> \
+--param bundle-version=<bundle-version> \
+--workspace name=shared-workspace,claimName=manual-pvc \
+-n okd-team
+```
 **Mounting the go-build and golangci-lint cache files**
 
 - If you are experiencing problems with mounting the cache directories

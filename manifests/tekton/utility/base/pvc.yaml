@@ -9,4 +9,5 @@ spec:
   resources:
     requests:
       storage: 2Gi
-  storageClassName: standard
+  #storageClassName: standard
+  storageClassName: ${STORAGE_CLASS}

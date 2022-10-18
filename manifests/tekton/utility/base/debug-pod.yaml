@@ -1,15 +1,12 @@
 kind: Pod
 apiVersion: v1
 metadata:
-  name: debugs-pod
+  name: debug-pod
   namespace: okd-team
 spec:
   containers:
     - name: debug-pod-container
-      image: busybox
-      securityContext:
-        privileged: true
-        runAsUser: 0   
+      image: registry.access.redhat.com/ubi8/ubi-init:latest
       volumeMounts:
       - mountPath: "/tmp"
         name: my-volume
@@ -17,4 +14,4 @@ spec:
   volumes:
     - name: my-volume
       persistentVolumeClaim:
-        claimName: local-volume-pvc  
+        claimName: ${PVC_NAME}  
