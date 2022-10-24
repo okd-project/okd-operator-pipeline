@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: manual-pvc
+  name: pipeline-pvc-dev
   namespace: okd-team
 spec:
   accessModes:

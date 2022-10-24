@@ -93,11 +93,12 @@ cd okd-operator-pipeline
 kubectl create ns okd-team
 
 # assume you are logged into your kubernetes cluster
+# use `environments/overlays/kind` for a kind cluster
+# use  `environments/overlays/operate-first` on OperateFirst cluster
 kubectl apply -k environments/overlays/cicd
 
 # check that all resources have deployed
 kubectl get all -n okd-team
-# If not running on Kind, also check PVCs are available
 kubectl get pvc -n okd-team
 
 # once all pods are in the RUNNING status create a configmap as follows
@@ -123,7 +124,7 @@ tkn pipeline start pipeline-dev-all \
 -n okd-team
 ```
 
-### Option 2 - Kind clusters, or without existing PVCs
+### Option 2 - No existing PVCs
 
 ```bash
 # example (using the node-observability-operator)
@@ -281,50 +282,69 @@ The folder structure is as follows :
 .
 ├── Dockerfile
 ├── environments
-│   └── overlays
-│       ├── cicd
-│       │   ├── kustomization.yaml
-│       │   └── pvc
-│       │       ├── build-cache-pvc.yaml
-│       │       └── pipeline-pvc.yaml
-│       └── nfs-provisioner
-│           ├── kustomization.yaml
-│           ├── namespace.yaml
-│           └── patch_nfs_details.yaml
+│   └── overlays
+│       ├── cicd
+│       │   ├── kustomization.yaml
+│       │   ├── patches
+│       │   │   ├── patch-bundle-all-resources.yaml
+│       │   │   └── patch-container-all-resources.yaml
+│       │   └── pvc
+│       │       ├── build-cache-pvc.yaml
+│       │       └── pipeline-pvc.yaml
+│       ├── kind
+│       │   ├── kustomization.yaml
+│       │   └── patches
+│       │       ├── patch-bundle-all-resources.yaml
+│       │       ├── patch-container-all-resources.yaml
+│       │       ├── set_pvc.yaml
+│       │       └── set_storage_class.yaml
+│       ├── nfs-provisioner
+│       │   ├── kustomization.yaml
+│       │   ├── namespace.yaml
+│       │   └── patch_nfs_details.yaml
+│       └── operate-first
+│           ├── kustomization.yaml
+│           └── patches
+│               ├── patch-bundle-all-resources.yaml
+│               ├── patch-container-all-resources.yaml
+│               ├── set_pvc.yaml
+│               └── set_storage_class.yaml
 ├── LICENSE
 ├── manifests
-│   └── tekton
-│       ├── pipelineruns
-│       │   ├── sample-pr-dev-all-on-kind.yaml
-│       │   └── workspace-template.yaml
-│       ├── pipelines
-│       │   └── base
-│       │       ├── kustomization.yaml
-│       │       ├── pipeline-dev-all.yaml
-│       │       └── pipeline-dev.yaml
-│       ├── rbac
-│       │   └── base
-│       │       ├── admin.yaml
-│       │       ├── edit.yaml
-│       │       ├── kustomization.yaml
-│       │       └── view.yaml
-│       ├── rolebindings
-│       │   └── base
-│       │       ├── binding-dev-openshift.yaml
-│       │       ├── binding-dev.yaml
-│       │       └── role-dev.yaml
-│       ├── tasks
-│       │   └── base
-│       │       ├── bundle-all.yaml
-│       │       ├── container-all.yaml
-│       │       ├── git-clone.yaml
-│       │       └── kustomization.yaml
-│       └── utility
-│           └── base
-│               ├── debug-pod.yaml
-│               ├── pvc-local.yaml
-│               ├── pvc.yaml
-│               └── pv.yaml
+│   └── tekton
+│       ├── pipelineruns
+│       │   ├── sample-pr-dev-all-on-kind.yaml
+│       │   ├── workspace-template-operate-first.yaml
+│       │   └── workspace-template.yaml
+│       ├── pipelines
+│       │   └── base
+│       │       ├── kustomization.yaml
+│       │       ├── pipeline-dev-all.yaml
+│       │       └── pipeline-dev.yaml
+│       ├── rbac
+│       │   └── base
+│       │       ├── admin.yaml
+│       │       ├── edit.yaml
+│       │       ├── kustomization.yaml
+│       │       └── view.yaml
+│       ├── rolebindings
+│       │   └── base
+│       │       ├── binding-dev-openshift.yaml
+│       │       ├── binding-dev.yaml
+│       │       └── role-dev.yaml
+│       ├── tasks
+│       │   └── base
+│       │       ├── bundle-all.yaml
+│       │       ├── container-all.yaml
+│       │       ├── git-clone.yaml
+│       │       └── kustomization.yaml
+│       └── utility
+│           └── base
+│               ├── debug-pod.yaml
+│               ├── kustomization.yaml
+│               ├── pvc-local.yaml
+│               ├── pvc.yaml
+│               └── pv.yaml
 ├── README.md
 └── uid_entrypoint.sh
 ```

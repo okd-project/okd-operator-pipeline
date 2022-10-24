@@ -1,0 +1,76 @@
+- op: remove
+  # step bundle
+  path: "/spec/steps/0/resources"
+  # value:
+  #   limits:
+  #     cpu: 250m
+  #     memory: 1000Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 1000Mi 
+
+- op: remove
+  # step bundle-dockerfile-check
+  path: "/spec/steps/1/resources"
+  # value:
+  #   limits:
+  #     cpu: 250m
+  #     memory: 1000Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 1000Mi 
+
+- op: remove
+  # step bundle-image-push
+  path: "/spec/steps/2/resources"
+  # value:
+  #   limits:
+  #     cpu: 250m
+  #     memory: 1000Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 1000Mi 
+
+- op: remove
+  # step index-image-build
+  path: "/spec/steps/3/resources"
+  # value:
+  #   limits:
+  #     cpu: 250m
+  #     memory: 1000Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 1000Mi 
+
+- op: remove
+  # step index-image-push
+  path: "/spec/steps/4/resources"
+  # value:
+  #   limits:
+  #     cpu: 250m
+  #     memory: 1000Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 1000Mi 
+
+- op: remove
+  # step catalog-image-build
+  path: "/spec/steps/5/resources"
+  # value:
+  #   limits:
+  #     cpu: 250m
+  #     memory: 1000Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 1000Mi 
+
+- op: remove
+  # step coatalog-image-push
+  path: "/spec/steps/6/resources"
+  # value:
+  #   limits:
+  #     cpu: 250m
+  #     memory: 1000Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 1000Mi 

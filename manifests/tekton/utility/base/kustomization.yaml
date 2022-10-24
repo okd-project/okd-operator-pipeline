@@ -1,0 +1,6 @@
+bases:
+  - pvc.yaml
+  - debug-pod.yaml
+
+
+
