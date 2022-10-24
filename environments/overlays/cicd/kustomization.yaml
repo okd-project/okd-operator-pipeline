@@ -6,3 +6,18 @@ bases:
   - ../../../manifests/tekton/pipelines/base
 namespace: okd-team
 
+patchesJson6902:
+- path: patches/patch-container-all-resources.yaml
+  target:
+    group: tekton.dev
+    kind: Task
+    name: container-all
+    version: v1beta1
+
+- path: patches/patch-bundle-all-resources.yaml
+  target:
+    group: tekton.dev
+    kind: Task
+    name: bundle-all
+    version: v1beta1
+
