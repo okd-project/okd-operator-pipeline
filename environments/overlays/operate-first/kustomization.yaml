@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+  - ../../../manifests/tekton/rbac/base
+  - ../../../manifests/tekton/tasks/base
+  - ../../../manifests/tekton/pipelines/base
+  - ../../../manifests/tekton/utility/base
+namespace: okd-team
+
+patchesJson6902:
+- path: patches/patch-container-all-resources.yaml
+  target:
+    group: tekton.dev
+    kind: Task
+    name: container-all
+    version: v1beta1
+
+- path: patches/patch-bundle-all-resources.yaml
+  target:
+    group: tekton.dev
+    kind: Task
+    name: bundle-all
+    version: v1beta1
+
+patchesStrategicMerge:
+  - patches/set_storage_class.yaml
+  - patches/set_pvc.yaml

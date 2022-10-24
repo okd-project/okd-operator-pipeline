@@ -1,0 +1,54 @@
+- op: replace
+  # step verify
+  path: "/spec/steps/0/resources"
+  value:
+    limits:
+      cpu: 800m
+      memory: 2000Mi
+    requests:
+      cpu: 800m
+      memory: 2000Mi 
+
+- op: remove
+  # step unit-test
+  path: "/spec/steps/1/resources"
+  # value:
+  #   limits:
+  #     cpu: 250m
+  #     memory: 1000Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 1000Mi 
+
+- op: replace
+  # step build
+  path: "/spec/steps/2/resources"
+  value:
+    limits:
+      cpu: 800m
+      memory: 2000Mi
+    requests:
+      cpu: 800m
+      memory: 2000Mi 
+
+- op: remove
+  # step runtime-docker
+  path: "/spec/steps/3/resources"
+  # value:
+  #   limits:
+  #     cpu: 250m
+  #     memory: 1000Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 1000Mi 
+
+- op: remove
+  # step container-build-and-push
+  path: "/spec/steps/4/resources"
+  # value:
+  #   limits:
+  #     cpu: 400m
+  #     memory: 2000Mi
+  #   requests:
+  #     cpu: 400m
+  #     memory: 2000Mi 

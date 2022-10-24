@@ -1,0 +1,10 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: debug-pod
+  namespace: okd-team
+spec:
+  volumes:
+    - name: my-volume
+      persistentVolumeClaim:
+        claimName: manual-pvc
