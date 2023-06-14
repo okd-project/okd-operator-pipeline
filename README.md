@@ -140,15 +140,25 @@ tkn pipeline start pipeline-dev-all \
 
 ## Dockerfile
 
+**NB - you can skip this step**
+
+There is an image that has been pushed to the quay.io registry with the latest version of all dependencies
+
+```
+quay.io/okd/go-bundle-tools:v1.1.0
+```
+
+This image is referneced in all the tasks. **NB** change these references when you create your own image.
+
 The dockerfile includes the base ubi image with all the relevant tools to compile and build the bundles. 
 The versions of most components have been updated to use the latest (please update and re-create as needed)
 
 To build the image simply execute
 
 ```bash
-# change the tag i.e (v1.0.0) for different versioning
-podman build -t quay.io/<id>/go-bundle-tools:v1.0.0 .
-podman push push quay.io/<id>/go-bundle-tools:v1.0.0
+# change the tag i.e (v1.1.0) for different versioning
+podman build -t quay.io/<id>/go-bundle-tools:v1.1.0 .
+podman push push quay.io/<id>/go-bundle-tools:v1.1.0
 
 # remember to update the tasks in manifests/tekton/tasks/base to reflect the changed image
 ```

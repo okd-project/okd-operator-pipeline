@@ -24,7 +24,7 @@ spec:
       
   steps: 
   - name: verify
-    image: quay.io/okd/go-bundle-tools:v1.0.1
+    image: quay.io/okd/go-bundle-tools:v1.1.0
     imagePullPolicy: Always
     resources: 
       limits:
@@ -98,7 +98,7 @@ spec:
     workingDir: /workspace/src/$(params.repo-name)
   
   - name: unit-test
-    image: quay.io/okd/go-bundle-tools:v1.0.1
+    image: quay.io/okd/go-bundle-tools:v1.1.0
     resources:
       limits:
         cpu: 200m
@@ -111,7 +111,7 @@ spec:
     args: ["test"]
 
   - name: build
-    image: quay.io/okd/go-bundle-tools:v1.0.1
+    image: quay.io/okd/go-bundle-tools:v1.1.0
     workingDir: /workspace/src/$(params.repo-name)
     resources:
       limits:
@@ -125,7 +125,7 @@ spec:
 
   - name: runtime-docker
     workingDir: /workspace/src/$(params.repo-name)
-    image: quay.io/okd/go-bundle-tools:v1.0.1
+    image: quay.io/okd/go-bundle-tools:v1.1.0
     resources:
       limits:
         cpu: 200m

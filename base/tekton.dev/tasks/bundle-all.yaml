@@ -22,7 +22,7 @@ spec:
       
   steps: 
   - name: bundle
-    image: quay.io/okd/go-bundle-tools:v1.0.1
+    image: quay.io/okd/go-bundle-tools:v1.1.0
     resources:
       limits:
         cpu: 200m
@@ -35,7 +35,7 @@ spec:
     args: ["bundle","OPERATOR_SDK_BIN=/usr/bin/operator-sdk","KUSTOMIZE=/usr/bin/kustomize","IMG=$(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version)"]
 
   - name: bundle-dockerfile-check
-    image: quay.io/okd/go-bundle-tools:v1.0.1
+    image: quay.io/okd/go-bundle-tools:v1.1.0
     resources:
       limits:
         cpu: 200m
@@ -70,7 +70,7 @@ spec:
       mountPath: /kaniko/.docker/
       
   - name: index-image-build
-    image: quay.io/okd/go-bundle-tools:v1.0.1
+    image: quay.io/okd/go-bundle-tools:v1.1.0
     resources:
       limits:
         cpu: 200m
@@ -102,7 +102,7 @@ spec:
       mountPath: /kaniko/.docker/
 
   - name: catalog-image-build
-    image: quay.io/okd/go-bundle-tools:v1.0.1
+    image: quay.io/okd/go-bundle-tools:v1.1.0
     resources:
       limits:
         cpu: 200m
