@@ -31,8 +31,14 @@ spec:
         cpu: 200m
         memory: 1000Mi
     workingDir: /workspace/src/$(params.repo-name)
-    command: ["make"]
-    args: ["bundle","OPERATOR_SDK_BIN=/usr/bin/operator-sdk","KUSTOMIZE=/usr/bin/kustomize","IMG=$(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version)"]
+    script: |
+      #!/usr/bin/env bash
+      #
+      echo "executing script to create bundles"
+      operator-sdk generate kustomize manifests -q 
+      cd config/manager && kustomize edit set image controller=$(params.base-image-registry)/$(params.repo-name)-bundle:v$(params.bundle-version)
+      cd ../../ && kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --version $(params.bundle-version) --default-channel=preview --channels=preview
+      operator-sdk bundle validate ./bundle
 
   - name: bundle-dockerfile-check
     image: quay.io/okd/go-bundle-tools:v1.1.0
@@ -64,7 +70,7 @@ spec:
         cpu: 200m
         memory: 1000Mi
     command: ["/kaniko/executor"]
-    args: ["--dockerfile=/workspace/src/$(params.repo-name)/bundle.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version)"]
+    args: ["--dockerfile=/workspace/src/$(params.repo-name)/bundle.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-bundle:v$(params.bundle-version)"]
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/
@@ -82,7 +88,7 @@ spec:
     script: |
       #!/usr/bin/env bash
       echo "executing opm generate index dockerfile"
-      /usr/bin/opm index add --bundles $(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version) --generate --out-dockerfile "index.Dockerfile"
+      /usr/bin/opm index add --bundles $(params.base-image-registry)/$(params.repo-name)-bundle:v$(params.bundle-version) --generate --out-dockerfile "index.Dockerfile"
       cat index.Dockerfile
  
   - name: index-image-push
@@ -96,7 +102,7 @@ spec:
         cpu: 200m
         memory: 1000Mi
     command: ["/kaniko/executor"]
-    args: ["--dockerfile=/workspace/src/$(params.repo-name)/index.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-index:$(params.bundle-version)"]
+    args: ["--dockerfile=/workspace/src/$(params.repo-name)/index.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-index:v$(params.bundle-version)"]
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/
@@ -119,7 +125,7 @@ spec:
       # leave the icon out for now
       # opm init $(params.repo-name) --default-channel=preview  --description=./README.md  --icon=./example-operator.svg  --output yaml > catalog/operator.yaml
       opm init $(params.repo-name)  --default-channel=preview  --description=./README.md  --output yaml > catalog/operator.yaml
-      opm render $(params.base-image-registry)/$(params.repo-name)-bundle:$(params.bundle-version)   --output=yaml >> catalog/operator.yaml
+      opm render $(params.base-image-registry)/$(params.repo-name)-bundle:v$(params.bundle-version)   --output=yaml >> catalog/operator.yaml
       
       # BUG (maybe) for some reason the render uses a . instead of : for the name - needs to be checked
       cat << EOF >> catalog/operator.yaml
@@ -128,7 +134,7 @@ spec:
       package: $(params.repo-name)
       name: preview
       entries:
-      - name: $(params.repo-name).$(params.bundle-version) 
+      - name: $(params.repo-name).v$(params.bundle-version) 
       EOF
       
       opm validate catalog
@@ -145,7 +151,7 @@ spec:
         cpu: 200m
         memory: 1000Mi
     command: ["/kaniko/executor"]
-    args: ["--dockerfile=/workspace/src/$(params.repo-name)/catalog.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-catalog:$(params.bundle-version)"]
+    args: ["--dockerfile=/workspace/src/$(params.repo-name)/catalog.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-catalog:v$(params.bundle-version)"]
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/
@@ -154,4 +160,3 @@ spec:
   - name: docker-config
     configMap:
       name: docker-config
-

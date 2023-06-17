@@ -12,7 +12,7 @@ spec:
     description: base registry image to push to
     type: string
   - name: bundle-version
-    description: baundle version
+    description: bundle version
     type: string
  
   workspaces:
@@ -36,17 +36,8 @@ spec:
     onError: continue
     script: |
       #!/usr/bin/env bash
-      #
-      # We have set an on error continue as some operators
-      # will fail code linting. 
-      # 
-      # Some operators may not have the make recipe 'verify' 
-      # We will create an 'on the fly' golangco-lint config file
-      #
       pwd
       ls -la
-
-      set -euxo pipefail
 
       cat << EOF >> golangci.yaml
       run:
@@ -59,7 +50,7 @@ spec:
         skip-dirs:
           - vendor
         skip-dirs-use-default: true
-        modules-download-mode: vendor
+        modules-download-mode: readonly
         allow-parallel-runners: false
 
       output:
@@ -73,7 +64,6 @@ spec:
       linters:
         disable-all: true
         enable:
-          - deadcode
           - errcheck
           - gofmt
           - goimports
@@ -82,17 +72,13 @@ spec:
           - ineffassign
           - misspell
           - staticcheck
-          - structcheck
           - typecheck
           - unused
-          - varcheck
           - gosec
         fast: false
 
       linters-settings:
         goimports:
-        # TODO
-        # local-prefixes: github.com/openshift/$(params.repo-name)
       EOF
       golangci-lint run -c golangci.yaml --deadline=5m --verbose
     workingDir: /workspace/src/$(params.repo-name)
@@ -145,7 +131,11 @@ spec:
       echo "ENTRYPOINT [\"/$(params.repo-name)\"]" >> runtime.Dockerfile
       cat runtime.Dockerfile
       # move dockerignore as it blocks bin directory
-      mv .dockerignore .bakdockerignore
+      if [ -f ".dockerignore" ]; then
+        echo "moving .dockerignore for kaniko build"
+        mv .dockerignore .bakdockerignore
+      fi
+
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/
@@ -161,7 +151,7 @@ spec:
         cpu: 200m
         memory: 1000Mi
     command: ["/kaniko/executor"]
-    args: ["--dockerfile=/workspace/src/$(params.repo-name)/runtime.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name):$(params.bundle-version)"]
+    args: ["--dockerfile=/workspace/src/$(params.repo-name)/runtime.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name):v$(params.bundle-version)"]
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/

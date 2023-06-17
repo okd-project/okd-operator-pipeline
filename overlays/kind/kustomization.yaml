@@ -1,10 +1,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 bases:
-  - ../../../base/tekton.dev/rbac
-  - ../../../base/tekton.dev/tasks
-  - ../../../base/tekton.dev/pipelines
-  - ../../../base/tekton.dev/pv-pvc
+  - ../../base/rbac.authorization.k8s.io/v1/rbac
+  - ../../base/tekton.dev/tasks
+  - ../../base/tekton.dev/pipelines
+  - ../../base/tekton.dev/pv-pvc
 namespace: okd-team
 
 patchesJson6902:
@@ -24,4 +24,4 @@ patchesJson6902:
 
 patchesStrategicMerge:
   - patches/set_storage_class.yaml
-  - patches/set_pvc.yaml
+    #- patches/set_pvc.yaml
