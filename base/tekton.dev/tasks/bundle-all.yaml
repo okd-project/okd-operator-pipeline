@@ -37,7 +37,7 @@ spec:
       echo "executing script to create bundles"
       operator-sdk generate kustomize manifests -q 
       cd config/manager && kustomize edit set image controller=$(params.base-image-registry)/$(params.repo-name)-bundle:v$(params.bundle-version)
-      cd ../../ && kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --version $(params.bundle-version) --default-channel=preview --channels=preview
+      cd ../../ && kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --package=$(params.repo-name) --version $(params.bundle-version) --default-channel=preview --channels=preview
       operator-sdk bundle validate ./bundle
 
   - name: bundle-dockerfile-check
