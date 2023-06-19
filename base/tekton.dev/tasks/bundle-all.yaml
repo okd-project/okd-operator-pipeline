@@ -14,6 +14,15 @@ spec:
   - name: bundle-version
     description: bundle version
     type: string
+  - name: channel 
+    description: Channel to use in catalog
+    type: string
+  - name: default-channel 
+    description: Default Channel to use in the catalog
+    type: string
+  - name: catalog-image 
+    description: The catalog image to publish to
+    type: string
  
   workspaces:
   - name: src
@@ -37,7 +46,7 @@ spec:
       echo "executing script to create bundles"
       operator-sdk generate kustomize manifests -q 
       cd config/manager && kustomize edit set image controller=$(params.base-image-registry)/$(params.repo-name)-bundle:v$(params.bundle-version)
-      cd ../../ && kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --package=$(params.repo-name) --version $(params.bundle-version) --default-channel=preview --channels=preview
+      cd ../../ && kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --package=$(params.repo-name) --version $(params.bundle-version) --default-channel=$(params.default-channel) --channels=$(params.channel)
       operator-sdk bundle validate ./bundle
 
   - name: bundle-dockerfile-check
@@ -124,7 +133,7 @@ spec:
       opm generate dockerfile catalog
       # leave the icon out for now
       # opm init $(params.repo-name) --default-channel=preview  --description=./README.md  --icon=./example-operator.svg  --output yaml > catalog/operator.yaml
-      opm init $(params.repo-name)  --default-channel=preview  --description=./README.md  --output yaml > catalog/operator.yaml
+      opm init $(params.repo-name)  --default-channel=$(params.default-channel)  --description=./README.md  --output yaml > catalog/operator.yaml
       opm render $(params.base-image-registry)/$(params.repo-name)-bundle:v$(params.bundle-version)   --output=yaml >> catalog/operator.yaml
       
       # BUG (maybe) for some reason the render uses a . instead of : for the name - needs to be checked
@@ -132,7 +141,7 @@ spec:
       ---
       schema: olm.channel
       package: $(params.repo-name)
-      name: preview
+      name: $(params.channel)
       entries:
       - name: $(params.repo-name).v$(params.bundle-version) 
       EOF
@@ -151,7 +160,7 @@ spec:
         cpu: 200m
         memory: 1000Mi
     command: ["/kaniko/executor"]
-    args: ["--dockerfile=/workspace/src/$(params.repo-name)/catalog.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.base-image-registry)/$(params.repo-name)-catalog:v$(params.bundle-version)"]
+    args: ["--dockerfile=/workspace/src/$(params.repo-name)/catalog.Dockerfile","--context=/workspace/src/$(params.repo-name)/","--destination=$(params.catalog-image)"]
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker/

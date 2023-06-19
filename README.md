@@ -120,6 +120,9 @@ tkn pipeline start pipeline-dev-all \
 --param repo-name=node-observability-operator \
 --param base-image-registry=quay.io/<your-repo-id> \
 --param bundle-version=0.0.1 \
+--param channel=preview \
+--param default-channel=preview \
+--param catalog-image=quay.io/okd/okd-dev-community-operator=0.0.1 \
 --workspace name=shared-workspace,claimName=pipeline-pvc-dev \
 -n okd-team
 ```
@@ -133,6 +136,9 @@ tkn pipeline start pipeline-dev-all \
 --param repo-name=node-observability-operator \
 --param base-image-registry=quay.io/<your-repo-id> \
 --param bundle-version=0.0.1 \
+--param channel=preview \
+--param default-channel=preview \
+--param catalog-image=quay.io/okd/okd-dev-community-operator=0.0.1 \
 --workspace name=shared-workspace,volumeClaimTemplateFile=manifests/tekton/pipelineruns/workspace-template.yaml \
 -n okd-team
 ```
