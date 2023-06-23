@@ -1,0 +1,14 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: debug-pod
+  namespace: okd-team
+spec:
+  containers:
+  - name: debug-pod
+    image: docker.io/curlimages/curl:7.70.0@sha256:031df77a11e5edded840bc761a845eab6e3c2edee22669fb8ad6d59484b6a1c4
+    command: ["sleep 360;"]
+  volumes:
+  - name: my-volume
+    persistentVolumeClaim:
+      claimName: pipeline-coreos-stable-pvc
