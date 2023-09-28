@@ -1,6 +1,6 @@
 bases:
   - pvc.yaml
-  - debug-pod.yaml
+    #- debug-pod.yaml
 
 
 

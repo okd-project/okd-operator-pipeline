@@ -119,7 +119,10 @@ tkn pipeline start pipeline-dev-all \
 --param repo-url=https://github.com/openshift/node-observability-operator \
 --param repo-name=node-observability-operator \
 --param base-image-registry=quay.io/<your-repo-id> \
---param bundle-version=v0.0.1 \
+--param bundle-version=0.0.1 \
+--param channel=preview \
+--param default-channel=preview \
+--param catalog-image=quay.io/okd/okd-dev-community-operator=0.0.1 \
 --workspace name=shared-workspace,claimName=pipeline-pvc-dev \
 -n okd-team
 ```
@@ -132,7 +135,10 @@ tkn pipeline start pipeline-dev-all \
 --param repo-url=https://github.com/openshift/node-observability-operator \
 --param repo-name=node-observability-operator \
 --param base-image-registry=quay.io/<your-repo-id> \
---param bundle-version=v0.0.1 \
+--param bundle-version=0.0.1 \
+--param channel=preview \
+--param default-channel=preview \
+--param catalog-image=quay.io/okd/okd-dev-community-operator=0.0.1 \
 --workspace name=shared-workspace,volumeClaimTemplateFile=manifests/tekton/pipelineruns/workspace-template.yaml \
 -n okd-team
 ```
@@ -140,15 +146,25 @@ tkn pipeline start pipeline-dev-all \
 
 ## Dockerfile
 
+**NB - you can skip this step**
+
+There is an image that has been pushed to the quay.io registry with the latest version of all dependencies
+
+```
+quay.io/okd/go-bundle-tools:v1.1.0
+```
+
+This image is referrenced in all the tasks. **NB** change these references when you create your own image.
+
 The dockerfile includes the base ubi image with all the relevant tools to compile and build the bundles. 
 The versions of most components have been updated to use the latest (please update and re-create as needed)
 
 To build the image simply execute
 
 ```bash
-# change the tag i.e (v1.0.0) for different versioning
-podman build -t quay.io/<id>/go-bundle-tools:v1.0.0 .
-podman push push quay.io/<id>/go-bundle-tools:v1.0.0
+# change the tag i.e (v1.1.0) for different versioning
+podman build -t quay.io/<id>/go-bundle-tools:v1.1.0 .
+podman push push quay.io/<id>/go-bundle-tools:v1.1.0
 
 # remember to update the tasks in manifests/tekton/tasks/base to reflect the changed image
 ```
@@ -274,77 +290,3 @@ sudo chcon -R system_u:object_r:container_file_t:s0 <pv-directory-for-cache>/.ca
 - In fact if you have any problems with mounting any other directory check the SELinux
 settings and apply the *system_u:object_r:container_file_t:s0* via chcon
 
-## Pipeline folder structure
-
-The folder structure is as follows :
-
-```bash
-.
-├── Dockerfile
-├── environments
-│   └── overlays
-│       ├── cicd
-│       │   ├── kustomization.yaml
-│       │   ├── patches
-│       │   │   ├── patch-bundle-all-resources.yaml
-│       │   │   └── patch-container-all-resources.yaml
-│       │   └── pvc
-│       │       ├── build-cache-pvc.yaml
-│       │       └── pipeline-pvc.yaml
-│       ├── kind
-│       │   ├── kustomization.yaml
-│       │   └── patches
-│       │       ├── patch-bundle-all-resources.yaml
-│       │       ├── patch-container-all-resources.yaml
-│       │       ├── set_pvc.yaml
-│       │       └── set_storage_class.yaml
-│       ├── nfs-provisioner
-│       │   ├── kustomization.yaml
-│       │   ├── namespace.yaml
-│       │   └── patch_nfs_details.yaml
-│       └── operate-first
-│           ├── kustomization.yaml
-│           └── patches
-│               ├── patch-bundle-all-resources.yaml
-│               ├── patch-container-all-resources.yaml
-│               ├── set_pvc.yaml
-│               └── set_storage_class.yaml
-├── LICENSE
-├── manifests
-│   └── tekton
-│       ├── pipelineruns
-│       │   ├── sample-pr-dev-all-on-kind.yaml
-│       │   ├── workspace-template-operate-first.yaml
-│       │   └── workspace-template.yaml
-│       ├── pipelines
-│       │   └── base
-│       │       ├── kustomization.yaml
-│       │       ├── pipeline-dev-all.yaml
-│       │       └── pipeline-dev.yaml
-│       ├── rbac
-│       │   └── base
-│       │       ├── admin.yaml
-│       │       ├── edit.yaml
-│       │       ├── kustomization.yaml
-│       │       └── view.yaml
-│       ├── rolebindings
-│       │   └── base
-│       │       ├── binding-dev-openshift.yaml
-│       │       ├── binding-dev.yaml
-│       │       └── role-dev.yaml
-│       ├── tasks
-│       │   └── base
-│       │       ├── bundle-all.yaml
-│       │       ├── container-all.yaml
-│       │       ├── git-clone.yaml
-│       │       └── kustomization.yaml
-│       └── utility
-│           └── base
-│               ├── debug-pod.yaml
-│               ├── kustomization.yaml
-│               ├── pvc-local.yaml
-│               ├── pvc.yaml
-│               └── pv.yaml
-├── README.md
-└── uid_entrypoint.sh
-```

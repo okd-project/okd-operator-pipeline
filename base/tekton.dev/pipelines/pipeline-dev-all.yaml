@@ -17,6 +17,15 @@ spec:
   - name: bundle-version 
     description: The bundle version
     type: string
+  - name: channel 
+    description: Channel to use in catalog
+    type: string
+  - name: default-channel 
+    description: Default Channel to use in the catalog
+    type: string
+  - name: catalog-image 
+    description: The catalog image to publish to
+    type: string
   
   workspaces:
   - name: shared-workspace
@@ -69,6 +78,13 @@ spec:
         value: $(params.base-image-registry)
       - name: bundle-version
         value: $(params.bundle-version)
+      - name: channel
+        value: $(params.channel)
+      - name: default-channel
+        value: $(params.default-channel)
+      - name: catalog-image
+        value: $(params.catalog-image)
+
     workspaces:
       - name: src
         workspace: shared-workspace
