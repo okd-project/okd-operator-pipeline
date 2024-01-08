@@ -1,7 +1,7 @@
 spec:
-  storageClassName: standard 
+  storageClassName: cluster-storage-3
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 2Gi
+      storage: 4Gi

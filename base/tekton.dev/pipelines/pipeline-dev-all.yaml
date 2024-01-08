@@ -8,8 +8,14 @@ spec:
   - name: repo-url 
     description: The repo url
     type: string
+  - name: repo-branch
+    description: The repo branch
+    type: string
   - name: repo-name 
     description: The repo name
+    type: string
+  - name: binary-name
+    description: The binary name
     type: string
   - name: base-image-registry 
     description: The base image registry
@@ -38,7 +44,7 @@ spec:
       - name: deleteExisting
         value: 'true'
       - name: revision
-        value: main
+        value: $(params.repo-branch)
       - name: subdirectory
         value: $(params.repo-name)
     taskRef:
@@ -59,6 +65,8 @@ spec:
         value: $(params.base-image-registry)
       - name: bundle-version
         value: $(params.bundle-version)
+      - name: binary-name
+        value: $(params.binary-name)
     workspaces:
       - name: build-cache-root
         workspace: shared-workspace

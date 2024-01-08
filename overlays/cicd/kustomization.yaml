@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 bases:
-  - ../../base/rbac.authorization.k8s.io/v1/rrbac
+  - ../../base/rbac.authorization.k8s.io/v1
   - ../../base/tekton.dev/tasks
   - ../../base/tekton.dev/pipelines
 namespace: okd-team

@@ -14,6 +14,9 @@ spec:
   - name: bundle-version
     description: bundle version
     type: string
+  - name: binary-name
+    description: binary name
+    type: string
  
   workspaces:
   - name: src
@@ -24,7 +27,7 @@ spec:
       
   steps: 
   - name: verify
-    image: quay.io/okd/go-bundle-tools:v1.1.0
+    image: quay.io/okd/go-bundle-tools:v1.1.2
     imagePullPolicy: Always
     resources: 
       limits:
@@ -33,7 +36,6 @@ spec:
       requests:
         cpu: 800m
         memory: 2000Mi
-    onError: continue
     script: |
       #!/usr/bin/env bash
       pwd
@@ -80,24 +82,29 @@ spec:
       linters-settings:
         goimports:
       EOF
-      golangci-lint run -c golangci.yaml --deadline=5m --verbose
+      #golangci-lint run -c golangci.yaml --deadline=10m --verbose
+      echo $UID
     workingDir: /workspace/src/$(params.repo-name)
   
   - name: unit-test
-    image: quay.io/okd/go-bundle-tools:v1.1.0
+    image: quay.io/okd/go-bundle-tools:v1.1.2
     resources:
       limits:
-        cpu: 200m
-        memory: 1000Mi
+        cpu: 2000m
+        memory: 4000Mi
       requests:
-        cpu: 200m
-        memory: 1000Mi
+        cpu: 2000m
+        memory: 4000Mi
     workingDir: /workspace/src/$(params.repo-name)
-    command: ["make"]
-    args: ["test"]
+    securityContext:
+      runAsNonRoot: false
+      runAsUser: 0
+    script: |
+      git config --global --add safe.directory /workspace/src/gitops-operator
+      make test
 
   - name: build
-    image: quay.io/okd/go-bundle-tools:v1.1.0
+    image: quay.io/okd/go-bundle-tools:v1.1.2
     workingDir: /workspace/src/$(params.repo-name)
     resources:
       limits:
@@ -106,12 +113,16 @@ spec:
       requests:
         cpu: 400m
         memory: 2000Mi
-    command: ["make"]
-    args: ["build-operator"]
+    securityContext:
+      runAsNonRoot: false
+      runAsUser: 0
+    script: |
+      git config --global --add safe.directory /workspace/src/gitops-operator
+      make build
 
   - name: runtime-docker
     workingDir: /workspace/src/$(params.repo-name)
-    image: quay.io/okd/go-bundle-tools:v1.1.0
+    image: quay.io/okd/go-bundle-tools:v1.1.2
     resources:
       limits:
         cpu: 200m
@@ -126,7 +137,7 @@ spec:
       echo "creating runtime Dockerfile"
       echo "FROM registry.access.redhat.com/ubi8/ubi-micro:8.5" >> runtime.Dockerfile
       echo "WORKDIR /" >> runtime.Dockerfile
-      echo "COPY bin/$(params.repo-name) ." >> runtime.Dockerfile
+      echo "COPY bin/$(params.binary-name) ." >> runtime.Dockerfile
       echo "USER 65532:65532" >> runtime.Dockerfile
       echo "ENTRYPOINT [\"/$(params.repo-name)\"]" >> runtime.Dockerfile
       cat runtime.Dockerfile

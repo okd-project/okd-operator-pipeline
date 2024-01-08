@@ -28,7 +28,7 @@ spec:
       - name: deleteExisting
         value: 'true'
       - name: revision
-        value: main
+        value: $(params.repo-branch)
       - name: subdirectory
         value: $(params.repo-name)
     taskRef:

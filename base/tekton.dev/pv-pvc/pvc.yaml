@@ -9,5 +9,5 @@ spec:
   resources:
     requests:
       storage: 2Gi
-  #storageClassName: standard
-  storageClassName: ${STORAGE_CLASS}
+  storageClassName: cluster-storage-3
+  #storageClassName: ${STORAGE_CLASS}
