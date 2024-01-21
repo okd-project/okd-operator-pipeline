@@ -1,0 +1,69 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: console-plugin-pipeline
+  namespace: okd-team
+spec:
+  params:
+    - name: repo-url
+      description: The repo url
+      type: string
+    - name: repo-ref
+      description: The repo ref
+      type: string
+
+  workspaces:
+    - name: workspace
+    - name: patches
+
+#  resources:
+#    - name: git-source
+#      type: git
+#    - name: build-image
+#      type: image
+
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: deleteExisting
+          value: 'true'
+        - name: revision
+          value: $(params.repo-ref)
+        - name: verbose
+          value: 'true'
+      workspaces:
+        - name: output
+          workspace: workspace
+
+#    - name: apply-patch
+#      runAfter: [fetch-repository]
+#      taskRef:
+#        name: git-cli
+#      params:
+#        - name: GIT_SCRIPT
+#          value: |
+#            git apply --ignore-whitespace --verbose /workspace/patches/repo.patch
+#      workspaces:
+#        - name: output
+#          workspace: shared-workspace
+#        - name: patches
+#          workspace: patches
+
+    - name: container-build
+      runAfter: [fetch-repository]
+      taskRef:
+        name: console-plugin-deploy
+      params:
+        - name: base-image-registry
+          value: ghcr.io/upstream-operators/gitops/
+        - name: image-name
+          value: console-plugin
+        - name: image-version
+          value: 0.1.0
+      workspaces:
+        - name: src
+          workspace: workspace

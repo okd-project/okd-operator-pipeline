@@ -1,5 +1,4 @@
 spec:
-  storageClassName: standard 
   accessModes:
   - ReadWriteOnce
   resources:

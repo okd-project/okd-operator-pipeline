@@ -1,0 +1,24 @@
+apiVersion: polling.tekton.dev/v1alpha1
+kind: Repository
+metadata:
+  name: gitops-console-plugin-repository
+  namespace: okd-team
+spec:
+  url: https://github.com/redhat-developer/gitops-console-plugin.git
+  ref: main
+  frequency: 5m
+  type: github
+  pipelineRef:
+    name: console-plugin-pipeline
+    namespace: okd-team
+    params:
+      - name: repo-ref
+        expression: commit.sha
+      - name: repo-url
+        expression: repoURL
+      - name: patch-configmap
+        expression: "'gitops-console-plugin-patch'"
+    workspaces:
+      - name: output
+        persistentVolumeClaim:
+          claimName: gitops-console-plugin-volume

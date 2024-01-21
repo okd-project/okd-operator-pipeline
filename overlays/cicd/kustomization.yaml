@@ -1,23 +1,22 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-bases:
-  - ../../base/rbac.authorization.k8s.io/v1/rrbac
-  - ../../base/tekton.dev/tasks
-  - ../../base/tekton.dev/pipelines
 namespace: okd-team
 
-patchesJson6902:
+
+resources:
+- ../../base/rbac.authorization.k8s.io/v1
+- ../../base/tekton.dev/tasks
+- ../../base/tekton.dev/pipelines
+patches:
 - path: patches/patch-container-all-resources.yaml
   target:
     group: tekton.dev
     kind: Task
     name: container-all
     version: v1beta1
-
 - path: patches/patch-bundle-all-resources.yaml
   target:
     group: tekton.dev
     kind: Task
     name: bundle-all
     version: v1beta1
-

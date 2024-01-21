@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: bundle-all 
+  name: bundle-deploy
   namespace: okd-team
 spec:
   params:
@@ -31,7 +31,7 @@ spec:
       
   steps: 
   - name: bundle
-    image: quay.io/okd/go-bundle-tools:v1.1.0
+    image: quay.io/okd/go-bundle-tools:v1.1.2
     resources:
       limits:
         cpu: 200m
@@ -50,7 +50,7 @@ spec:
       operator-sdk bundle validate ./bundle
 
   - name: bundle-dockerfile-check
-    image: quay.io/okd/go-bundle-tools:v1.1.0
+    image: quay.io/okd/go-bundle-tools:v1.1.2
     resources:
       limits:
         cpu: 200m
@@ -85,7 +85,7 @@ spec:
       mountPath: /kaniko/.docker/
       
   - name: index-image-build
-    image: quay.io/okd/go-bundle-tools:v1.1.0
+    image: quay.io/okd/go-bundle-tools:v1.1.2
     resources:
       limits:
         cpu: 200m
@@ -117,7 +117,7 @@ spec:
       mountPath: /kaniko/.docker/
 
   - name: catalog-image-build
-    image: quay.io/okd/go-bundle-tools:v1.1.0
+    image: quay.io/okd/go-bundle-tools:v1.1.2
     resources:
       limits:
         cpu: 200m

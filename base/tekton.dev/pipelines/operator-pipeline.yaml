@@ -1,0 +1,90 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: operator-pipeline
+  namespace: okd-team
+spec:
+  params:
+    - name: repo-url
+      description: The repo url
+      type: string
+    - name: repo-name
+      description: The repo name
+      type: string
+    - name: base-image-registry
+      description: The base image registry
+      type: string
+    - name: bundle-version
+      description: The bundle version
+      type: string
+    - name: channel
+      description: Channel to use in catalog
+      type: string
+    - name: default-channel
+      description: Default Channel to use in the catalog
+      type: string
+    - name: catalog-image
+      description: The catalog image to publish to
+      type: string
+  
+  workspaces:
+    - name: shared-workspace
+
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: deleteExisting
+          value: 'true'
+        - name: revision
+          value: master
+        - name: subdirectory
+          value: $(params.repo-name)
+      workspaces:
+        - name: src
+          workspace: shared-workspace
+
+    - name: deploy-operator
+      runAfter: [fetch-repository]
+      taskRef:
+        name: generic
+      params:
+        - name: repo-name
+          value: $(params.repo-name)
+        - name: base-image-registry
+          value: $(params.base-image-registry)
+        - name: bundle-version
+          value: $(params.bundle-version)
+      workspaces:
+        - name: build-cache-root
+          workspace: shared-workspace
+        - name: src
+          workspace: shared-workspace
+        - name: build-pkg
+          workspace: shared-workspace
+
+    - name: deploy-bundle
+      runAfter: [container-all]
+      taskRef:
+        name: bundle
+      params:
+        - name: repo-name
+          value: $(params.repo-name)
+        - name: base-image-registry
+          value: $(params.base-image-registry)
+        - name: bundle-version
+          value: $(params.bundle-version)
+        - name: channel
+          value: $(params.channel)
+        - name: default-channel
+          value: $(params.default-channel)
+        - name: catalog-image
+          value: $(params.catalog-image)
+      workspaces:
+        - name: src
+          workspace: shared-workspace
+        - name: build-cache-root
+          workspace: shared-workspace
