@@ -1,0 +1,22 @@
+From d3061617753d462debfae6b664ed46affc5c4fc4 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sun, 11 Feb 2024 01:04:12 +0000
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index 4c90aba..23154c3 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,4 +1,4 @@
+-FROM openshift/origin-release:golang-1.20 AS build
++FROM registry.ci.openshift.org/openshift/release:golang-1.20 AS build
+ WORKDIR /go/src
+ COPY . /go/src
+ RUN GIT_COMMIT=$(git rev-parse HEAD) && \
+--
+2.40.0.windows.1
+

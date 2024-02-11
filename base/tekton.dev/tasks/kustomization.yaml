@@ -1,7 +1,9 @@
 resources:
-  - console-plugin-deploy.yaml
-  - generic-deploy.yaml
-  - bundle-deploy.yaml
-
-
-
+  - git-clone.yaml
+  - golang-build.yaml
+  - buildah.yaml
+  - yarn-build.yaml
+  - bundle.yaml
+  - make-build.yaml
+  - build-id.yaml
+  - find-version.yaml

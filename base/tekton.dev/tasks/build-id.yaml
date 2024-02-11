@@ -1,0 +1,45 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-id
+  namespace: okd-team
+spec:
+  params:
+    - name: version
+      description: Base product version
+      type: string
+      default: "nightly"
+
+  results:
+  - name: timestamp
+    description: Current timestamp
+  - name: build-id
+    description: ID of the current build
+
+  stepTemplate:
+    name: task
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+    image: docker.io/library/bash:5
+    env:
+      - name: TIMESTAMP_PATH
+        value: $(results.timestamp.path)
+      - name: BUILD_ID_PATH
+        value: $(results.build-id.path)
+      - name: VERSION
+        value: $(params.version)
+
+  steps:
+    - name: get-timestamp
+      script: |
+        #!/usr/bin/env bash
+        ts=`date "+%Y-%m-%d-%H%M%S"`
+        echo "Current Timestamp: ${ts}"
+        echo ${ts} | tr -d "\n" | tee $TIMESTAMP_PATH
+    - name: get-buildid
+      script: |
+        #!/usr/bin/env bash
+        ts=`cat $TIMESTAMP_PATH`
+        buildId=$VERSION-${ts}
+        echo ${buildId} | tr -d "\n" | tee $BUILD_ID_PATH

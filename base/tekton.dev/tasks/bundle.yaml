@@ -1,0 +1,61 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: bundle
+  namespace: okd-team
+spec:
+  params:
+    - name: subdirectory
+      description: The subdirectory to run the build in
+      type: string
+      default: ""
+    - name: base-image-registry
+      description: The base image registry
+      type: string
+    - name: image-name
+      description: The image name
+      type: string
+    - name: image-version
+      description: The image version
+      type: string
+    - name: default-channel
+      description: Default Channel to use in the catalog
+      type: string
+    - name: channel
+      description: Channel to use in catalog
+      type: string
+
+  workspaces:
+    - name: source
+    - name: build-cache-root
+      mountPath: /go/.cache
+    - name: build-pkg
+      mountPath: /go/pkg
+
+  stepTemplate:
+    name: task
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+    workingDir: $(workspaces.source.path)/$(params.subdirectory)
+    image: quay.io/okd/go-bundle-tools:v1.1.2
+
+  steps:
+    - name: bundle
+      script: |
+        #!/usr/bin/env bash
+        echo "executing script to create bundles"
+        operator-sdk generate kustomize manifests -q
+        cd config/manager && kustomize edit set image controller=$(params.base-image-registry)/$(params.image-name)-bundle:v$(params.image-version)
+        cd ../../ && kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --package=$(params.image-name) --version $(params.image-version) --default-channel=$(params.default-channel) --channels=$(params.channel)
+        operator-sdk bundle validate ./bundle
+
+    - name: bundle-dockerfile-check
+      script: |
+        #!/usr/bin/env bash
+        # grep -irn Dockerfile --include="Makefile" | grep -oE "bundle.Dockerfile||Dockerfile.bundle"
+        echo "checking bundle dockerfile"
+        if [ -f "Dockerfile.bundle" ]; then
+          echo "copying Dockerfile.bundle to bundle.Dockerfile for buildah"
+          cp  Dockerfile.bundle bundle.Dockerfile
+        fi

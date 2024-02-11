@@ -1,0 +1,38 @@
+From 25ebf0f510ffbb07f31c2ef82888e653fca49584 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Fri, 9 Feb 2024 19:05:53 +0000
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile   | 2 +-
+ package.json | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index 4785713..110903b 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
+ RUN yarn config set network-timeout 600000 -g
+ RUN yarn install && yarn build
+
+-FROM --platform=linux/amd64 registry.redhat.io/rhel8/httpd-24
++FROM --platform=linux/amd64 quay.io/fedora/httpd-24
+
+ USER root
+ RUN chown -R 1001:0 /opt/app-root/src
+diff --git a/package.json b/package.json
+index 7828815..b86f724 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "gitops-plugin",
+-  "description": "OpenShift Console plugin for GitOps.",
++  "description": "OKD Console plugin for GitOps.",
+   "version": "0.0.1",
+   "private": true,
+   "license": "Apache-2.0",
+--
+2.40.0.windows.1
+

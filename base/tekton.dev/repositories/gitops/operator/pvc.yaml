@@ -1,14 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: local-volume-pvc
+  name: gitops-operator-volume
   namespace: okd-team
-  annotations:
-    volumeType: local
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: standard
   resources:
     requests:
-      storage: 2Gi
+      storage: 4Gi

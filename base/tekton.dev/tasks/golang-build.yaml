@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: golang-build
+  namespace: okd-team
+spec:
+  params:
+    - name: subdirectory
+      description: The subdirectory to run the build in
+      type: string
+    - name: context
+      description: The context to run the build in
+      type: string
+      default: .
+
+  workspaces:
+    - name: source
+    - name: build-cache-root
+      mountPath: /go/.cache
+    - name: build-pkg
+      mountPath: /go/pkg
+
+  stepTemplate:
+    name: task
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+    workingDir: $(workspaces.source.path)/$(params.subdirectory)
+    image: quay.io/okd/go-bundle-tools:v1.1.2
+
+  steps:
+    - name: build
+      command: ["go"]
+      env:
+        - name: CGO_ENABLED
+          value: "0"
+        - name: GOOS
+          value: "linux"
+        - name: GIT_COMMIT
+          value: $(git rev-parse HEAD)
+      args: ["build", "-a", "-mod=readonly", "$(params.context)"]

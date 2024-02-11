@@ -9,7 +9,7 @@ spec:
   frequency: 5m
   type: github
   pipelineRef:
-    name: operator-pipeline
+    name: operator-golang
     namespace: okd-team
     params:
       - name: repo-ref

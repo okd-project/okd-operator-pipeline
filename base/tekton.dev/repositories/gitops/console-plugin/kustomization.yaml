@@ -9,4 +9,4 @@ configMapGenerator:
 
 resources:
   - repository.yaml
-  - volume.yaml
+  - pvc.yaml

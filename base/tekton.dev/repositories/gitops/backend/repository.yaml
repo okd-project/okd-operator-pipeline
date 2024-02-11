@@ -1,0 +1,30 @@
+apiVersion: polling.tekton.dev/v1alpha1
+kind: Repository
+metadata:
+  name: gitops-backend-repository
+  namespace: okd-team
+spec:
+  url: https://github.com/redhat-developer/gitops-backend.git
+  ref: main
+  frequency: 5m
+  type: github
+  pipelineRef:
+    name: operand-golang
+    namespace: okd-team
+    params:
+      - name: repo-ref
+        expression: commit.sha
+      - name: repo-url
+        expression: repoURL
+      - name: patch-configmap
+        expression: "'gitops-backend-patch'"
+      - name: base-image-registry
+        expression: "'quay.io/okderators'"
+      - name: image-name
+        expression: "'gitops-backend'"
+      - name: image-version
+        expression: "'0.1.0'"
+    workspaces:
+      - name: output
+        persistentVolumeClaim:
+          claimName: gitops-backend-volume

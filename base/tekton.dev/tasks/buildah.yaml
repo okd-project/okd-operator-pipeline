@@ -1,0 +1,60 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: buildah
+  namespace: okd-team
+spec:
+  params:
+    - name: dockerfile
+      description: The path to the Dockerfile to build
+      type: string
+      default: Dockerfile
+    - name: context
+      description: The build context
+      type: string
+      default: .
+    - name: image
+      description: The name of the image to build
+      type: string
+    - name: subdirectory
+      description: Subdirectory inside the `source` Workspace to clone the repo into.
+      type: string
+      default: ""
+    - name: storage-driver
+      description: The storage driver to use
+      type: string
+      default: vfs
+
+  workspaces:
+    - name: source
+
+  volumes:
+    - name: docker-config
+      configMap:
+        name: docker-config
+    - name: varlibcontainers
+      emptyDir: {}
+
+  stepTemplate:
+    name: task
+    securityContext:
+      runAsUser: 1000
+    image: quay.io/buildah/stable:v1
+    workingDir: $(workspaces.source.path)/$(params.subdirectory)
+    volumeMounts:
+      - name: docker-config
+        mountPath: /home/build/.docker/
+      - name: varlibcontainers
+        mountPath: /home/build/.local/share/containers
+    env:
+      - name: DOCKER_CONFIG
+        value: /home/build/.docker/
+
+  steps:
+    - name: build
+      command: ["buildah"]
+      args: ["--storage-driver=$(params.storage-driver)", "bud", "-f", "$(params.dockerfile)", "-t", "$(params.image)", "$(params.context)"]
+
+    - name: push
+      command: ["buildah"]
+      args: ["--storage-driver=$(params.storage-driver)", "push", "$(params.image)", "docker://$(params.image)"]

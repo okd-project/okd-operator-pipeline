@@ -9,7 +9,7 @@ spec:
   frequency: 5m
   type: github
   pipelineRef:
-    name: console-plugin-pipeline
+    name: operand-yarn
     namespace: okd-team
     params:
       - name: repo-ref
@@ -18,6 +18,12 @@ spec:
         expression: repoURL
       - name: patch-configmap
         expression: "'gitops-console-plugin-patch'"
+      - name: base-image-registry
+        expression: "'quay.io/okderators'"
+      - name: image-name
+        expression: "'gitops-console-plugin'"
+      - name: image-version
+        expression: "'0.1.0'"
     workspaces:
       - name: output
         persistentVolumeClaim:

@@ -1,0 +1,33 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: find-version
+  namespace: okd-team
+spec:
+  params:
+    - name: name
+      description: The name of the operator
+      type: string
+    - name: subdirectory
+      description: Subdirectory inside the `source` Workspace to clone the repo into.
+      type: string
+      default: ""
+
+  results:
+    - name: version
+      description: Version of operator
+
+  workspaces:
+    - name: source
+
+  steps:
+    - name: find-version
+      image: docker.io/mikefarah/yq:4
+      workingDir: $(workspaces.source.path)/$(params.subdirectory)
+      stdoutConfig:
+        path: $(results.version.path)
+      args: [".spec.version", "config/manifests/bases/$(params.name).clusterserviceversion.yaml"]
+    - name: strip-whitespace
+      image: docker.io/bash:5
+      script: |
+        cat "$(results.version.path)" | sed -re 's/^[[:blank:]]+|[[:blank:]]+$//g' -e 's/[[:blank:]]+/ /g' | tr -d "\n" | tee "$(results.version.path)"

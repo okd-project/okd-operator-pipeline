@@ -1,0 +1,4 @@
+resources:
+  - ./backend
+  - ./console-plugin
+  - ./operator

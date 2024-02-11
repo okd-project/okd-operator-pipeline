@@ -1,7 +1,7 @@
-namePrefix: 
-
-bases:
-  - pipeline-dev-all.yaml
+resources:
+  - operand-yarn.yaml
+  - operand-golang.yaml
+  - operator-golang.yaml
 
 
 

@@ -1,0 +1,71 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: operand-yarn
+  namespace: okd-team
+spec:
+  params:
+    - name: repo-url
+      description: The repo url
+      type: string
+    - name: repo-ref
+      description: The repo ref
+      type: string
+    - name: base-image-registry
+      description: The base image registry
+      type: string
+    - name: image-name
+      description: The image name
+      type: string
+    - name: image-version
+      description: The image version
+      type: string
+
+  workspaces:
+    - name: workspace
+    - name: patches
+
+  tasks:
+    - name: clone-and-patch
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: deleteExisting
+          value: 'true'
+        - name: revision
+          value: $(params.repo-ref)
+        - name: verbose
+          value: 'true'
+        - name: subdirectory
+          value: repository
+      workspaces:
+        - name: output
+          workspace: workspace
+        - name: patches
+          workspace: patches
+
+    - name: build
+      runAfter: [clone-and-patch]
+      taskRef:
+          name: yarn-build
+      params:
+        - name: subdirectory
+          value: repository
+      workspaces:
+        - name: source
+          workspace: workspace
+
+    - name: deploy
+      runAfter: [build]
+      taskRef:
+        name: buildah
+      params:
+        - name: image
+          value: $(params.base-image-registry)/$(params.image-name):v$(params.image-version)
+        - name: subdirectory
+          value: repository
+      workspaces:
+        - name: source
+          workspace: workspace
