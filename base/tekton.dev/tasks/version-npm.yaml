@@ -1,13 +1,12 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: find-version
+  name: version-npm
   namespace: okd-team
 spec:
+  description: |
+    This task finds the version of an operator from its ClusterServiceVersion.
   params:
-    - name: name
-      description: The name of the operator
-      type: string
     - name: subdirectory
       description: Subdirectory inside the `source` Workspace to clone the repo into.
       type: string
@@ -22,11 +21,12 @@ spec:
 
   steps:
     - name: find-version
-      image: docker.io/mikefarah/yq:4
+      image: docker.io/apteno/alpine-jq:latest
       workingDir: $(workspaces.source.path)/$(params.subdirectory)
       stdoutConfig:
         path: $(results.version.path)
-      args: [".spec.version", "config/manifests/bases/$(params.name).clusterserviceversion.yaml"]
+      command: ["jq"]
+      args: ["-r", ".version", "package.json"]
     - name: strip-whitespace
       image: docker.io/bash:5
       script: |

@@ -17,6 +17,10 @@ spec:
     - name: image-name
       description: The image name
       type: string
+    - name: csv-location
+      description: The location of the CSV
+      type: string
+      default: config/manifests/bases/$(params.image-name).clusterserviceversion.yaml
   
   workspaces:
     - name: workspace
@@ -46,12 +50,10 @@ spec:
     - name: get-version
       runAfter: [ clone-and-patch ]
       taskRef:
-        name: find-version
+        name: version-csv
       params:
-        - name: subdirectory
-          value: repository
-        - name: name
-          value: $(params.image-name)
+        - name: location
+          value: repository/$(params.csv-location)
       workspaces:
         - name: source
           workspace: workspace
@@ -64,7 +66,7 @@ spec:
         - name: version
           value: $(tasks.get-version.results.version)
 
-    - name: build-operator
+    - name: test-operator
       runAfter: [ clone-and-patch ]
       taskRef:
         name: make-build
@@ -79,21 +81,36 @@ spec:
         - name: build-pkg
           workspace: workspace
 
-    - name: deploy-operator
-      runAfter: [ build-operator, get-id ]
+    - name: build-operator
+      runAfter: [ test-operator ]
       taskRef:
-        name: buildah
+        name: buildah-build
       params:
         - name: image
-          value: $(params.base-image-registry)/$(params.image-name):v$(tasks.get-id.results.build-id)
+          value: $(params.image-name)
         - name: subdirectory
           value: repository
       workspaces:
         - name: source
           workspace: workspace
+        - name: containers
+          workspace: workspace
 
-    - name: build-bundle
-      runAfter: [ deploy-operator ]
+    - name: deploy-operator
+      runAfter: [ build-operator, get-id ]
+      taskRef:
+        name: buildah-push
+      params:
+        - name: image
+          value: $(params.image-name)
+        - name: remote
+          value: $(params.base-image-registry)/$(params.image-name):v$(tasks.get-id.results.build-id)
+      workspaces:
+        - name: containers
+          workspace: workspace
+
+    - name: check-bundle
+      runAfter: [ clone-and-patch, get-id ]
       taskRef:
         name: bundle
       params:
@@ -117,19 +134,34 @@ spec:
         - name: build-pkg
           workspace: workspace
 
-    - name: deploy-bundle
-      runAfter: [ build-bundle ]
+    - name: build-bundle
+      runAfter: [ check-bundle ]
       taskRef:
-        name: buildah
+        name: buildah-build
       params:
         - name: image
-          value: $(params.base-image-registry)/$(params.image-name)-bundle:v$(tasks.get-id.results.build-id)
+          value: $(params.image-name)-bundle
         - name: dockerfile
           value: bundle.Dockerfile
         - name: subdirectory
           value: repository
       workspaces:
         - name: source
+          workspace: workspace
+        - name: containers
+          workspace: workspace
+
+    - name: deploy-bundle
+      runAfter: [ build-bundle ]
+      taskRef:
+        name: buildah-push
+      params:
+        - name: image
+          value: $(params.image-name)-bundle
+        - name: remote
+          value: $(params.base-image-registry)/$(params.image-name)-bundle:v$(tasks.get-id.results.build-id)
+      workspaces:
+        - name: containers
           workspace: workspace
 
 #    - name: deploy-bundle

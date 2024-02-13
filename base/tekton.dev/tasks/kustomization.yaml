@@ -1,9 +1,11 @@
 resources:
   - git-clone.yaml
   - golang-build.yaml
-  - buildah.yaml
+  - buildah-build.yaml
+  - buildah-push.yaml
   - yarn-build.yaml
   - bundle.yaml
   - make-build.yaml
   - build-id.yaml
-  - find-version.yaml
+  - version-csv.yaml
+  - version-npm.yaml

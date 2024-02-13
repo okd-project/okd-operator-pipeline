@@ -1,0 +1,43 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: buildah-push
+  namespace: okd-team
+spec:
+  params:
+    - name: image
+      description: The name of the image to build
+      type: string
+    - name: remote
+      description: The remote to push the image to
+      type: string
+    - name: storage-driver
+      description: The storage driver to use
+      type: string
+      default: vfs
+
+  workspaces:
+    - name: containers
+      mountPath: /home/build/.local/share/containers
+
+  volumes:
+    - name: docker-config
+      configMap:
+        name: docker-config
+
+  stepTemplate:
+    name: task
+    securityContext:
+      runAsUser: 1000
+    image: quay.io/buildah/stable:v1
+    volumeMounts:
+      - name: docker-config
+        mountPath: /home/build/.docker/
+    env:
+      - name: DOCKER_CONFIG
+        value: /home/build/.docker/
+
+  steps:
+    - name: push
+      command: ["buildah"]
+      args: ["--storage-driver=$(params.storage-driver)", "push", "$(params.image)", "docker://$(params.remote)"]

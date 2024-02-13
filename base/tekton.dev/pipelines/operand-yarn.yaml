@@ -46,7 +46,7 @@ spec:
         - name: patches
           workspace: patches
 
-    - name: build
+    - name: test
       runAfter: [clone-and-patch]
       taskRef:
           name: yarn-build
@@ -57,15 +57,30 @@ spec:
         - name: source
           workspace: workspace
 
-    - name: deploy
-      runAfter: [build]
+    - name: build
+      runAfter: [ test ]
       taskRef:
-        name: buildah
+        name: buildah-build
       params:
         - name: image
-          value: $(params.base-image-registry)/$(params.image-name):v$(params.image-version)
+          value: $(params.image-name)
         - name: subdirectory
           value: repository
       workspaces:
         - name: source
+          workspace: workspace
+        - name: containers
+          workspace: workspace
+
+    - name: deploy
+      runAfter: [ build ]
+      taskRef:
+        name: buildah-push
+      params:
+        - name: image
+          value: $(params.image-name)
+        - name: remote
+          value: $(params.base-image-registry)/$(params.image-name):v$(params.image-version)
+      workspaces:
+        - name: containers
           workspace: workspace

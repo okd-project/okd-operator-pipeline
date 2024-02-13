@@ -1,0 +1,157 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: operand-noobaa
+  namespace: okd-team
+spec:
+  params:
+    - name: repo-url
+      description: The repo url
+      type: string
+    - name: repo-ref
+      description: The repo ref
+      type: string
+    - name: base-image-registry
+      description: The base image registry
+      type: string
+    - name: image-name
+      description: The image name
+      type: string
+
+  workspaces:
+    - name: workspace
+    - name: patches
+
+  tasks:
+    - name: clone-and-patch
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: deleteExisting
+          value: 'true'
+        - name: revision
+          value: $(params.repo-ref)
+        - name: verbose
+          value: 'true'
+        - name: subdirectory
+          value: repository
+      workspaces:
+        - name: output
+          workspace: workspace
+        - name: patches
+          workspace: patches
+
+    - name: get-version
+      runAfter: [ clone-and-patch ]
+      taskRef:
+          name: version-npm
+      params:
+        - name: subdirectory
+          value: repository
+      workspaces:
+        - name: source
+          workspace: workspace
+
+    - name: get-id
+      runAfter: [ get-version ]
+      taskRef:
+        name: build-id
+      params:
+        - name: version
+          value: $(tasks.get-version.results.version)
+
+    - name: build-builder
+      runAfter: [ clone-and-patch ]
+      taskRef:
+        name: buildah-build
+      params:
+        - name: image
+          value: noobaa-builder
+        - name: subdirectory
+          value: repository
+        - name: dockerfile
+          value: src/deploy/NVA_build/builder.Dockerfile
+      workspaces:
+        - name: source
+          workspace: workspace
+        - name: containers
+          workspace: workspace
+
+    - name: build-base
+      runAfter: [ build-builder ]
+      taskRef:
+        name: buildah-build
+      params:
+        - name: image
+          value: noobaa-base
+        - name: subdirectory
+          value: repository
+        - name: dockerfile
+          value: src/deploy/NVA_build/Base.Dockerfile
+      workspaces:
+        - name: source
+          workspace: workspace
+        - name: containers
+          workspace: workspace
+
+    - name: build-core
+      runAfter: [ build-base ]
+      taskRef:
+        name: buildah-build
+      params:
+        - name: image
+          value: noobaa
+        - name: subdirectory
+          value: repository
+        - name: dockerfile
+          value: src/deploy/NVA_build/NooBaa.Dockerfile
+      workspaces:
+        - name: source
+          workspace: workspace
+        - name: containers
+          workspace: workspace
+
+    - name: test
+      runAfter: [ build-core ]
+      taskRef:
+        name: buildah-build
+      params:
+        - name: image
+          value: noobaa
+        - name: subdirectory
+          value: repository
+        - name: dockerfile
+          value: src/deploy/NVA_build/Tests.Dockerfile
+      workspaces:
+        - name: source
+          workspace: workspace
+        - name: containers
+          workspace: workspace
+
+    - name: deploy
+      runAfter: [ test, get-version ]
+      taskRef:
+        name: buildah-push
+      params:
+        - name: image
+          value: noobaa
+        - name: remote
+          value: $(params.base-image-registry)/$(params.image-name):v$(tasks.get-version.results.version)
+      workspaces:
+        - name: containers
+          workspace: workspace
+
+    - name: deploy-id
+      runAfter: [ test, get-id ]
+      taskRef:
+        name: buildah-push
+      params:
+        - name: image
+          value: noobaa
+        - name: remote
+          value: $(params.base-image-registry)/$(params.image-name):v$(tasks.get-id.results.build-id)
+      workspaces:
+        - name: containers
+          workspace: workspace

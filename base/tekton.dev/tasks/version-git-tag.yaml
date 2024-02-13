@@ -1,0 +1,35 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: version-git-tag
+  namespace: okd-team
+spec:
+  description: |
+
+  params:
+    - name: subdirectory
+      description: Subdirectory inside the `source` Workspace to clone the repo into.
+      type: string
+      default: ""
+
+  results:
+    - name: version
+      description: Version of operator
+
+  workspaces:
+    - name: source
+
+  steps:
+    - name: find-version
+      image: docker.io/alpine/git:latest
+      workingDir: $(workspaces.source.path)/$(params.subdirectory)
+      stdoutConfig:
+        path: $(results.version.path)
+      script: |
+        tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+        # Remove the 'v' prefix from the tag if exists
+        if [[ $tag == v* ]]; then
+          tag=${tag:1}
+        fi
+        echo "Version: $tag"
+        echo $tag > $(results.version.path)

@@ -1,15 +1,15 @@
 apiVersion: polling.tekton.dev/v1alpha1
 kind: Repository
 metadata:
-  name: gitops-console-plugin-repository
+  name: noobaa-core-repository
   namespace: okd-team
 spec:
-  url: https://github.com/redhat-developer/gitops-console-plugin.git
+  url: https://github.com/noobaa/noobaa-core.git
   ref: main
   frequency: 5m
   type: github
   pipelineRef:
-    name: operand
+    name: operand-noobaa
     namespace: okd-team
     params:
       - name: repo-ref
@@ -17,16 +17,12 @@ spec:
       - name: repo-url
         expression: repoURL
       - name: patch-configmap
-        expression: "'gitops-console-plugin-patch'"
+        expression: "'noobaa-core-patch'"
       - name: base-image-registry
         expression: "'quay.io/okderators'"
       - name: image-name
-        expression: "'gitops-console-plugin'"
-      - name: image-version
-        expression: "'0.1.0'"
-      - name: build-type
-        expression: "'yarn'"
+        expression: "'noobaa-core'"
     workspaces:
       - name: output
         persistentVolumeClaim:
-          claimName: gitops-console-plugin-volume
+          claimName: noobaa-core-volume

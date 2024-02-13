@@ -39,6 +39,29 @@ case $1 in
       --pod-template pod-template.yaml \
       -n okd-team
     ;;
+  "noobaa-core")
+    tkn pipeline start operand-noobaa \
+      --param repo-url=https://github.com/noobaa/noobaa-core \
+      --param repo-ref=master \
+      --param base-image-registry=$BASE_IMAGE_REGISTRY \
+      --param image-name=noobaa-core \
+      --workspace name=workspace,claimName=noobaa-core-volume \
+      --workspace name=patches,config=noobaa-core-patch \
+      --pod-template pod-template.yaml \
+      -n okd-team
+    ;;
+  "noobaa-operator")
+    tkn pipeline start operator-golang \
+      --param repo-url=https://github.com/noobaa/noobaa-operator \
+      --param repo-ref=master \
+      --param base-image-registry=$BASE_IMAGE_REGISTRY \
+      --param image-name=noobaa-operator \
+      --param csv-location=deploy/olm/noobaa-operator.clusterserviceversion.yaml \
+      --workspace name=workspace,claimName=noobaa-operator-volume \
+      --workspace name=patches,config=noobaa-operator-patch \
+      --pod-template pod-template.yaml \
+      -n okd-team
+    ;;
   *)
     echo "Usage: $0 <gitops-console-plugin|gitops-backend|gitops-operator>"
     exit 1

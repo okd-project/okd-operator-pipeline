@@ -1,0 +1,35 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: version-npm
+  namespace: okd-team
+spec:
+  description: |
+    This task finds the version of an operator from its ClusterServiceVersion.
+  params:
+    - name: name
+      description: The name of the csv
+      type: string
+    - name: version
+      description: The version to fallback to if the version is not found
+      type: string
+    - name: subdirectory
+      description: Subdirectory inside the `source` Workspace to clone the repo into.
+      type: string
+      default: ""
+
+  results:
+    - name: version
+      description: Version of operator
+
+  workspaces:
+    - name: source
+
+  steps:
+    - name: find-version
+      image: docker.io/bash:5
+      env:
+        - name: VERSION
+          value: $(params.version)
+      script: |
+        echo $VERSION | tr -d "\n" | tee "$(results.version.path)"
