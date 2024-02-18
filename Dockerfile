@@ -38,16 +38,16 @@ RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
 
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s ${GOLANGCI_LINT_VERSION}
 
-ENV PATH $PATH:/bin:/usr/local/go/bin:/usr/bin/:/go/bin/
-ENV GOPATH /go
-ENV GOCACHE /go/.cache/go-build
-env GOLANGCI_LINT_CACHE /go/.cache/golangci-lint
-ENV GOENV /go/.config/go/env
+ENV PATH $PATH:/bin:/usr/local/go/bin:/usr/bin/:/home/build/bin/
+ENV GOPATH /home/build
+ENV GOCACHE /home/build/.cache/go-build
+env GOLANGCI_LINT_CACHE /home/build/.cache/golangci-lint
+ENV GOENV /home/build/.config/go/env
 
 RUN useradd -u 1001 -ms /bin/bash build
 
 RUN mkdir -p /home/build/src /home/build/bin /home/build/pkg /home/build/build /home/build/.cache /home/build/.local \
-    && chmod -R 0777 /go
+    && chmod -R 0777 /home/build
 
 RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@${CONTROLLER_TOOLS_VERSION} \
     && go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
