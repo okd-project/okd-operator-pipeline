@@ -17,6 +17,10 @@ spec:
 
   workspaces:
     - name: source
+    - name: build-cache-root
+      mountPath: /go/.cache
+    - name: build-pkg
+      mountPath: /go/pkg
 
   steps:
     - name: run

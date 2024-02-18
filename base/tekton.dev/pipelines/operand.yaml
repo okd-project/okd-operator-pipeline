@@ -23,7 +23,7 @@ spec:
     - name: build-image
       description: The build image
       type: string
-      default: quay.io/okd/go-bundle-tools:v1.1.2
+      default: quay.io/okderators/bundle-tools:vdev
   
   workspaces:
     - name: workspace
@@ -64,6 +64,10 @@ spec:
       workspaces:
         - name: source
           workspace: workspace
+        - name: build-cache-root
+          workspace: workspace
+        - name: build-pkg
+          workspace: workspace
 
     - name: build
       runAfter: [ install ]
@@ -78,6 +82,10 @@ spec:
           value: [ "okd-build" ]
       workspaces:
         - name: source
+          workspace: workspace
+        - name: build-cache-root
+          workspace: workspace
+        - name: build-pkg
           workspace: workspace
 
     - name: test
@@ -94,6 +102,10 @@ spec:
       workspaces:
         - name: source
           workspace: workspace
+        - name: build-cache-root
+          workspace: workspace
+        - name: build-pkg
+          workspace: workspace
 
     - name: e2e
       runAfter: [ test ]
@@ -108,6 +120,10 @@ spec:
           value: [ "okd-e2e" ]
       workspaces:
         - name: source
+          workspace: workspace
+        - name: build-cache-root
+          workspace: workspace
+        - name: build-pkg
           workspace: workspace
 
     - name: image-build

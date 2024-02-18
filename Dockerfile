@@ -44,19 +44,21 @@ ENV GOCACHE /go/.cache/go-build
 env GOLANGCI_LINT_CACHE /go/.cache/golangci-lint
 ENV GOENV /go/.config/go/env
 
-RUN mkdir -p /go/src /go/bin /go/pkg /go/build /go/.cache /go/.local \
+RUN useradd -u 1001 -ms /bin/bash build
+
+RUN mkdir -p /home/build/src /home/build/bin /home/build/pkg /home/build/build /home/build/.cache /home/build/.local \
     && chmod -R 0777 /go
 
 RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@${CONTROLLER_TOOLS_VERSION} \
     && go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
-RUN chown -R 1001:1001 /go
+RUN chown -R 1001:1001 /home/build
 
-COPY uid_entrypoint.sh /go/
+COPY uid_entrypoint.sh /home/build/
 
-WORKDIR /go
+WORKDIR /home/build/
 
-USER 1001
+USER build
 
 ENTRYPOINT [ "./uid_entrypoint.sh" ]
 

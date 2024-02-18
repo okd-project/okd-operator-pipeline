@@ -4,7 +4,7 @@ BASE_IMAGE_REGISTRY=quay.io/okderators
 
 case $1 in
   "bundle-tools")
-    tkn pipeline start operand \
+    tkn pipeline start image-build \
       --param repo-url=https://github.com/upstream-operators/okd-operator-pipeline \
       --param repo-ref=main \
       --param base-image-registry=$BASE_IMAGE_REGISTRY \
@@ -14,6 +14,7 @@ case $1 in
       --workspace name=patches,config=bundle-tools-patch \
       --pod-template pod-template.yaml \
       -n okd-team
+    ;;
   "gitops-console-plugin")
     tkn pipeline start operand \
       --param repo-url=https://github.com/redhat-developer/gitops-console-plugin \
