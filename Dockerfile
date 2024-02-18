@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi9/ubi-init:latest
 LABEL maintainer="luzuccar@redhat.com"
 
 # gcc for cgo
-RUN dnf install -y git gcc make diffutils && rm -rf /var/lib/apt/lists/*
+RUN dnf install -y git gcc make diffutils nodejs npm && rm -rf /var/lib/apt/lists/*
 
 ENV GOLANG_VERSION 1.20.5
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
@@ -18,6 +18,8 @@ ENV OPM_BIN /usr/bin/opm
 ENV OS linux
 ENV ARCH amd64
 ENV GOLANGCI_LINT_VERSION v1.53.2
+
+RUN npm install -g yarn
 
 RUN curl -fsSLo ${OPERATOR_SDK_BIN} "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_${OS}_${ARCH}" \
     && chmod 0755 $OPERATOR_SDK_BIN

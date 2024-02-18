@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: make
+  namespace: okd-team
+spec:
+  params:
+    - name: image
+      description: The image to use for the build
+      type: string
+    - name: subdirectory
+      description: The subdirectory to run the build in
+      type: string
+    - name: args
+      description: The arguments to pass to the make command
+      type: array
+
+  workspaces:
+    - name: source
+
+  steps:
+    - name: run
+      workingDir: $(workspaces.source.path)/$(params.subdirectory)
+      image: $(params.image)
+      command: ["make"]
+      args: ["$(params.args[*])"]
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532

@@ -1,0 +1,9 @@
+configMapGenerator:
+  - name: bundle-tools-patch
+    namespace: okd-team
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+  - pvc.yaml

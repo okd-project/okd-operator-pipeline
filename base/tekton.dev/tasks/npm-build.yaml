@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: npm-build
+  namespace: okd-team
+spec:
+  params:
+    - name: subdirectory
+      description: Subdirectory inside the `source` Workspace to clone the repo into.
+      type: string
+      default: ""
+
+  workspaces:
+    - name: source
+
+  stepTemplate:
+    name: task
+    workingDir: $(workspaces.source.path)/$(params.subdirectory)
+    image: docker.io/node:16-alpine
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+    env:
+      - name: HOME
+        value: $(workspaces.source.path)
+
+  steps:
+    - name: install
+      command: ["npm"]
+      args: ["ci"]
+
+    - name: lint
+      command: ["npm"]
+      args: ["run", "lint"]
+
+    - name: build
+      command: ["npm"]
+      args: ["run", "build"]

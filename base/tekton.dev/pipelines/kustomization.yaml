@@ -1,5 +1,5 @@
 resources:
-  - operand-yarn.yaml
-  - operand-golang.yaml
+  - operand.yaml
   - operator-golang.yaml
   - operand-noobaa.yaml
+  - image-build.yaml

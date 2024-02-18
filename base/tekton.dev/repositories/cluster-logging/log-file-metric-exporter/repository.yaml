@@ -1,0 +1,33 @@
+apiVersion: polling.tekton.dev/v1alpha1
+kind: Repository
+metadata:
+  name: log-file-metric-exporter-repository
+  namespace: okd-team
+spec:
+  url: https://github.com/ViaQ/log-file-metric-exporter
+  ref: release-5.8
+  frequency: 5m
+  type: github
+  pipelineRef:
+    name: operand
+    namespace: okd-team
+    params:
+      - name: repo-url
+        expression: repoURL
+      - name: repo-ref
+        expression: commit.sha
+      - name: base-image-registry
+        expression: "'quay.io/okderators'"
+      - name: image-name
+        expression: "'log-file-metric-exporter'"
+      - name: image-version
+        expression: "'dev'"
+      - name: build-type
+        expression: "'golang'"
+    workspaces:
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: log-file-metric-exporter-volume
+      - name: patches
+        configMap:
+          name: log-file-metric-exporter-patch

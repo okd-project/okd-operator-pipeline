@@ -1,0 +1,33 @@
+apiVersion: polling.tekton.dev/v1alpha1
+kind: Repository
+metadata:
+  name: logging-view-plugin-repository
+  namespace: okd-team
+spec:
+  url: https://github.com/openshift/logging-view-plugin.git
+  ref: main
+  frequency: 5m
+  type: github
+  pipelineRef:
+    name: operand
+    namespace: okd-team
+    params:
+      - name: repo-url
+        expression: repoURL
+      - name: repo-ref
+        expression: commit.sha
+      - name: base-image-registry
+        expression: "'quay.io/okderators'"
+      - name: image-name
+        expression: "'logging-view-plugin'"
+      - name: image-version
+        expression: "'dev'"
+      - name: build-type
+        expression: "'yarn'"
+    workspaces:
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: logging-view-plugin-volume
+      - name: patches
+        configMap:
+          name: logging-view-plugin-patch

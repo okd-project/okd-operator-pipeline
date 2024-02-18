@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: operand-yarn
+  name: image-build
   namespace: okd-team
 spec:
   params:
@@ -46,19 +46,8 @@ spec:
         - name: patches
           workspace: patches
 
-    - name: test
-      runAfter: [clone-and-patch]
-      taskRef:
-          name: yarn-build
-      params:
-        - name: subdirectory
-          value: repository
-      workspaces:
-        - name: source
-          workspace: workspace
-
-    - name: build
-      runAfter: [ test ]
+    - name: image-build
+      runAfter: [ clone-and-patch ]
       taskRef:
         name: buildah-build
       params:
@@ -72,8 +61,8 @@ spec:
         - name: containers
           workspace: workspace
 
-    - name: deploy
-      runAfter: [ build ]
+    - name: image-push
+      runAfter: [ image-build ]
       taskRef:
         name: buildah-push
       params:

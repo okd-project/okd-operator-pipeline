@@ -39,3 +39,7 @@ spec:
         - name: GIT_COMMIT
           value: $(git rev-parse HEAD)
       args: ["build", "-a", "-mod=readonly", "$(params.context)"]
+
+    - name: test
+      command: [ "go" ]
+      args: [ "test" ]

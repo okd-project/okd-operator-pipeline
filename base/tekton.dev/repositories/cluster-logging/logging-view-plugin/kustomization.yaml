@@ -1,0 +1,12 @@
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: logging-view-plugin-patch
+    namespace: okd-team
+    files:
+      - repo.patch
+
+resources:
+  - repository.yaml
+  - pvc.yaml

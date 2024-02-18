@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: operand-golang
+  name: operand
   namespace: okd-team
 spec:
   params:
@@ -20,10 +20,10 @@ spec:
     - name: image-version
       description: The image version
       type: string
-    - name: build-context
-      description: The build context
+    - name: build-image
+      description: The build image
       type: string
-      default: .
+      default: quay.io/okd/go-bundle-tools:v1.1.2
   
   workspaces:
     - name: workspace
@@ -50,25 +50,68 @@ spec:
         - name: patches
           workspace: patches
 
-    - name: test
+    - name: install
       runAfter: [ clone-and-patch ]
       taskRef:
-        name: golang-build
+        name: make
       params:
+        - name: image
+          value: $(params.build-image)
         - name: subdirectory
           value: repository
-        - name: context
-          value: $(params.build-context)
+        - name: args
+          value: ["okd-install"]
       workspaces:
         - name: source
           workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
-          workspace: workspace
 
     - name: build
+      runAfter: [ install ]
+      taskRef:
+        name: make
+      params:
+        - name: image
+          value: $(params.build-image)
+        - name: subdirectory
+          value: repository
+        - name: args
+          value: [ "okd-build" ]
+      workspaces:
+        - name: source
+          workspace: workspace
+
+    - name: test
+      runAfter: [ build ]
+      taskRef:
+        name: make
+      params:
+        - name: image
+          value: $(params.build-image)
+        - name: subdirectory
+          value: repository
+        - name: args
+          value: [ "okd-test" ]
+      workspaces:
+        - name: source
+          workspace: workspace
+
+    - name: e2e
       runAfter: [ test ]
+      taskRef:
+        name: make
+      params:
+        - name: image
+          value: $(params.build-image)
+        - name: subdirectory
+          value: repository
+        - name: args
+          value: [ "okd-e2e" ]
+      workspaces:
+        - name: source
+          workspace: workspace
+
+    - name: image-build
+      runAfter: [ e2e ]
       taskRef:
         name: buildah-build
       params:
@@ -82,8 +125,8 @@ spec:
         - name: containers
           workspace: workspace
 
-    - name: deploy
-      runAfter: [ build ]
+    - name: image-push
+      runAfter: [ image-build ]
       taskRef:
         name: buildah-push
       params:
