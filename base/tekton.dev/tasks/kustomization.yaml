@@ -2,8 +2,5 @@ resources:
   - git-clone.yaml
   - buildah-build.yaml
   - buildah-push.yaml
-  - bundle.yaml
   - make.yaml
   - build-id.yaml
-  - version-csv.yaml
-  - version-npm.yaml

@@ -88,8 +88,27 @@ spec:
         - name: build-pkg
           workspace: workspace
 
-    - name: test
+    - name: lint
       runAfter: [ build ]
+      taskRef:
+        name: make
+      params:
+        - name: image
+          value: $(params.build-image)
+        - name: subdirectory
+          value: repository
+        - name: args
+          value: [ "okd-lint" ]
+      workspaces:
+        - name: source
+          workspace: workspace
+        - name: build-cache-root
+          workspace: workspace
+        - name: build-pkg
+          workspace: workspace
+
+    - name: test
+      runAfter: [ lint ]
       taskRef:
         name: make
       params:
@@ -107,27 +126,8 @@ spec:
         - name: build-pkg
           workspace: workspace
 
-    - name: e2e
-      runAfter: [ test ]
-      taskRef:
-        name: make
-      params:
-        - name: image
-          value: $(params.build-image)
-        - name: subdirectory
-          value: repository
-        - name: args
-          value: [ "okd-e2e" ]
-      workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
-          workspace: workspace
-
     - name: image-build
-      runAfter: [ e2e ]
+      runAfter: [ test ]
       taskRef:
         name: buildah-build
       params:

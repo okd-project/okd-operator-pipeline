@@ -1,6 +1,8 @@
 #!/bin/bash
 
 BASE_IMAGE_REGISTRY=quay.io/okderators
+CHANNEL=alpha
+DEFAULT_CHANNEL=alpha
 
 case $1 in
   "bundle-tools")
@@ -46,6 +48,8 @@ case $1 in
       --param base-image-registry=$BASE_IMAGE_REGISTRY \
       --param image-name=gitops-operator \
       --param image-version=dev \
+      --param channel=$CHANNEL \
+      --param default-channel=$DEFAULT_CHANNEL \
       --workspace name=workspace,claimName=gitops-operator-volume \
       --workspace name=patches,config=gitops-operator-patch \
       --pod-template pod-template.yaml \
@@ -64,12 +68,14 @@ case $1 in
       -n okd-team
     ;;
   "noobaa-operator")
-    tkn pipeline start operator-golang \
+    tkn pipeline start operator \
       --param repo-url=https://github.com/noobaa/noobaa-operator \
       --param repo-ref=master \
       --param base-image-registry=$BASE_IMAGE_REGISTRY \
       --param image-name=noobaa-operator \
       --param image-version=dev \
+      --param channel=$CHANNEL \
+      --param default-channel=$DEFAULT_CHANNEL \
       --workspace name=workspace,claimName=noobaa-operator-volume \
       --workspace name=patches,config=noobaa-operator-patch \
       --pod-template pod-template.yaml \

@@ -14,29 +14,33 @@ We are totally aware that not all Makefiles in each operator repository keep the
 As mentioned this is a WIP so suggestions, PR's, updates etc are more than welcome
 
 As an example makefile recipes such as :-
-- make verify
-- make test
-- make build
-- make container-build
+- make okd-install
+- make okd-lint
+- make okd-build
+- make okd-test
+- make okd-bundle
 
 The pipeline uses 2 tasks (with steps)
 
-- container-all
-  - git-clone
-  - verify (golangci-lint)
-  - test (unit tests)
-  - build (go compile to binary)
-  - build and push image
+- operator
+  - clone-and-patch
+  - get-id (appends timestamp to version)
+  - install (make okd-install)
+  - lint (make okd-lint)
+  - build (make okd-build)
+  - test (make okd-test)
+  - build-operator (buildah-build)
+  - push-operator (buildah-push)
+  - make-bundle (make okd-bundle)
+  - build-bundle (buildah-build)
+  - push-bundle (buildah-push)
 
-- bundle-all
-  - bundle 
-  - bundle-image-push
-  - index-image-build
-  - index-image-push
-  - catalog-image-build
-  - catalog-image-push 
+- operand
+  - clone-and-patch
+  - install
+  - lint
 
-The reason for the separation into 2 tasks is that the *container-all* task can be re-used
+The reason for the separation into 2 tasks is that the make/buildah tasks can be re-used
 to build operands (i.e in the node-observability-operator we have an operand (agent) that is required)
 
 A custom golang image is used with the relevant dependencies to execute the various make recipes
@@ -59,6 +63,12 @@ During the installation, some of the steps are specific to a regular Kubernetes 
 ### Install Tekton Operator
 
 Install the tekton cli and tekton resources before continuing (see https://tekton.dev/docs/pipelines/install)
+
+### Install Tekton Polling Operator
+
+The Tekton polling operator is used to trigger the pipeline when a new commit is pushed to the origin repository. 
+
+see (https://github.com/bigkevmcd/tekton-polling-operator/blob/main/README.md#installation)
 
 ### Clone the repository
 

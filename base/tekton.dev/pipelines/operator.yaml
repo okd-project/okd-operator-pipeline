@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: operator-golang
+  name: operator
   namespace: okd-team
 spec:
   params:
@@ -17,10 +17,23 @@ spec:
     - name: image-name
       description: The image name
       type: string
-    - name: csv-location
-      description: The location of the CSV
+    - name: image-version
+      description: The image version
       type: string
-      default: config/manifests/bases/$(params.image-name).clusterserviceversion.yaml
+    - name: build-image
+      description: The build image
+      type: string
+      default: quay.io/okderators/bundle-tools:vdev
+    - name: channel
+      description: The channel
+      type: string
+    - name: default-channel
+      description: The default channel
+      type: string
+    - name: enable-timestamp
+      description: Enable timestamp
+      type: string
+      default: "true"
   
   workspaces:
     - name: workspace
@@ -47,32 +60,89 @@ spec:
         - name: patches
           workspace: patches
 
-    - name: get-version
-      runAfter: [ clone-and-patch ]
-      taskRef:
-        name: version-csv
-      params:
-        - name: location
-          value: repository/$(params.csv-location)
-      workspaces:
-        - name: source
-          workspace: workspace
-
     - name: get-id
-      runAfter: [ get-version ]
       taskRef:
         name: build-id
       params:
         - name: version
-          value: $(tasks.get-version.results.version)
+          value: $(params.image-version)
+        - name: enable-timestamp
+          value: $(params.enable-timestamp)
 
-    - name: test-operator
-      runAfter: [ clone-and-patch ]
+    - name: install
+      runAfter: [ clone-and-patch, get-id ]
       taskRef:
-        name: make-build
+        name: make
       params:
+        - name: image
+          value: $(params.build-image)
         - name: subdirectory
           value: repository
+        - name: args
+          value: ["okd-install"]
+        - name: version
+          value: $(tasks.get-id.results.build-id)
+      workspaces:
+        - name: source
+          workspace: workspace
+        - name: build-cache-root
+          workspace: workspace
+        - name: build-pkg
+          workspace: workspace
+
+    - name: lint
+      runAfter: [ install ]
+      taskRef:
+          name: make
+      params:
+          - name: image
+            value: $(params.build-image)
+          - name: subdirectory
+            value: repository
+          - name: args
+            value: [ "okd-lint" ]
+      workspaces:
+          - name: source
+            workspace: workspace
+          - name: build-cache-root
+            workspace: workspace
+          - name: build-pkg
+            workspace: workspace
+
+    - name: build
+      runAfter: [ lint ]
+      taskRef:
+        name: make
+      params:
+        - name: image
+          value: $(params.build-image)
+        - name: subdirectory
+          value: repository
+        - name: args
+          value: [ "okd-build" ]
+        - name: version
+          value: $(tasks.get-id.results.build-id)
+      workspaces:
+        - name: source
+          workspace: workspace
+        - name: build-cache-root
+          workspace: workspace
+        - name: build-pkg
+          workspace: workspace
+
+    - name: test
+      runAfter: [ build ]
+      taskRef:
+        name: make
+      params:
+        - name: image
+          value: $(params.build-image)
+        - name: subdirectory
+          value: repository
+        - name: args
+          value: [ "okd-test" ]
+        - name: version
+          value: $(tasks.get-id.results.build-id)
       workspaces:
         - name: source
           workspace: workspace
@@ -82,7 +152,7 @@ spec:
           workspace: workspace
 
     - name: build-operator
-      runAfter: [ test-operator ]
+      runAfter: [ test ]
       taskRef:
         name: buildah-build
       params:
@@ -96,7 +166,7 @@ spec:
         - name: containers
           workspace: workspace
 
-    - name: deploy-operator
+    - name: push-operator
       runAfter: [ build-operator, get-id ]
       taskRef:
         name: buildah-push
@@ -109,23 +179,21 @@ spec:
         - name: containers
           workspace: workspace
 
-    - name: check-bundle
-      runAfter: [ clone-and-patch, get-id ]
+    - name: make-bundle
+      runAfter: [ push-operator, clone-and-patch, get-id ]
       taskRef:
-        name: bundle
+        name: make
       params:
-        - name: image-name
-          value: $(params.image-name)
-        - name: base-image-registry
-          value: $(params.base-image-registry)
-        - name: image-version
+        - name: image
+          value: $(params.build-image)
+        - name: args
+          value: [ "okd-bundle" ]
+        - name: version
           value: $(tasks.get-id.results.build-id)
-        - name: channel
-          value: stable
-        - name: default-channel
-          value: stable
         - name: subdirectory
           value: repository
+        - name: normalized-version
+          value: $(params.image-version)
       workspaces:
         - name: source
           workspace: workspace
@@ -135,7 +203,7 @@ spec:
           workspace: workspace
 
     - name: build-bundle
-      runAfter: [ check-bundle ]
+      runAfter: [ make-bundle ]
       taskRef:
         name: buildah-build
       params:
@@ -151,7 +219,7 @@ spec:
         - name: containers
           workspace: workspace
 
-    - name: deploy-bundle
+    - name: push-bundle
       runAfter: [ build-bundle ]
       taskRef:
         name: buildah-push

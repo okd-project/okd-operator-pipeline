@@ -4,8 +4,8 @@ generatorOptions:
 configMapGenerator:
   - name: noobaa-operator-patch
     namespace: okd-team
-#    files:
-#      - repo.patch
+    files:
+      - repo.patch
 
 resources:
   - repository.yaml

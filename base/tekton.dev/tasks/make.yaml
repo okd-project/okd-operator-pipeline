@@ -14,6 +14,14 @@ spec:
     - name: args
       description: The arguments to pass to the make command
       type: array
+    - name: version
+      description: The version to use for the build
+      type: string
+      default: ""
+    - name: normalized-version
+      description: The normalized version to use for the build
+      type: string
+      default: $(params.version)
 
   workspaces:
     - name: source
@@ -30,4 +38,9 @@ spec:
       args: ["$(params.args[*])"]
       securityContext:
         runAsNonRoot: true
-        runAsUser: 65532
+        runAsUser: 1001
+      env:
+        - name: "VERSION"
+          value: "$(params.version)"
+        - name: "NORM_VERSION"
+          value: "$(params.normalized-version)"
