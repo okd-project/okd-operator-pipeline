@@ -5,9 +5,9 @@ LABEL maintainer="luzuccar@redhat.com"
 # gcc for cgo
 RUN dnf update -y && dnf install -y git gcc make diffutils nodejs npm && rm -rf /var/lib/apt/lists/*
 
-ENV GOLANG_VERSION 1.22.0
+ENV GOLANG_VERSION 1.21.7
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
-ENV GOLANG_DOWNLOAD_SHA256 f6c8a87aa03b92c4b0bf3d558e28ea03006eb29db78917daec5cfb6ec1046265
+ENV GOLANG_DOWNLOAD_SHA256 13b76a9b2a26823e53062fa841b07087d48ae2ef2936445dc34c4ae03293702c
 ENV CONTROLLER_TOOLS_VERSION v0.14.0
 
 ENV OPERATOR_SDK_VERSION v1.33.0
