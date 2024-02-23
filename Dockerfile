@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi9/ubi-init:latest
 LABEL maintainer="luzuccar@redhat.com"
 
 # gcc for cgo
-RUN dnf install -y git gcc make diffutils nodejs npm && rm -rf /var/lib/apt/lists/*
+RUN dnf update -y && dnf install -y git gcc make diffutils nodejs npm && rm -rf /var/lib/apt/lists/*
 
 ENV GOLANG_VERSION 1.22.0
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
@@ -44,7 +44,7 @@ ENV GOCACHE /home/build/.cache/go-build
 env GOLANGCI_LINT_CACHE /home/build/.cache/golangci-lint
 ENV GOENV /home/build/.config/go/env
 
-RUN useradd -u 1001 -ms /bin/bash build
+RUN useradd -u 65532 -ms /bin/bash build
 
 RUN mkdir -p /home/build/src /home/build/bin /home/build/pkg /home/build/build /home/build/.cache /home/build/.local \
     && chmod -R 0777 /home/build
@@ -52,7 +52,7 @@ RUN mkdir -p /home/build/src /home/build/bin /home/build/pkg /home/build/build /
 RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@${CONTROLLER_TOOLS_VERSION} \
     && go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
-RUN chown -R 1001:1001 /home/build
+RUN chown -R 65532:65532 /home/build
 
 COPY uid_entrypoint.sh /home/build/
 
