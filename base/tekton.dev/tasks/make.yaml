@@ -22,6 +22,10 @@ spec:
       description: The normalized version to use for the build
       type: string
       default: $(params.version)
+    - name: env-map
+      description: The env map
+      type: string
+      default: ""
 
   workspaces:
     - name: source
@@ -32,13 +36,15 @@ spec:
 
   steps:
     - name: run
+      imagePullPolicy: Always
       workingDir: $(workspaces.source.path)/$(params.subdirectory)
       image: $(params.image)
-      command: ["make"]
-      args: ["$(params.args[*])"]
+      args: ["$(params.args)"]
+      script: |
+        $(params.env-map) make $@
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1001
+        runAsUser: 65532
       env:
         - name: "VERSION"
           value: "$(params.version)"
