@@ -58,6 +58,8 @@ COPY uid_entrypoint.sh /home/build/
 
 WORKDIR /home/build/
 
+COPY storage.conf .config/containers/storage.conf
+
 USER build
 
 ENTRYPOINT [ "./uid_entrypoint.sh" ]
