@@ -3,7 +3,9 @@ FROM registry.access.redhat.com/ubi9/ubi-init:latest
 LABEL maintainer="luzuccar@redhat.com"
 
 # gcc for cgo
-RUN dnf update -y && dnf install -y podman git gcc make unzip diffutils nodejs npm && rm -rf /var/lib/apt/lists/*
+RUN dnf update -y && \
+    dnf install -y podman shadow-utils slirp4netns git gcc make unzip diffutils nodejs npm && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV GOLANG_VERSION 1.21.7
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
@@ -20,6 +22,8 @@ ENV ARCH amd64
 ENV GOLANGCI_LINT_VERSION v1.56.2
 
 RUN npm install -g yarn
+
+COPY --chmod=755 storage.conf /etc/containers/storage.conf
 
 RUN curl -fsSLo ${OPERATOR_SDK_BIN} "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_${OS}_${ARCH}" \
     && chmod 0755 $OPERATOR_SDK_BIN
@@ -44,7 +48,8 @@ ENV GOCACHE /home/build/.cache/go-build
 env GOLANGCI_LINT_CACHE /home/build/.cache/golangci-lint
 ENV GOENV /home/build/.config/go/env
 
-RUN useradd -u 65532 -ms /bin/bash build
+RUN useradd -u 65532 -ms /bin/bash build && \
+    usermod --add-subuids 100000-165535 --add-subgids 100000-165535 build
 
 RUN mkdir -p /home/build/src /home/build/bin /home/build/pkg /home/build/build /home/build/.cache /home/build/.local \
     && chmod -R 0777 /home/build
@@ -53,8 +58,6 @@ RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@${CONTROLLER_TOOL
     && go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
 RUN chown -R 65532:65532 /home/build
-
-COPY uid_entrypoint.sh /home/build/
 
 WORKDIR /home/build/
 
