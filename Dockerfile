@@ -1,11 +1,42 @@
 FROM registry.access.redhat.com/ubi9/ubi-init:latest
 
 LABEL maintainer="luzuccar@redhat.com"
+LABEL "io.containers.capabilities"="CHOWN,DAC_OVERRIDE,FOWNER,FSETID,KILL,NET_BIND_SERVICE,SETFCAP,SETGID,SETPCAP,SETUID,CHOWN,DAC_OVERRIDE,FOWNER,FSETID,KILL,NET_BIND_SERVICE,SETFCAP,SETGID,SETPCAP,SETUID,SYS_CHROOT"
 
 # gcc for cgo
-RUN dnf update -y && \
-    dnf install -y podman shadow-utils git gcc make unzip diffutils nodejs npm && \
-    rm -rf /var/lib/apt/lists/*
+RUN dnf -y makecache && \
+    dnf -y update && \
+    dnf install -y podman slirp4netns shadow-utils git gcc make unzip diffutils nodejs npm fuse-overlayfs cpp --exclude container-selinux && \
+    dnf -y clean all && \
+    rm -rf /var/cache /var/log/dnf* /var/log/yum.*
+
+ADD ./containers.conf /etc/containers/
+
+# Setup internal Buildah to pass secrets/subscriptions down from host to internal container
+RUN printf '/run/secrets/etc-pki-entitlement:/run/secrets/etc-pki-entitlement\n/run/secrets/rhsm:/run/secrets/rhsm\n' > /etc/containers/mounts.conf
+
+# Copy & modify the defaults to provide reference if runtime changes needed.
+# Changes here are required for running with fuse-overlay storage inside container.
+RUN sed -e 's|^#mount_program|mount_program|g' \
+        -e '/additionalimage.*/a "/var/lib/shared",' \
+        -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' \
+        /usr/share/containers/storage.conf \
+        > /etc/containers/storage.conf && \
+    chmod 644 /etc/containers/storage.conf && \
+    chmod 644 /etc/containers/containers.conf
+
+RUN mkdir -p /var/lib/shared/overlay-images \
+             /var/lib/shared/overlay-layers \
+             /var/lib/shared/vfs-images \
+             /var/lib/shared/vfs-layers && \
+    touch /var/lib/shared/overlay-images/images.lock && \
+    touch /var/lib/shared/overlay-layers/layers.lock && \
+    touch /var/lib/shared/vfs-images/images.lock && \
+    touch /var/lib/shared/vfs-layers/layers.lock
+
+# Set an environment variable to default to chroot isolation for RUN
+# instructions and "buildah run".
+ENV BUILDAH_ISOLATION=chroot
 
 ENV GOLANG_VERSION 1.21.7
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
@@ -22,8 +53,6 @@ ENV ARCH amd64
 ENV GOLANGCI_LINT_VERSION v1.56.2
 
 RUN npm install -g yarn
-
-#COPY --chmod=755 storage.conf /etc/containers/storage.conf
 
 RUN curl -fsSLo ${OPERATOR_SDK_BIN} "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_${OS}_${ARCH}" \
     && chmod 0755 $OPERATOR_SDK_BIN
@@ -49,7 +78,18 @@ env GOLANGCI_LINT_CACHE /home/build/.cache/golangci-lint
 ENV GOENV /home/build/.config/go/env
 
 RUN useradd -u 65532 -ms /bin/bash build && \
-    usermod --add-subuids 100000-165535 --add-subgids 100000-165535 build
+    usermod --add-subuids 100000-165535 --add-subgids 100000-165535 build && \
+    mkdir -p /home/build/.local/share/containers && \
+    mkdir -p /home/build/.config/containers
+
+# See:  https://github.com/containers/buildah/issues/4669
+# Copy & modify the config for the `build` user and remove the global
+# `runroot` and `graphroot` which current `build` user cannot access,
+# in such case storage will choose a runroot in `/var/tmp`.
+RUN sed -e 's|^#mount_program|mount_program|g' \
+        -e 's|^graphroot|#graphroot|g' \
+        -e 's|^runroot|#runroot|g' \
+        /etc/containers/storage.conf > /home/build/.config/containers/storage.conf
 
 RUN mkdir -p /home/build/src /home/build/bin /home/build/pkg /home/build/build /home/build/.cache /home/build/.local \
     && chmod -R 0777 /home/build
@@ -60,8 +100,6 @@ RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@${CONTROLLER_TOOL
 RUN chown -R 65532:65532 /home/build
 
 WORKDIR /home/build/
-
-COPY storage.conf .config/containers/storage.conf
 
 USER build
 
