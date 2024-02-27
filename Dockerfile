@@ -34,7 +34,7 @@ RUN mkdir -p /var/lib/shared/overlay-images \
     touch /var/lib/shared/overlay-layers/layers.lock && \
     touch /var/lib/shared/vfs-images/images.lock && \
     touch /var/lib/shared/vfs-layers/layers.lock && \
-    chomod 755 -R /var/lib/shared/overlay-images \
+    chmod 755 -R /var/lib/shared/overlay-images \
              /var/lib/shared/overlay-layers \
              /var/lib/shared/vfs-images \
              /var/lib/shared/vfs-layers
