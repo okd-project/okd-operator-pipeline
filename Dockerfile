@@ -4,7 +4,7 @@ LABEL maintainer="luzuccar@redhat.com"
 
 # gcc for cgo
 RUN dnf update -y && \
-    dnf install -y podman shadow-utils slirp4netns git gcc make unzip diffutils nodejs npm && \
+    dnf install -y podman shadow-utils git gcc make unzip diffutils nodejs npm && \
     rm -rf /var/lib/apt/lists/*
 
 ENV GOLANG_VERSION 1.21.7
@@ -23,7 +23,7 @@ ENV GOLANGCI_LINT_VERSION v1.56.2
 
 RUN npm install -g yarn
 
-COPY --chmod=755 storage.conf /etc/containers/storage.conf
+#COPY --chmod=755 storage.conf /etc/containers/storage.conf
 
 RUN curl -fsSLo ${OPERATOR_SDK_BIN} "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_${OS}_${ARCH}" \
     && chmod 0755 $OPERATOR_SDK_BIN
