@@ -33,7 +33,11 @@ RUN mkdir -p /var/lib/shared/overlay-images \
     touch /var/lib/shared/overlay-images/images.lock && \
     touch /var/lib/shared/overlay-layers/layers.lock && \
     touch /var/lib/shared/vfs-images/images.lock && \
-    touch /var/lib/shared/vfs-layers/layers.lock
+    touch /var/lib/shared/vfs-layers/layers.lock && \
+    chomod 755 -R /var/lib/shared/overlay-images \
+             /var/lib/shared/overlay-layers \
+             /var/lib/shared/vfs-images \
+             /var/lib/shared/vfs-layers
 
 RUN useradd -u 65532 -ms /bin/bash build && \
     usermod --add-subuids 100000-165535 --add-subgids 100000-165535 build && \
@@ -99,6 +103,8 @@ RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@${CONTROLLER_TOOL
 RUN chown -R 65532:65532 /home/build
 
 WORKDIR /home/build/
+
+COPY uid_entrypoint.sh /home/build/
 
 USER build
 
