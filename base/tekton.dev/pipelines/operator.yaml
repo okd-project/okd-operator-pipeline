@@ -87,13 +87,9 @@ spec:
         - name: version
           value: $(tasks.get-id.results.build-id)
         - name: env-map
-          value: $(params.env-map)
+          value: $(params.env-map)=
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: lint
@@ -110,11 +106,7 @@ spec:
           - name: env-map
             value: $(params.env-map)
       workspaces:
-          - name: source
-            workspace: workspace
-          - name: build-cache-root
-            workspace: workspace
-          - name: build-pkg
+          - name: work
             workspace: workspace
 
     - name: build
@@ -133,11 +125,7 @@ spec:
         - name: env-map
           value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: test
@@ -156,11 +144,7 @@ spec:
         - name: env-map
           value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: build-operator
@@ -209,11 +193,7 @@ spec:
         - name: env-map
           value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: build-bundle

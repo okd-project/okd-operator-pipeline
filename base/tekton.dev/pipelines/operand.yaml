@@ -24,6 +24,10 @@ spec:
       description: The build image
       type: string
       default: quay.io/okderators/bundle-tools:vdev
+    - name: env-map
+      description: The env map
+      type: string
+      default: ""
   
   workspaces:
     - name: workspace
@@ -61,12 +65,10 @@ spec:
           value: repository
         - name: args
           value: ["okd-install"]
+        - name: env-map
+          value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: build
@@ -80,12 +82,10 @@ spec:
           value: repository
         - name: args
           value: [ "okd-build" ]
+        - name: env-map
+          value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: lint
@@ -99,12 +99,10 @@ spec:
           value: repository
         - name: args
           value: [ "okd-lint" ]
+        - name: env-map
+          value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: test
@@ -118,12 +116,10 @@ spec:
           value: repository
         - name: args
           value: [ "okd-test" ]
+        - name: env-map
+          value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: image-build

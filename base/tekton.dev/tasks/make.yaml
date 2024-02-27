@@ -28,19 +28,16 @@ spec:
       default: ""
 
   workspaces:
-    - name: source
-    - name: build-cache-root
-      mountPath: /go/.cache
-    - name: build-pkg
-      mountPath: /go/pkg
+    - name: work
 
   steps:
     - name: run
       imagePullPolicy: Always
-      workingDir: $(workspaces.source.path)/$(params.subdirectory)
+      workingDir: $(workspaces.work.path)/$(params.subdirectory)
       image: $(params.image)
       args: ["$(params.args)"]
       script: |
+        echo "$(params.env-map) make $@"
         $(params.env-map) make $@
       securityContext:
         runAsNonRoot: true
@@ -50,3 +47,16 @@ spec:
           value: "$(params.version)"
         - name: "NORM_VERSION"
           value: "$(params.normalized-version)"
+      volumeMounts:
+        - name: $(workspaces.work.volume)
+          mountPath: /var/lib/containers
+          subPath: containers
+        - name: $(workspaces.work.volume)
+          mountPath: /run/containers
+          subPath: run-containers
+        - name: $(workspaces.work.volume)
+          mountPath: /home/build/go/.cache
+          subPath: go-cache-root
+        - name: $(workspaces.work.volume)
+          mountPath: /home/build/go/pkg
+          subPath: go-pkg

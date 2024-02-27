@@ -5,21 +5,22 @@ BASE_IMAGE_REGISTRY=${BASE_IMAGE_REGISTRY:-quay.io/okderators}
 CHANNEL=${CHANNEL:-dev}
 DEFAULT_CHANNEL=${DEFAULT_CHANNEL:-stable}
 VERSION=${VERSION:-dev}
-ENV_MAP=${ENV_MAP:-""}
+ENV=${ENV:-""}
 BUILD_IMAGE=${BUILD_IMAGE:-quay.io/okderators/bundle-tools:vdev}
 ENABLE_TIMESTAMP=${ENABLE_TIMESTAMP:-true}
 
 function build_operand() {
   NAME=$3
+  ENV_MAP="$ENV $4"
   tkn pipeline start operand \
     --param repo-url=$1 \
     --param repo-ref=$2 \
     --param base-image-registry=$BASE_IMAGE_REGISTRY \
     --param image-name=$3 \
     --param image-version=$VERSION \
-    --param build-image $BUILD_IMAGE \
+    --param build-image=$BUILD_IMAGE \
     --param enable-timestamp=$ENABLE_TIMESTAMP \
-    --param env-map=$ENV_MAP \
+    --param env-map="$ENV_MAP" \
     --workspace name=workspace,claimName=$NAME-volume \
     --workspace name=patches,config=$5-patch \
     --pod-template pod-template.yaml \
@@ -28,6 +29,8 @@ function build_operand() {
 
 function build_operator() {
   NAME=$3
+  ENV_MAP="$ENV $4"
+  echo "$ENV_MAP"
   tkn pipeline start operator \
     --param repo-url=$1 \
     --param repo-ref=$2 \
@@ -36,9 +39,9 @@ function build_operator() {
     --param image-version=$VERSION \
     --param channel=$CHANNEL \
     --param default-channel=$DEFAULT_CHANNEL \
-    --param build-image $BUILD_IMAGE \
+    --param build-image=$BUILD_IMAGE \
     --param enable-timestamp=$ENABLE_TIMESTAMP \
-    --param env-map=$ENV_MAP \
+    --param env-map="$ENV_MAP" \
     --workspace name=workspace,claimName=$NAME-volume \
     --workspace name=patches,config=$NAME-patch \
     --pod-template pod-template.yaml \
@@ -89,7 +92,8 @@ case $1 in
     build_operand https://github.com/ViaQ/log-file-metric-exporter release-5.8 log-file-metric-exporter
     ;;
   "ocs-operator")
-    build_operator https://github.com/red-hat-storage/ocs-operator main ocs-operator
+    build_operator https://github.com/red-hat-storage/ocs-operator main ocs-operator \
+      "CSV_VERSION=999.999.999 NOOBAA_CORE_IMAGE=quay.io/okderators/noobaa-core:dev NOOBAA_DB_IMAGE=quay.io/sclorg/postgresql-16-c9s:latest ROOK_IMAGE=docker.io/rook/ceph:v1.13.4 CEPH_IMAGE=quay.io/ceph/ceph:v18.2.1 NOOBAA_BUNDLE_FULL_IMAGE_NAME=quay.io/okderators/noobaa-operator-bundle:dev OCS_IMAGE=quay.io/okderators/ocs-operator:dev OCS_METRICS_EXPORTER_IMAGE=quay.io/okderators/ocs-metrics-exporter:dev UX_BACKEND_OAUTH_IMAGE=quay.io/openshift/origin-oauth-proxy:latest"
     ;;
   *)
     echo "Usage: $0 <operand/operator name>"
