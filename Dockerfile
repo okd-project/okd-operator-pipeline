@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi9/ubi-init:latest
 LABEL maintainer="luzuccar@redhat.com"
 
 # gcc for cgo
-RUN dnf update -y && dnf install -y git gcc make unzip diffutils nodejs npm && rm -rf /var/lib/apt/lists/*
+RUN dnf update -y && dnf install -y podman git gcc make unzip diffutils nodejs npm && rm -rf /var/lib/apt/lists/*
 
 ENV GOLANG_VERSION 1.21.7
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
