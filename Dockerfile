@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi-init:latest
+FROM registry.fedoraproject.org/fedora:latest
 
 LABEL maintainer="luzuccar@redhat.com"
 LABEL "io.containers.capabilities"="CHOWN,DAC_OVERRIDE,FOWNER,FSETID,KILL,NET_BIND_SERVICE,SETFCAP,SETGID,SETPCAP,SETUID,CHOWN,DAC_OVERRIDE,FOWNER,FSETID,KILL,NET_BIND_SERVICE,SETFCAP,SETGID,SETPCAP,SETUID,SYS_CHROOT"
@@ -6,7 +6,8 @@ LABEL "io.containers.capabilities"="CHOWN,DAC_OVERRIDE,FOWNER,FSETID,KILL,NET_BI
 # gcc for cgo
 RUN dnf -y makecache && \
     dnf -y update && \
-    dnf install -y podman slirp4netns shadow-utils git gcc make unzip diffutils nodejs npm fuse-overlayfs cpp --exclude container-selinux && \
+    rpm --setcaps shadow-utils 2>/dev/null && \
+    dnf install -y podman buildah slirp4netns shadow-utils git gcc make unzip diffutils nodejs npm fuse-overlayfs cpp --exclude container-selinux && \
     dnf -y clean all && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
@@ -34,9 +35,21 @@ RUN mkdir -p /var/lib/shared/overlay-images \
     touch /var/lib/shared/vfs-images/images.lock && \
     touch /var/lib/shared/vfs-layers/layers.lock
 
-# Set an environment variable to default to chroot isolation for RUN
-# instructions and "buildah run".
-ENV BUILDAH_ISOLATION=chroot
+RUN useradd -u 65532 -ms /bin/bash build && \
+    usermod --add-subuids 100000-165535 --add-subgids 100000-165535 build && \
+    mkdir -p /home/build/.local/share/containers && \
+    mkdir -p /home/build/.config/containers
+
+# See:  https://github.com/containers/buildah/issues/4669
+# Copy & modify the config for the `build` user and remove the global
+# `runroot` and `graphroot` which current `build` user cannot access,
+# in such case storage will choose a runroot in `/var/tmp`.
+RUN sed -e 's|^#mount_program|mount_program|g' \
+        -e 's|^graphroot|#graphroot|g' \
+        -e 's|^runroot|#runroot|g' \
+        /etc/containers/storage.conf \
+        > /home/build/.config/containers/storage.conf && \
+        chown build:build /home/build/.config/containers/storage.conf
 
 ENV GOLANG_VERSION 1.21.7
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
@@ -77,20 +90,6 @@ ENV GOCACHE /home/build/.cache/go-build
 env GOLANGCI_LINT_CACHE /home/build/.cache/golangci-lint
 ENV GOENV /home/build/.config/go/env
 
-RUN useradd -u 65532 -ms /bin/bash build && \
-    usermod --add-subuids 100000-165535 --add-subgids 100000-165535 build && \
-    mkdir -p /home/build/.local/share/containers && \
-    mkdir -p /home/build/.config/containers
-
-# See:  https://github.com/containers/buildah/issues/4669
-# Copy & modify the config for the `build` user and remove the global
-# `runroot` and `graphroot` which current `build` user cannot access,
-# in such case storage will choose a runroot in `/var/tmp`.
-RUN sed -e 's|^#mount_program|mount_program|g' \
-        -e 's|^graphroot|#graphroot|g' \
-        -e 's|^runroot|#runroot|g' \
-        /etc/containers/storage.conf > /home/build/.config/containers/storage.conf
-
 RUN mkdir -p /home/build/src /home/build/bin /home/build/pkg /home/build/build /home/build/.cache /home/build/.local \
     && chmod -R 0777 /home/build
 
@@ -105,3 +104,6 @@ USER build
 
 ENTRYPOINT [ "./uid_entrypoint.sh" ]
 
+# Set an environment variable to default to chroot isolation for RUN
+# instructions and "buildah run".
+ENV BUILDAH_ISOLATION=chroot
