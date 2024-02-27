@@ -34,10 +34,7 @@ RUN mkdir -p /var/lib/shared/overlay-images \
     touch /var/lib/shared/overlay-layers/layers.lock && \
     touch /var/lib/shared/vfs-images/images.lock && \
     touch /var/lib/shared/vfs-layers/layers.lock && \
-    chmod 755 -R /usr/lib/shared/overlay-images \
-             /usr/lib/shared/overlay-layers \
-             /usr/lib/shared/vfs-images \
-             /usr/lib/shared/vfs-layers
+    chmod 755 -R /usr/lib/containers/
 
 RUN useradd -u 65532 -ms /bin/bash build && \
     usermod --add-subuids 100000-165535 --add-subgids 100000-165535 build && \
