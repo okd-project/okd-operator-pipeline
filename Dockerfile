@@ -13,6 +13,8 @@ RUN dnf -y makecache && \
 
 ADD ./containers.conf /etc/containers/
 
+COPY --chmod=755 ./storage.conf /etc/containers/
+
 # Setup internal Buildah to pass secrets/subscriptions down from host to internal container
 RUN printf '/run/secrets/etc-pki-entitlement:/run/secrets/etc-pki-entitlement\n/run/secrets/rhsm:/run/secrets/rhsm\n' > /etc/containers/mounts.conf
 
