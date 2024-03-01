@@ -18,7 +18,7 @@ ADD $_REPO_URL/podman-containers.conf /home/build/.config/containers/containers.
 # Changes here are required for running with fuse-overlay storage inside container.
 RUN sed -i -e 's|^#mount_program|mount_program|g' \
            -e '/additionalimage.*/a "/var/lib/shared",' \
-           -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,metacopy=on,fsync=0"|g' \
+           -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' \
            /etc/containers/storage.conf && \
            chmod 644 /etc/containers/containers.conf
 # End Podman Adaption
