@@ -6,6 +6,7 @@ configMapGenerator:
     namespace: okd-team
     files:
       - repo.patch
+      - remove-reliance-on-podman-run.patch
 
 resources:
   - repository.yaml
