@@ -24,13 +24,13 @@ function build_operand() {
     --workspace name=workspace,claimName=$NAME-volume \
     --workspace name=patches,config=$5-patch \
     --pod-template pod-template.yaml \
-    -n $NAMESPACE
+    -n $NAMESPACE \
+    --showlog
 }
 
 function build_operator() {
   NAME=$3
   ENV_MAP="$ENV $4"
-  echo "$ENV_MAP"
   tkn pipeline start operator \
     --param repo-url=$1 \
     --param repo-ref=$2 \
@@ -45,7 +45,8 @@ function build_operator() {
     --workspace name=workspace,claimName=$NAME-volume \
     --workspace name=patches,config=$NAME-patch \
     --pod-template pod-template.yaml \
-    -n $NAMESPACE
+    -n $NAMESPACE \
+    --showlog
 }
 
 case $1 in

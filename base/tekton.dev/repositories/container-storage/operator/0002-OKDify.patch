@@ -1,11 +1,11 @@
-From 0bb6aeb1bf2de4485bc62dfcc8802da432f37de8 Mon Sep 17 00:00:00 2001
+From 7eecd7c8e12b4e8c49af6708843900e3c60a2d70 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Thu, 22 Feb 2024 17:07:42 +0000
-Subject: [PATCH] OKDify
+Subject: [PATCH 2/2] OKDify
 
 ---
  Dockerfile                                    |  2 +-
- Makefile                                      | 28 ++++++++++++-
+ Makefile                                      | 26 ++++++++++++
  README.md                                     |  4 +-
  config/manager/kustomization.yaml             |  4 +-
  config/manager/manager.yaml                   |  2 +-
@@ -15,49 +15,42 @@ Subject: [PATCH] OKDify
  deploy/csv-templates/ocs-operator.csv.yaml.in | 28 ++++++-------
  deploy/deploy-with-olm.yaml                   |  4 +-
  .../ocs-operator.clusterserviceversion.yaml   | 42 +++++++++----------
- hack/common.sh                                |  4 +-
+ hack/build-operator-catalog.sh                |  2 +-
+ hack/common.sh                                |  7 ++--
  hack/compile-operator.sh                      | 10 +++++
+ hack/generate-unified-csv.sh                  | 23 ++++++++++
  hack/source-manifests.sh                      |  4 +-
  metrics/deploy/deployment.yaml                |  2 +-
  .../deploy/prometheus-ocs-rules-external.yaml | 16 +++----
  metrics/deploy/prometheus-ocs-rules.yaml      | 16 +++----
  pkg/deploy-manager/subscription.go            |  4 +-
  tools/csv-merger/csv-merger.go                |  2 +-
- 19 files changed, 119 insertions(+), 83 deletions(-)
+ 21 files changed, 144 insertions(+), 84 deletions(-)
  create mode 100755 hack/compile-operator.sh
 
 diff --git a/Dockerfile b/Dockerfile
-index f945fa33..f6a5a291 100644
+index 804016ce..9d9843a7 100644
 --- a/Dockerfile
 +++ b/Dockerfile
 @@ -1,6 +1,6 @@
  # Build stage 1
-
+ 
 -FROM golang:1.21 as builder
 +FROM quay.io/projectquay/golang:1.21 as builder
-
+ 
  WORKDIR /workspace
-
+ 
 diff --git a/Makefile b/Makefile
-index 5f76fe3e..a771e8d8 100644
+index 5f76fe3e..6ffd0d50 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -2,7 +2,7 @@ LOCALBIN=$(shell pwd)/bin
-
- KUSTOMIZE_VERSION=v4.5.5
- KUSTOMIZE=$(LOCALBIN)/kustomize
--CONTROLLER_GEN_VERSION=v0.9.2
-+CONTROLLER_GEN_VERSION=v0.14.0
- CONTROLLER_GEN=$(LOCALBIN)/controller-gen
-
-
 @@ -187,3 +187,29 @@ install-noobaa: operator-sdk
  install-ocs: operator-sdk
  	@echo "Installing ocs operator"
  	hack/install-ocs.sh
 +
 +.PHONY: okd-install
-+okd-install:
++okd-install: deps-update
 +	go mod download
 +
 +.PHONY: okd-lint
@@ -76,7 +69,7 @@ index 5f76fe3e..a771e8d8 100644
 +okd-build: okd-compile okd-gen-csv
 +
 +.PHONY: okd-test
-+okd-test: ocs-operator-ci
++okd-test: shellcheck-test golangci-lint unit-test verify-deps verify-generated
 +
 +.PHONY: okd-bundle
 +okd-bundle:
@@ -96,7 +89,7 @@ index a141072f..1ee14fad 100644
 +  publisher: OKD Community
  EOF
  ```
-
+ 
 diff --git a/config/manager/kustomization.yaml b/config/manager/kustomization.yaml
 index 49cf16d1..0effc6a6 100644
 --- a/config/manager/kustomization.yaml
@@ -149,36 +142,36 @@ index bb88ade1..6877c94b 100644
    description: |
 -    **Red Hat OpenShift Container Storage** deploys three operators.
 +    **OKD Container Storage** deploys three operators.
-
+ 
 -    ### OpenShift Container Storage operator
 +    ### OKD Container Storage operator
-
+ 
 -    The OpenShift Container Storage operator is the primary operator for OpenShift Container Storage. It serves to facilitate the other operators in OpenShift Container Storage by performing administrative tasks outside their scope as well as watching and configuring their CustomResources.
 +    The OKD Container Storage operator is the primary operator for OKD Container Storage. It serves to facilitate the other operators in OKD Container Storage by performing administrative tasks outside their scope as well as watching and configuring their CustomResources.
-
+ 
      ### Rook
-
+ 
 -    [Rook][1] deploys and manages Ceph on OpenShift, which provides block and file storage.
 +    [Rook][1] deploys and manages Ceph on OKD, which provides block and file storage.
-
+ 
      # Core Capabilities
-
+ 
 -    * **Self-managing service:** No matter which supported storage technologies you choose, OpenShift Container Storage ensures that resources can be deployed and managed automatically.
 +    * **Self-managing service:** No matter which supported storage technologies you choose, OKD Container Storage ensures that resources can be deployed and managed automatically.
-
+ 
 -    * **Hyper-scale or hyper-converged:** With OpenShift Container Storage you can either build dedicated storage clusters or hyper-converged clusters where your apps run alongside storage.
 +    * **Hyper-scale or hyper-converged:** With OKD Container Storage you can either build dedicated storage clusters or hyper-converged clusters where your apps run alongside storage.
-
+ 
 -    * **File, Block, and Object provided by OpenShift Container Storage:** OpenShift Container Storage integrates Ceph with multiple storage presentations including object storage (compatible with S3), block storage, and POSIX-compliant shared file system.
 +    * **File, Block, and Object provided by OKD Container Storage:** OKD Container Storage integrates Ceph with multiple storage presentations including object storage (compatible with S3), block storage, and POSIX-compliant shared file system.
-
+ 
 -    * **Your data, protected:** OpenShift Container Storage efficiently distributes and replicates your data across your cluster to minimize the risk of data loss. With snapshots, cloning, and versioning, no more losing sleep over your data.
 +    * **Your data, protected:** OKD Container Storage efficiently distributes and replicates your data across your cluster to minimize the risk of data loss. With snapshots, cloning, and versioning, no more losing sleep over your data.
-
+ 
      * **Elastic storage in your datacenter:** Scale is now possible in your datacenter. Get started with a few terabytes, and easily scale up.
-
+ 
      * **Simplified data management:** Easily create hybrid and multi-cloud data storage for your workloads, using a single namespace.
-
+ 
      [1]: https://rook.io
 -  displayName: OpenShift Container Storage
 +  displayName: OKD Container Storage
@@ -244,36 +237,36 @@ index f91fe072..8f3eac16 100644
    description: |
 -    **Red Hat OpenShift Container Storage** deploys three operators.
 +    **OKD Container Storage** deploys three operators.
-
+ 
 -    ### OpenShift Container Storage operator
 +    ### OKD Container Storage operator
-
+ 
 -    The OpenShift Container Storage operator is the primary operator for OpenShift Container Storage. It serves to facilitate the other operators in OpenShift Container Storage by performing administrative tasks outside their scope as well as watching and configuring their CustomResources.
 +    The OKD Container Storage operator is the primary operator for OKD Container Storage. It serves to facilitate the other operators in OKD Container Storage by performing administrative tasks outside their scope as well as watching and configuring their CustomResources.
-
+ 
      ### Rook
-
+ 
 -    [Rook][1] deploys and manages Ceph on OpenShift, which provides block and file storage.
 +    [Rook][1] deploys and manages Ceph on OKD, which provides block and file storage.
-
+ 
      # Core Capabilities
-
+ 
 -    * **Self-managing service:** No matter which supported storage technologies you choose, OpenShift Container Storage ensures that resources can be deployed and managed automatically.
 +    * **Self-managing service:** No matter which supported storage technologies you choose, OKD Container Storage ensures that resources can be deployed and managed automatically.
-
+ 
 -    * **Hyper-scale or hyper-converged:** With OpenShift Container Storage you can either build dedicated storage clusters or hyper-converged clusters where your apps run alongside storage.
 +    * **Hyper-scale or hyper-converged:** With OKD Container Storage you can either build dedicated storage clusters or hyper-converged clusters where your apps run alongside storage.
-
+ 
 -    * **File, Block, and Object provided by OpenShift Container Storage:** OpenShift Container Storage integrates Ceph with multiple storage presentations including object storage (compatible with S3), block storage, and POSIX-compliant shared file system.
 +    * **File, Block, and Object provided by OKD Container Storage:** OKD Container Storage integrates Ceph with multiple storage presentations including object storage (compatible with S3), block storage, and POSIX-compliant shared file system.
-
+ 
 -    * **Your data, protected:** OpenShift Container Storage efficiently distributes and replicates your data across your cluster to minimize the risk of data loss. With snapshots, cloning, and versioning, no more losing sleep over your data.
 +    * **Your data, protected:** OKD Container Storage efficiently distributes and replicates your data across your cluster to minimize the risk of data loss. With snapshots, cloning, and versioning, no more losing sleep over your data.
-
+ 
      * **Elastic storage in your datacenter:** Scale is now possible in your datacenter. Get started with a few terabytes, and easily scale up.
-
+ 
      * **Simplified data management:** Easily create hybrid and multi-cloud data storage for your workloads, using a single namespace.
-
+ 
      [1]: https://rook.io
 -  displayName: OpenShift Container Storage
 +  displayName: OKD Container Storage
@@ -315,7 +308,7 @@ index f385a24a..e9f4ae0a 100644
    sourceType: grpc
  ---
 diff --git a/deploy/ocs-operator/manifests/ocs-operator.clusterserviceversion.yaml b/deploy/ocs-operator/manifests/ocs-operator.clusterserviceversion.yaml
-index 5d41cf9c..fb289d5e 100644
+index 924c4388..e24261b0 100644
 --- a/deploy/ocs-operator/manifests/ocs-operator.clusterserviceversion.yaml
 +++ b/deploy/ocs-operator/manifests/ocs-operator.clusterserviceversion.yaml
 @@ -56,9 +56,9 @@ metadata:
@@ -346,36 +339,36 @@ index 5d41cf9c..fb289d5e 100644
    description: |
 -    **Red Hat OpenShift Container Storage** deploys three operators.
 +    **OKD Container Storage** deploys three operators.
-
+ 
 -    ### OpenShift Container Storage operator
 +    ### OKD Container Storage operator
-
+ 
 -    The OpenShift Container Storage operator is the primary operator for OpenShift Container Storage. It serves to facilitate the other operators in OpenShift Container Storage by performing administrative tasks outside their scope as well as watching and configuring their CustomResources.
 +    The OKD Container Storage operator is the primary operator for OKD Container Storage. It serves to facilitate the other operators in OKD Container Storage by performing administrative tasks outside their scope as well as watching and configuring their CustomResources.
-
+ 
      ### Rook
-
+ 
 -    [Rook][1] deploys and manages Ceph on OpenShift, which provides block and file storage.
 +    [Rook][1] deploys and manages Ceph on OKD, which provides block and file storage.
-
+ 
      # Core Capabilities
-
+ 
 -    * **Self-managing service:** No matter which supported storage technologies you choose, OpenShift Container Storage ensures that resources can be deployed and managed automatically.
 +    * **Self-managing service:** No matter which supported storage technologies you choose, OKD Container Storage ensures that resources can be deployed and managed automatically.
-
+ 
 -    * **Hyper-scale or hyper-converged:** With OpenShift Container Storage you can either build dedicated storage clusters or hyper-converged clusters where your apps run alongside storage.
 +    * **Hyper-scale or hyper-converged:** With OKD Container Storage you can either build dedicated storage clusters or hyper-converged clusters where your apps run alongside storage.
-
+ 
 -    * **File, Block, and Object provided by OpenShift Container Storage:** OpenShift Container Storage integrates Ceph with multiple storage presentations including object storage (compatible with S3), block storage, and POSIX-compliant shared file system.
 +    * **File, Block, and Object provided by OKD Container Storage:** OKD Container Storage integrates Ceph with multiple storage presentations including object storage (compatible with S3), block storage, and POSIX-compliant shared file system.
-
+ 
 -    * **Your data, protected:** OpenShift Container Storage efficiently distributes and replicates your data across your cluster to minimize the risk of data loss. With snapshots, cloning, and versioning, no more losing sleep over your data.
 +    * **Your data, protected:** OKD Container Storage efficiently distributes and replicates your data across your cluster to minimize the risk of data loss. With snapshots, cloning, and versioning, no more losing sleep over your data.
-
+ 
      * **Elastic storage in your datacenter:** Scale is now possible in your datacenter. Get started with a few terabytes, and easily scale up.
-
+ 
      * **Simplified data management:** Easily create hybrid and multi-cloud data storage for your workloads, using a single namespace.
-
+ 
      [1]: https://rook.io
 -  displayName: OpenShift Container Storage
 +  displayName: OKD Container Storage
@@ -397,7 +390,7 @@ index 5d41cf9c..fb289d5e 100644
                  - name: PROVIDER_API_SERVER_IMAGE
 -                  value: quay.io/ocs-dev/ocs-operator:latest
 +                  value: quay.io/okderators/ocs-operator:latest
-                 - name: ONBOARDING_SECRET_GENERATOR_IMAGE
+                 - name: ONBOARDING_VALIDATION_KEYS_GENERATOR_IMAGE
 -                  value: quay.io/ocs-dev/ocs-operator:latest
 +                  value: quay.io/okderators/ocs-operator:latest
                  - name: OPERATOR_NAMESPACE
@@ -439,8 +432,21 @@ index 5d41cf9c..fb289d5e 100644
      name: ocs-metrics-exporter
    - image: quay.io/openshift/origin-oauth-proxy:latest
      name: ux-backend-oauth-image
+diff --git a/hack/build-operator-catalog.sh b/hack/build-operator-catalog.sh
+index b16a4772..f94e6820 100755
+--- a/hack/build-operator-catalog.sh
++++ b/hack/build-operator-catalog.sh
+@@ -11,7 +11,7 @@ echo "Did you push the bundle image? It must be pullable from '$IMAGE_REGISTRY'.
+ echo "Run '${IMAGE_BUILD_CMD} push ${BUNDLE_FULL_IMAGE_NAME}'"
+ echo
+ ${OPM} render --output=yaml "${BUNDLE_FULL_IMAGE_NAME}" > catalog/ocs-bundle.yaml
+-${OPM} render --output=yaml ${NOOBAA_BUNDLE_FULL_IMAGE_NAME} > catalog/noobaa-bundle.yaml
++${OPM} render --output=yaml "${NOOBAA_BUNDLE_FULL_IMAGE_NAME}" > catalog/noobaa-bundle.yaml
+ ${OPM} validate catalog
+ ${OPM} generate dockerfile catalog
+ 
 diff --git a/hack/common.sh b/hack/common.sh
-index da52b53d..9a12ce9c 100644
+index da52b53d..1c62c3f5 100644
 --- a/hack/common.sh
 +++ b/hack/common.sh
 @@ -53,10 +53,10 @@ LATEST_NOOBAA_DB_IMAGE="docker.io/centos/postgresql-12-centos8"
@@ -449,16 +455,26 @@ index da52b53d..9a12ce9c 100644
  # TODO: change image once the quay repo is changed
 -LATEST_MUST_GATHER_IMAGE="quay.io/ocs-dev/ocs-must-gather:latest"
 +LATEST_MUST_GATHER_IMAGE="quay.io/okderators/ocs-must-gather:latest"
-
+ 
  DEFAULT_IMAGE_REGISTRY="quay.io"
 -DEFAULT_REGISTRY_NAMESPACE="ocs-dev"
 +DEFAULT_REGISTRY_NAMESPACE="okderators"
  DEFAULT_IMAGE_TAG="latest"
  DEFAULT_OPERATOR_IMAGE_NAME="ocs-operator"
  DEFAULT_OPERATOR_BUNDLE_NAME="ocs-operator-bundle"
+@@ -85,7 +85,8 @@ FILE_BASED_CATALOG_FULL_IMAGE_NAME="${FILE_BASED_CATALOG_FULL_IMAGE_NAME:-${DEFA
+ METRICS_EXPORTER_FULL_IMAGE_NAME="${METRICS_EXPORTER_FULL_IMAGE_NAME:-${DEFAULT_METRICS_EXPORTER_FULL_IMAGE_NAME}}"
+ UX_BACKEND_OAUTH_FULL_IMAGE_NAME="${UX_BACKEND_OAUTH_FULL_IMAGE_NAME:-${DEFAULT_UX_BACKEND_OAUTH_FULL_IMAGE_NAME}}"
+ 
+-NOOBAA_BUNDLE_FULL_IMAGE_NAME="quay.io/noobaa/noobaa-operator-bundle:master-20231217"
++DEFAULT_NOOBAA_BUNDLE_FULL_IMAGE_NAME="quay.io/noobaa/noobaa-operator-bundle:master-20231217"
++NOOBAA_BUNDLE_FULL_IMAGE_NAME="${NOOBAA_BUNDLE_FULL_IMAGE_NAME:-${DEFAULT_NOOBAA_BUNDLE_FULL_IMAGE_NAME}}"
+ 
+ OCS_OPERATOR_INSTALL="${OCS_OPERATOR_INSTALL:-false}"
+ OCS_CLUSTER_UNINSTALL="${OCS_CLUSTER_UNINSTALL:-false}"
 diff --git a/hack/compile-operator.sh b/hack/compile-operator.sh
 new file mode 100755
-index 00000000..9036bd3e
+index 00000000..35b02fad
 --- /dev/null
 +++ b/hack/compile-operator.sh
 @@ -0,0 +1,10 @@
@@ -470,14 +486,48 @@ index 00000000..9036bd3e
 +
 +go build -ldflags "$LDFLAGS" -tags netgo,osusergo -o ocs-operator main.go
 +go build -tags netgo,osusergo -o provider-api services/provider/main.go
-+go build -tags netgo,osusergo -o onboarding-secret-generator onboarding/main.go
++go build -tags netgo,osusergo -o onboarding-validation-keys-gen onboarding-validation-keys-generator/main.go
 +go build -tags netgo,osusergo -o ux-backend-server services/ux-backend/main.go
 \ No newline at end of file
+diff --git a/hack/generate-unified-csv.sh b/hack/generate-unified-csv.sh
+index 9cb7901f..28f865aa 100755
+--- a/hack/generate-unified-csv.sh
++++ b/hack/generate-unified-csv.sh
+@@ -30,6 +30,29 @@ function help_txt() {
+ 	echo "    ROOK_IMAGE=<image> CSV_VERSION=<version> $0"
+ }
+ 
++echo "CSV_VERSION: $CSV_VERSION"
++echo "REPLACES_CSV_VERSION: $REPLACES_CSV_VERSION"
++echo "SKIP_RANGE: $SKIP_RANGE"
++echo "ROOK_IMAGE: $ROOK_IMAGE"
++echo "CEPH_IMAGE: $CEPH_IMAGE"
++echo "ROOK_CSI_CEPH_IMAGE: $ROOK_CSI_CEPH_IMAGE"
++echo "ROOK_CSI_REGISTRAR_IMAGE: $ROOK_CSI_REGISTRAR_IMAGE"
++echo "ROOK_CSI_RESIZER_IMAGE: $ROOK_CSI_RESIZER_IMAGE"
++echo "ROOK_CSI_PROVISIONER_IMAGE: $ROOK_CSI_PROVISIONER_IMAGE"
++echo "ROOK_CSI_SNAPSHOTTER_IMAGE: $ROOK_CSI_SNAPSHOTTER_IMAGE"
++echo "ROOK_CSI_ATTACHER_IMAGE: $ROOK_CSI_ATTACHER_IMAGE"
++echo "NOOBAA_CORE_IMAGE: $NOOBAA_CORE_IMAGE"
++echo "NOOBAA_DB_IMAGE: $NOOBAA_DB_IMAGE"
++echo "OCS_IMAGE: $OCS_IMAGE"
++echo "OCS_METRICS_EXPORTER_IMAGE: $OCS_METRICS_EXPORTER_IMAGE"
++echo "UX_BACKEND_OAUTH_IMAGE: $UX_BACKEND_OAUTH_IMAGE"
++echo "OCS_MUST_GATHER_IMAGE: $OCS_MUST_GATHER_IMAGE"
++echo "OUTDIR_CRDS: $OUTDIR_CRDS"
++echo "BUNDLEMANIFESTS_DIR: $BUNDLEMANIFESTS_DIR"
++echo "OCS_FINAL_DIR: $OCS_FINAL_DIR"
++echo "TIMESTAMP: $TIMESTAMP"
++echo "ROOK_CSIADDONS_IMAGE: $ROOK_CSIADDONS_IMAGE"
++
+ # check required env vars
+ if [ -z "$NOOBAA_CORE_IMAGE" ] || [ -z "$NOOBAA_DB_IMAGE" ] || \
+    [ -z "$ROOK_IMAGE" ] || [ -z "$CSV_VERSION" ] || [ -z "$OCS_IMAGE" ] || [ -z "$OCS_METRICS_EXPORTER_IMAGE" ] || \
 diff --git a/hack/source-manifests.sh b/hack/source-manifests.sh
-index 8b3b86ae..5d329f20 100755
+index 2d632e06..51a5eeb3 100755
 --- a/hack/source-manifests.sh
 +++ b/hack/source-manifests.sh
-@@ -55,7 +55,7 @@ function dump_rook_csv() {
+@@ -53,7 +53,7 @@ function dump_rook_csv() {
  # Generate an OCS CSV using the operator-sdk.
  # This is the base CSV everything else gets merged into later on.
  function gen_ocs_csv() {
@@ -486,7 +536,7 @@ index 8b3b86ae..5d329f20 100755
  	rm -rf "$(dirname $OCS_FINAL_DIR)"
  	ocs_crds_outdir="$OUTDIR_CRDS/ocs"
  	rm -rf $OUTDIR_TEMPLATES/manifests/ocs-operator.clusterserviceversion.yaml
-@@ -67,7 +67,7 @@ function gen_ocs_csv() {
+@@ -65,7 +65,7 @@ function gen_ocs_csv() {
  	# shellcheck disable=SC2086
  	$OPERATOR_SDK $gen_args
  	pushd config/manager
@@ -573,7 +623,7 @@ index 42c8403c..6d015333 100644
    - name: odf-obc-quota-alert.rules
      rules:
 diff --git a/metrics/deploy/prometheus-ocs-rules.yaml b/metrics/deploy/prometheus-ocs-rules.yaml
-index a3540a45..db85fdfc 100644
+index f846d681..320065aa 100644
 --- a/metrics/deploy/prometheus-ocs-rules.yaml
 +++ b/metrics/deploy/prometheus-ocs-rules.yaml
 @@ -28,31 +28,31 @@ spec:
@@ -652,7 +702,7 @@ index e946b4bc..b1e5a7fc 100644
  				Data:      "PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTQ1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2UwMDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlJlZEhhdC1Mb2dvLUhhdC1Db2xvcjwvdGl0bGU+PHBhdGggZD0iTTE1Ny43Nyw2Mi42MWExNCwxNCwwLDAsMSwuMzEsMy40MmMwLDE0Ljg4LTE4LjEsMTcuNDYtMzAuNjEsMTcuNDZDNzguODMsODMuNDksNDIuNTMsNTMuMjYsNDIuNTMsNDRhNi40Myw2LjQzLDAsMCwxLC4yMi0xLjk0bC0zLjY2LDkuMDZhMTguNDUsMTguNDUsMCwwLDAtMS41MSw3LjMzYzAsMTguMTEsNDEsNDUuNDgsODcuNzQsNDUuNDgsMjAuNjksMCwzNi40My03Ljc2LDM2LjQzLTIxLjc3LDAtMS4wOCwwLTEuOTQtMS43My0xMC4xM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMjcuNDcsODMuNDljMTIuNTEsMCwzMC42MS0yLjU4LDMwLjYxLTE3LjQ2YTE0LDE0LDAsMCwwLS4zMS0zLjQybC03LjQ1LTMyLjM2Yy0xLjcyLTcuMTItMy4yMy0xMC4zNS0xNS43My0xNi42QzEyNC44OSw4LjY5LDEwMy43Ni41LDk3LjUxLjUsOTEuNjkuNSw5MCw4LDgzLjA2LDhjLTYuNjgsMC0xMS42NC01LjYtMTcuODktNS42LTYsMC05LjkxLDQuMDktMTIuOTMsMTIuNSwwLDAtOC40MSwyMy43Mi05LjQ5LDI3LjE2QTYuNDMsNi40MywwLDAsMCw0Mi41Myw0NGMwLDkuMjIsMzYuMywzOS40NSw4NC45NCwzOS40NU0xNjAsNzIuMDdjMS43Myw4LjE5LDEuNzMsOS4wNSwxLjczLDEwLjEzLDAsMTQtMTUuNzQsMjEuNzctMzYuNDMsMjEuNzdDNzguNTQsMTA0LDM3LjU4LDc2LjYsMzcuNTgsNTguNDlhMTguNDUsMTguNDUsMCwwLDEsMS41MS03LjMzQzIyLjI3LDUyLC41LDU1LC41LDc0LjIyYzAsMzEuNDgsNzQuNTksNzAuMjgsMTMzLjY1LDcwLjI4LDQ1LjI4LDAsNTYuNy0yMC40OCw1Ni43LTM2LjY1LDAtMTIuNzItMTEtMjcuMTYtMzAuODMtMzUuNzgiLz48L3N2Zz4=",
  				MediaType: "image/svg+xml",
 diff --git a/tools/csv-merger/csv-merger.go b/tools/csv-merger/csv-merger.go
-index 11539086..e0dcecd1 100644
+index 36d8fc7d..682d7c8b 100644
 --- a/tools/csv-merger/csv-merger.go
 +++ b/tools/csv-merger/csv-merger.go
 @@ -609,7 +609,7 @@ func generateUnifiedCSV() *csvv1.ClusterServiceVersion {
@@ -664,6 +714,6 @@ index 11539086..e0dcecd1 100644
  	ocsCSV.Annotations["capabilities"] = "Deep Insights"
  	ocsCSV.Annotations["categories"] = "Storage"
  	ocsCSV.Annotations["operators.operatorframework.io/operator-type"] = "non-standalone"
---
+-- 
 2.40.0.windows.1
 

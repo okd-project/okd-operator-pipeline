@@ -1,14 +1,15 @@
-From a7f5c084e7d61415577c34741672cd333ce5345f Mon Sep 17 00:00:00 2001
+From ccd8984827b78fdc356fb56b89d6a216dbe9689f Mon Sep 17 00:00:00 2001
 From: Zed Spencer-Milnes <zed@ziax.com>
 Date: Fri, 1 Mar 2024 00:28:27 +0000
-Subject: [PATCH] Prefer create and cp over cat and ls manipulation
+Subject: [PATCH 1/2] Prefer create and cp over cat and ls manipulation
 
+Signed-off-by: Zed Spencer-Milnes <zed@ziax.com>
 ---
  hack/source-manifests.sh | 26 ++++++++++++--------------
  1 file changed, 12 insertions(+), 14 deletions(-)
 
 diff --git a/hack/source-manifests.sh b/hack/source-manifests.sh
-index 8b3b86aeb2..40c9bd836c 100755
+index 8b3b86ae..2d632e06 100755
 --- a/hack/source-manifests.sh
 +++ b/hack/source-manifests.sh
 @@ -32,23 +32,21 @@ function dump_rook_csv() {
@@ -16,7 +17,7 @@ index 8b3b86aeb2..40c9bd836c 100755
  	rook_crds_dir=$rook_template_dir/ceph
  	rook_crds_outdir="$OUTDIR_CRDS/rook"
 +	tmp_container="rook-$(date +%S%N)"
-+	
++
  	rm -rf $ROOK_CSV
 -	rm -rf $rook_crds_outdir
  	mkdir -p $rook_crds_outdir
@@ -37,13 +38,16 @@ index 8b3b86aeb2..40c9bd836c 100755
 -	done;
 -	rm -f "$crd_list"
 +	echo "Creating rook image to play with using command: $IMAGE_BUILD_CMD create --name=$tmp_container $ROOK_IMAGE"
-+	$IMAGE_BUILD_CMD create --name=$tmp_container $ROOK_IMAGE
++	$IMAGE_BUILD_CMD create --name="$tmp_container" "$ROOK_IMAGE"
 +	echo "Dumping rook csv using command: $IMAGE_BUILD_CMD cp $tmp_container:$rook_template_dir/$rook_csv_template $ROOK_CSV"
-+	$IMAGE_BUILD_CMD cp $tmp_container:$rook_template_dir/$rook_csv_template $ROOK_CSV
++	$IMAGE_BUILD_CMD cp "$tmp_container":$rook_template_dir/$rook_csv_template $ROOK_CSV
 +	echo "Dumping rook crds using command: $IMAGE_BUILD_CMD cp $tmp_container:$rook_crds_dir $rook_crds_outdir"
-+	$IMAGE_BUILD_CMD cp $tmp_container:$rook_crds_dir $rook_crds_outdir
++	$IMAGE_BUILD_CMD cp "$tmp_container":$rook_crds_dir $rook_crds_outdir
 +	echo "Cleaning up rook container with command: $IMAGE_BUILD_CMD rm $tmp_container"
-+	$IMAGE_BUILD_CMD rm $tmp_container
++	$IMAGE_BUILD_CMD rm "$tmp_container"
  }
  
  # ==== DUMP OCS YAMLS ====
+-- 
+2.40.0.windows.1
+

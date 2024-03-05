@@ -3,6 +3,9 @@ kind: Task
 metadata:
   name: make
   namespace: okd-team
+  annotations:
+    io.openshift.podman-fuse: ""
+    io.kubernetes.cri-o.Devices: "/dev/fuse"
 spec:
   params:
     - name: image
@@ -51,6 +54,9 @@ spec:
         - name: $(workspaces.work.volume)
           mountPath: /var/lib/containers
           subPath: containers
+        - name: $(workspaces.work.volume)
+          mountPath: /home/build/.local/share/containers
+          subPath: local-containers
         - name: $(workspaces.work.volume)
           mountPath: /run/containers
           subPath: run-containers
