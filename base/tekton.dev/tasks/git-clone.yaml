@@ -248,10 +248,12 @@ spec:
         printf "%s" "${RESULT_COMMITTER_DATE}" > "$(results.committer-date.path)"
         printf "%s" "${RESULT_SHA}" > "$(results.commit.path)"
         printf "%s" "${PARAM_URL}" > "$(results.url.path)"
+        
+        git config --global user.email "okd@example.com"
+        git config --global user.name "OKD Build bot"
+  
         # Apply patches
         if [ -d "${WORKSPACE_PATCHES_PATH}" ] ; then
           cd "${CHECKOUT_DIR}"
-          for patch in $(ls "${WORKSPACE_PATCHES_PATH}"); do
-            git apply "${WORKSPACE_PATCHES_PATH}/${patch}"
-          done
+          git am -3 ${WORKSPACE_PATCHES_PATH}/*.patch
         fi

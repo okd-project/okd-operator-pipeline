@@ -3,6 +3,9 @@ kind: Task
 metadata:
   name: make
   namespace: okd-team
+  annotations:
+    io.openshift.podman-fuse: ""
+    io.kubernetes.cri-o.Devices: "/dev/fuse"
 spec:
   params:
     - name: image
@@ -22,25 +25,44 @@ spec:
       description: The normalized version to use for the build
       type: string
       default: $(params.version)
+    - name: env-map
+      description: The env map
+      type: string
+      default: ""
 
   workspaces:
-    - name: source
-    - name: build-cache-root
-      mountPath: /go/.cache
-    - name: build-pkg
-      mountPath: /go/pkg
+    - name: work
 
   steps:
     - name: run
-      workingDir: $(workspaces.source.path)/$(params.subdirectory)
+      imagePullPolicy: Always
+      workingDir: $(workspaces.work.path)/$(params.subdirectory)
       image: $(params.image)
-      command: ["make"]
-      args: ["$(params.args[*])"]
+      args: ["$(params.args)"]
+      script: |
+        echo "$(params.env-map) make $@"
+        $(params.env-map) make $@
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1001
+        runAsUser: 65532
       env:
         - name: "VERSION"
           value: "$(params.version)"
         - name: "NORM_VERSION"
           value: "$(params.normalized-version)"
+      volumeMounts:
+        - name: $(workspaces.work.volume)
+          mountPath: /var/lib/containers
+          subPath: containers
+        - name: $(workspaces.work.volume)
+          mountPath: /home/build/.local/share/containers
+          subPath: local-containers
+        - name: $(workspaces.work.volume)
+          mountPath: /run/containers
+          subPath: run-containers
+        - name: $(workspaces.work.volume)
+          mountPath: /home/build/go/.cache
+          subPath: go-cache-root
+        - name: $(workspaces.work.volume)
+          mountPath: /home/build/go/pkg
+          subPath: go-pkg

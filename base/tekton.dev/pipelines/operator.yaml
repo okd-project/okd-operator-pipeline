@@ -34,6 +34,10 @@ spec:
       description: Enable timestamp
       type: string
       default: "true"
+    - name: env-map
+      description: The env map
+      type: string
+      default: ""
   
   workspaces:
     - name: workspace
@@ -82,12 +86,10 @@ spec:
           value: ["okd-install"]
         - name: version
           value: $(tasks.get-id.results.build-id)
+        - name: env-map
+          value: $(params.env-map)=
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: lint
@@ -101,12 +103,10 @@ spec:
             value: repository
           - name: args
             value: [ "okd-lint" ]
+          - name: env-map
+            value: $(params.env-map)
       workspaces:
-          - name: source
-            workspace: workspace
-          - name: build-cache-root
-            workspace: workspace
-          - name: build-pkg
+          - name: work
             workspace: workspace
 
     - name: build
@@ -122,12 +122,10 @@ spec:
           value: [ "okd-build" ]
         - name: version
           value: $(tasks.get-id.results.build-id)
+        - name: env-map
+          value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: test
@@ -143,12 +141,10 @@ spec:
           value: [ "okd-test" ]
         - name: version
           value: $(tasks.get-id.results.build-id)
+        - name: env-map
+          value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: build-operator
@@ -194,12 +190,10 @@ spec:
           value: repository
         - name: normalized-version
           value: $(params.image-version)
+        - name: env-map
+          value: $(params.env-map)
       workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
+        - name: work
           workspace: workspace
 
     - name: build-bundle

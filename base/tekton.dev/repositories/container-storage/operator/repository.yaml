@@ -1,10 +1,10 @@
 apiVersion: polling.tekton.dev/v1alpha1
 kind: Repository
 metadata:
-  name: noobaa-operator-repository
+  name: ocs-repository
   namespace: okd-team
 spec:
-  url: https://github.com/noobaa/noobaa-operator.git
+  url: https://github.com/red-hat-storage/ocs-operator.git
   ref: master
   frequency: 5m
   type: github
@@ -17,19 +17,19 @@ spec:
       - name: repo-url
         expression: repoURL
       - name: base-image-registry
-        value: quay.io/okderators
+        expression: "'quay.io/okderators'"
       - name: image-name
-        value: noobaa-operator
+        expression: "'ocs-operator'"
       - name: image-version
-        value: dev
+        expression: "'dev'"
       - name: channel
-        value: dev
+        expression: "'dev'"
       - name: default-channel
-        value: stable
+        expression: "'stable'"
     workspaces:
       - name: output
         persistentVolumeClaim:
-          claimName: noobaa-operator-volume
+          claimName: ocs-operator-volume
       - name: patches
         persistentVolumeClaim:
-          claimName: noobaa-operator-patch
+          claimName: ocs-operator-patch
