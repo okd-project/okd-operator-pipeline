@@ -1,0 +1,65 @@
+From 19373e650dd6c54b9297f4042995018143b1df83 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Tue, 5 Mar 2024 16:43:40 +0000
+Subject: [PATCH] OKDify
+
+---
+ Makefile                       | 17 +++++++++++++++++
+ hack/build-metrics-exporter.sh |  5 +++--
+ metrics/Dockerfile             |  2 +-
+ 3 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 5f76fe3e..2b36a66a 100644
+--- a/Makefile
++++ b/Makefile
+@@ -187,3 +187,20 @@ install-noobaa: operator-sdk
+ install-ocs: operator-sdk
+ 	@echo "Installing ocs operator"
+ 	hack/install-ocs.sh
++
++.PHONY: okd-install
++okd-install: deps-update
++	go mod download
++
++.PHONY: okd-lint
++okd-lint: golangci-lint
++
++VERSION ?= $(shell git describe --tags --always --dirty)
++
++.PHONY: okd-build
++okd-build: ocs-metrics-exporter
++	cp -f metrics/Dockerfile Dockerfile
++
++.PHONY: okd-test
++okd-test:
++	@echo "Nothing to test for metrics-exporter"
+diff --git a/hack/build-metrics-exporter.sh b/hack/build-metrics-exporter.sh
+index 79e8be2a..a64b996f 100755
+--- a/hack/build-metrics-exporter.sh
++++ b/hack/build-metrics-exporter.sh
+@@ -6,6 +6,7 @@ source hack/common.sh
+ source hack/docker-common.sh
+ 
+ pushd metrics
+-${IMAGE_BUILD_CMD} build --no-cache -f Dockerfile -t "${METRICS_EXPORTER_FULL_IMAGE_NAME}" . \
+-    --build-arg="GOOS=${GOOS}" --build-arg="GOARCH=${GOARCH}" --build-arg="LDFLAGS=${LDFLAGS}"
++#${IMAGE_BUILD_CMD} build --no-cache -f Dockerfile -t "${METRICS_EXPORTER_FULL_IMAGE_NAME}" . \
++#    --build-arg="GOOS=${GOOS}" --build-arg="GOARCH=${GOARCH}" --build-arg="LDFLAGS=${LDFLAGS}"
++GOOS="$GOOS" GOARCH="$GOARCH" go build -ldflags "$LDFLAGS" -tags netgo,osusergo -o metrics-exporter main.go
+ popd
+diff --git a/metrics/Dockerfile b/metrics/Dockerfile
+index fc8f2441..724235b3 100644
+--- a/metrics/Dockerfile
++++ b/metrics/Dockerfile
+@@ -1,6 +1,6 @@
+ # Build stage 1
+ 
+-FROM golang:1.21 as builder
++FROM quay.io/projectquay/golang:1.21 as builder
+ 
+ WORKDIR /workspace
+ 
+-- 
+2.40.0.windows.1
+

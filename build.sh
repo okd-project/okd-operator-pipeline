@@ -19,10 +19,9 @@ function build_operand() {
     --param image-name=$3 \
     --param image-version=$VERSION \
     --param build-image=$BUILD_IMAGE \
-    --param enable-timestamp=$ENABLE_TIMESTAMP \
     --param env-map="$ENV_MAP" \
     --workspace name=workspace,claimName=$NAME-volume \
-    --workspace name=patches,config=$5-patch \
+    --workspace name=patches,config=$NAME-patch \
     --pod-template pod-template.yaml \
     -n $NAMESPACE \
     --showlog
@@ -95,6 +94,9 @@ case $1 in
   "ocs-operator")
     build_operator https://github.com/red-hat-storage/ocs-operator main ocs-operator \
       "CSV_VERSION=999.999.999 NOOBAA_CORE_IMAGE=quay.io/okderators/noobaa-core:dev NOOBAA_DB_IMAGE=quay.io/sclorg/postgresql-16-c9s:latest ROOK_IMAGE=docker.io/rook/ceph:v1.13.4 CEPH_IMAGE=quay.io/ceph/ceph:v18.2.1 NOOBAA_BUNDLE_FULL_IMAGE_NAME=quay.io/okderators/noobaa-operator-bundle:dev OCS_IMAGE=quay.io/okderators/ocs-operator:dev OCS_METRICS_EXPORTER_IMAGE=quay.io/okderators/ocs-metrics-exporter:dev UX_BACKEND_OAUTH_IMAGE=quay.io/openshift/origin-oauth-proxy:latest"
+    ;;
+  "ocs-metrics-exporter")
+    build_operand https://github.com/red-hat-storage/ocs-operator main ocs-metrics-exporter
     ;;
   *)
     echo "Usage: $0 <operand/operator name>"
