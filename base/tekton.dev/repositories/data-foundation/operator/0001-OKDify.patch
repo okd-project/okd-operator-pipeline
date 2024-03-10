@@ -1,0 +1,376 @@
+From 3b19fcf629697d6c773df68ffd6049b0f49319fd Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Fri, 8 Mar 2024 16:12:18 +0000
+Subject: [PATCH] OKDify
+
+---
+ Makefile                                      | 13 +++++
+ .../odf-operator.clusterserviceversion.yaml   | 50 +++++++++----------
+ config/console/kustomization.yaml             |  2 +-
+ config/install/kustomization.yaml             |  2 +-
+ config/install/odf-catalogsource.yaml         |  4 +-
+ config/manager/kustomization.yaml             |  2 +-
+ .../odf-operator.clusterserviceversion.yaml   | 14 +++---
+ .../odf-operator.csv.card-description.yaml    | 32 ++++++------
+ hack/make-bundle-vars.mk                      |  6 +--
+ hack/mirror-noobaa-images.sh                  |  4 +-
+ 10 files changed, 69 insertions(+), 60 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 07130323..2a6cf8dd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -177,3 +177,16 @@ catalog-build: catalog ## Build a catalog image.
+ .PHONY: catalog-push
+ catalog-push: ## Push a catalog image.
+ 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
++
++.PHONY: okd-install
++okd-install:
++	go mod download && go mod vendor && go mod tidy
++
++.PHONY: okd-lint
++okd-lint: lint
++
++.PHONY: okd-build
++okd-build: build
++
++.PHONY: okd-test
++okd-test: test
+\ No newline at end of file
+diff --git a/bundle/manifests/odf-operator.clusterserviceversion.yaml b/bundle/manifests/odf-operator.clusterserviceversion.yaml
+index 678cc2bd..04c8503d 100644
+--- a/bundle/manifests/odf-operator.clusterserviceversion.yaml
++++ b/bundle/manifests/odf-operator.clusterserviceversion.yaml
+@@ -34,10 +34,10 @@ metadata:
+     capabilities: Deep Insights
+     categories: Storage
+     console.openshift.io/plugins: '["odf-console"]'
+-    containerImage: quay.io/ocs-dev/odf-operator:latest
++    containerImage: quay.io/okderators/odf-operator:latest
+     createdAt: "2024-02-09T04:53:49Z"
+-    description: OpenShift Data Foundation provides a common control plane for storage
+-      solutions on OpenShift Container Platform.
++    description: OKD Data Foundation provides a common control plane for storage
++      solutions on OKD Container Platform.
+     features.operators.openshift.io/token-auth-aws: "true"
+     olm.properties: '[{"type": "olm.maxOpenShiftVersion", "value": "4.16"}]'
+     olm.skipRange: ""
+@@ -57,13 +57,11 @@ metadata:
+       }
+     operatorframework.io/suggested-namespace: openshift-storage
+     operators.openshift.io/infrastructure-features: '["disconnected"]'
+-    operators.openshift.io/valid-subscription: '["OpenShift Platform Plus","OpenShift
+-      Data Foundation Essentials","OpenShift Data Foundation Advanced"]'
+     operators.operatorframework.io/builder: operator-sdk-v1.30.0
+     operators.operatorframework.io/operator-type: standalone
+     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+     repository: https://github.com/red-hat-storage/odf-operator
+-    support: Red Hat
++    support: OKD Community
+     vendors.odf.openshift.io/kind: '["storagecluster.ocs.openshift.io/v1", "flashsystemcluster.odf.ibm.com/v1alpha1"]'
+   labels:
+     operatorframework.io/arch.amd64: supported
+@@ -88,37 +86,37 @@ spec:
+         version: v1
+       version: v1alpha1
+   description: |
+-    **Red Hat OpenShift Data Foundation** deploys three operators.
++    **OKD Data Foundation** deploys three operators.
+ 
+-    ### OpenShift Data Foundation
+-    The OpenShift Data Foundation operator is the primary operator for
+-    OpenShift Data Foundation. It serves to facilitate the other operators in
+-    OpenShift Data Foundation by performing administrative tasks outside their
++    ### OKD Data Foundation
++    The OKD Data Foundation operator is the primary operator for
++    OKD Data Foundation. It serves to facilitate the other operators in
++    OKD Data Foundation by performing administrative tasks outside their
+     scope as well as watching and configuring their CustomResources.
+ 
+     ### Rook
+-    [Rook][1] deploys and manages Ceph on OpenShift, which provides block,
++    [Rook][1] deploys and manages Ceph on OKD, which provides block,
+     file and object storage.
+ 
+     ### NooBaa operator
+     The NooBaa operator deploys and manages the [NooBaa][2] Multi-Cloud Gateway
+-    on OpenShift, which provides object storage.
++    on OKD, which provides object storage.
+ 
+     # Core Capabilities
+     * **Self-managing service:** No matter which supported storage technologies
+-    you choose, OpenShift Data Foundation ensures that resources can be
++    you choose, OKD Data Foundation ensures that resources can be
+     deployed and managed automatically.
+ 
+-    * **Hyper-scale or hyper-converged:** With OpenShift Data Foundation you
++    * **Hyper-scale or hyper-converged:** With OKD Data Foundation you
+     can either build dedicated storage clusters or hyper-converged clusters
+     where your apps run alongside storage.
+ 
+-    * **File, Block, and Object provided by OpenShift Data Foundation:**
+-    OpenShift Data Foundation integrates Ceph with multiple storage
++    * **File, Block, and Object provided by OKD Data Foundation:**
++    OKD Data Foundation integrates Ceph with multiple storage
+     presentations including object storage (compatible with S3), block storage,
+     and POSIX-compliant shared file system.
+ 
+-    * **Your data, protected:** OpenShift Data Foundation efficiently
++    * **Your data, protected:** OKD Data Foundation efficiently
+     distributes and replicates your data across your cluster to minimize the
+     risk of data loss. With snapshots, cloning, and versioning, no more losing
+     sleep over your data.
+@@ -130,15 +128,15 @@ spec:
+     storage for your workloads, using a single namespace.
+ 
+     # Subscriptions
+-    OpenShift Data Foundation requires a matching 1:1 ratio with the OpenShift
+-    subscription used. The Essential subscription is included in the OpenShift
++    OKD Data Foundation requires a matching 1:1 ratio with the OKD
++    subscription used. The Essential subscription is included in the OKD
+     Platform Plus subscription. Disaster Recovery features, external mode, and
+-    KMS integration for encryption at rest require a bundle of OpenShift
+-    Platform Plus with OpenShift Data Foundation Advanced subscription.
++    KMS integration for encryption at rest require a bundle of OKD
++    Platform Plus with OKD Data Foundation Advanced subscription.
+ 
+     [1]: https://rook.io
+     [2]: https://www.noobaa.io
+-  displayName: OpenShift Data Foundation
++  displayName: OKD Data Foundation
+   icon:
+   - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTQ1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2UwMDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlJlZEhhdC1Mb2dvLUhhdC1Db2xvcjwvdGl0bGU+PHBhdGggZD0iTTE1Ny43Nyw2Mi42MWExNCwxNCwwLDAsMSwuMzEsMy40MmMwLDE0Ljg4LTE4LjEsMTcuNDYtMzAuNjEsMTcuNDZDNzguODMsODMuNDksNDIuNTMsNTMuMjYsNDIuNTMsNDRhNi40Myw2LjQzLDAsMCwxLC4yMi0xLjk0bC0zLjY2LDkuMDZhMTguNDUsMTguNDUsMCwwLDAtMS41MSw3LjMzYzAsMTguMTEsNDEsNDUuNDgsODcuNzQsNDUuNDgsMjAuNjksMCwzNi40My03Ljc2LDM2LjQzLTIxLjc3LDAtMS4wOCwwLTEuOTQtMS43My0xMC4xM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMjcuNDcsODMuNDljMTIuNTEsMCwzMC42MS0yLjU4LDMwLjYxLTE3LjQ2YTE0LDE0LDAsMCwwLS4zMS0zLjQybC03LjQ1LTMyLjM2Yy0xLjcyLTcuMTItMy4yMy0xMC4zNS0xNS43My0xNi42QzEyNC44OSw4LjY5LDEwMy43Ni41LDk3LjUxLjUsOTEuNjkuNSw5MCw4LDgzLjA2LDhjLTYuNjgsMC0xMS42NC01LjYtMTcuODktNS42LTYsMC05LjkxLDQuMDktMTIuOTMsMTIuNSwwLDAtOC40MSwyMy43Mi05LjQ5LDI3LjE2QTYuNDMsNi40MywwLDAsMCw0Mi41Myw0NGMwLDkuMjIsMzYuMywzOS40NSw4NC45NCwzOS40NU0xNjAsNzIuMDdjMS43Myw4LjE5LDEuNzMsOS4wNSwxLjczLDEwLjEzLDAsMTQtMTUuNzQsMjEuNzctMzYuNDMsMjEuNzdDNzguNTQsMTA0LDM3LjU4LDc2LjYsMzcuNTgsNTguNDlhMTguNDUsMTguNDUsMCwwLDEsMS41MS03LjMzQzIyLjI3LDUyLC41LDU1LC41LDc0LjIyYzAsMzEuNDgsNzQuNTksNzAuMjgsMTMzLjY1LDcwLjI4LDQ1LjI4LDAsNTYuNy0yMC40OCw1Ni43LTM2LjY1LDAtMTIuNzItMTEtMjcuMTYtMzAuODMtMzUuNzgiLz48L3N2Zz4=
+     mediatype: image/svg+xml
+@@ -434,7 +432,7 @@ spec:
+                 envFrom:
+                 - configMapRef:
+                     name: odf-operator-manager-config
+-                image: quay.io/ocs-dev/odf-operator:latest
++                image: quay.io/okderators/odf-operator:latest
+                 livenessProbe:
+                   httpGet:
+                     path: /healthz
+@@ -483,7 +481,7 @@ spec:
+                 app: odf-console
+             spec:
+               containers:
+-              - image: quay.io/ocs-dev/odf-console:latest
++              - image: quay.io/okderators/odf-console:latest
+                 livenessProbe:
+                   httpGet:
+                     path: /plugin-manifest.json
+@@ -592,5 +590,5 @@ spec:
+     name: Red Hat Support
+   maturity: alpha
+   provider:
+-    name: Red Hat
++    name: OKD Community
+   version: 4.15.0
+diff --git a/config/console/kustomization.yaml b/config/console/kustomization.yaml
+index c0333b64..72feb9d1 100644
+--- a/config/console/kustomization.yaml
++++ b/config/console/kustomization.yaml
+@@ -11,5 +11,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
+ kind: Kustomization
+ images:
+ - name: odf-console
+-  newName: quay.io/ocs-dev/odf-console
++  newName: quay.io/okderators/odf-console
+   newTag: latest
+diff --git a/config/install/kustomization.yaml b/config/install/kustomization.yaml
+index 288ae4f9..ad172a1b 100644
+--- a/config/install/kustomization.yaml
++++ b/config/install/kustomization.yaml
+@@ -11,5 +11,5 @@ configurations:
+ # replace catalogsource image
+ images:
+ - name: catalog-img
+-  newName: quay.io/ocs-dev/odf-operator-catalog
++  newName: quay.io/okderators/odf-operator-catalog
+   newTag: latest
+diff --git a/config/install/odf-catalogsource.yaml b/config/install/odf-catalogsource.yaml
+index c2262d16..681d531a 100644
+--- a/config/install/odf-catalogsource.yaml
++++ b/config/install/odf-catalogsource.yaml
+@@ -6,5 +6,5 @@ metadata:
+ spec:
+   sourceType: grpc
+   image: catalog-img
+-  displayName: OpenShift Data Foundation
+-  publisher: Red Hat
++  displayName: OKD Data Foundation
++  publisher: OKD Community
+diff --git a/config/manager/kustomization.yaml b/config/manager/kustomization.yaml
+index b14ba087..cfedd213 100644
+--- a/config/manager/kustomization.yaml
++++ b/config/manager/kustomization.yaml
+@@ -14,5 +14,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
+ kind: Kustomization
+ images:
+ - name: controller
+-  newName: quay.io/ocs-dev/odf-operator
++  newName: quay.io/okderators/odf-operator
+   newTag: latest
+diff --git a/config/manifests/bases/odf-operator.clusterserviceversion.yaml b/config/manifests/bases/odf-operator.clusterserviceversion.yaml
+index 1c4ccf74..c48c54cf 100644
+--- a/config/manifests/bases/odf-operator.clusterserviceversion.yaml
++++ b/config/manifests/bases/odf-operator.clusterserviceversion.yaml
+@@ -6,9 +6,9 @@ metadata:
+     capabilities: Deep Insights
+     categories: Storage
+     console.openshift.io/plugins: '["odf-console"]'
+-    containerImage: quay.io/ocs-dev/odf-operator:latest
+-    description: OpenShift Data Foundation provides a common control plane for storage
+-      solutions on OpenShift Container Platform.
++    containerImage: quay.io/okderators/odf-operator:latest
++    description: OKD Data Foundation provides a common control plane for storage
++      solutions on OKD Container Platform.
+     features.operators.openshift.io/token-auth-aws: "true"
+     operatorframework.io/initialization-resource: |-
+       {
+@@ -26,10 +26,8 @@ metadata:
+       }
+     operatorframework.io/suggested-namespace: openshift-storage
+     operators.openshift.io/infrastructure-features: '["disconnected"]'
+-    operators.openshift.io/valid-subscription: '["OpenShift Platform Plus","OpenShift
+-      Data Foundation Essentials","OpenShift Data Foundation Advanced"]'
+     repository: https://github.com/red-hat-storage/odf-operator
+-    support: Red Hat
++    support: OKD Community
+     vendors.odf.openshift.io/kind: '["storagecluster.ocs.openshift.io/v1", "flashsystemcluster.odf.ibm.com/v1alpha1"]'
+   labels:
+     operatorframework.io/arch.amd64: supported
+@@ -53,7 +51,7 @@ spec:
+         name: storageclusters.ocs.openshift.io
+         version: v1
+       version: v1alpha1
+-  displayName: OpenShift Data Foundation
++  displayName: OKD Data Foundation
+   install:
+     spec:
+       deployments: null
+@@ -79,5 +77,5 @@ spec:
+     name: Red Hat Support
+   maturity: alpha
+   provider:
+-    name: Red Hat
++    name: OKD Community
+   version: 0.0.0
+diff --git a/config/manifests/bases/odf-operator.csv.card-description.yaml b/config/manifests/bases/odf-operator.csv.card-description.yaml
+index 86b9da08..b3aa9ab1 100644
+--- a/config/manifests/bases/odf-operator.csv.card-description.yaml
++++ b/config/manifests/bases/odf-operator.csv.card-description.yaml
+@@ -5,37 +5,37 @@ metadata:
+   namespace: placeholder
+ spec:
+   description: |
+-    **Red Hat OpenShift Data Foundation** deploys three operators.
++    **OKD Data Foundation** deploys three operators.
+ 
+-    ### OpenShift Data Foundation
+-    The OpenShift Data Foundation operator is the primary operator for
+-    OpenShift Data Foundation. It serves to facilitate the other operators in
+-    OpenShift Data Foundation by performing administrative tasks outside their
++    ### OKD Data Foundation
++    The OKD Data Foundation operator is the primary operator for
++    OKD Data Foundation. It serves to facilitate the other operators in
++    OKD Data Foundation by performing administrative tasks outside their
+     scope as well as watching and configuring their CustomResources.
+ 
+     ### Rook
+-    [Rook][1] deploys and manages Ceph on OpenShift, which provides block,
++    [Rook][1] deploys and manages Ceph on OKD, which provides block,
+     file and object storage.
+ 
+     ### NooBaa operator
+     The NooBaa operator deploys and manages the [NooBaa][2] Multi-Cloud Gateway
+-    on OpenShift, which provides object storage.
++    on OKD, which provides object storage.
+ 
+     # Core Capabilities
+     * **Self-managing service:** No matter which supported storage technologies
+-    you choose, OpenShift Data Foundation ensures that resources can be
++    you choose, OKD Data Foundation ensures that resources can be
+     deployed and managed automatically.
+ 
+-    * **Hyper-scale or hyper-converged:** With OpenShift Data Foundation you
++    * **Hyper-scale or hyper-converged:** With OKD Data Foundation you
+     can either build dedicated storage clusters or hyper-converged clusters
+     where your apps run alongside storage.
+ 
+-    * **File, Block, and Object provided by OpenShift Data Foundation:**
+-    OpenShift Data Foundation integrates Ceph with multiple storage
++    * **File, Block, and Object provided by OKD Data Foundation:**
++    OKD Data Foundation integrates Ceph with multiple storage
+     presentations including object storage (compatible with S3), block storage,
+     and POSIX-compliant shared file system.
+ 
+-    * **Your data, protected:** OpenShift Data Foundation efficiently
++    * **Your data, protected:** OKD Data Foundation efficiently
+     distributes and replicates your data across your cluster to minimize the
+     risk of data loss. With snapshots, cloning, and versioning, no more losing
+     sleep over your data.
+@@ -47,11 +47,11 @@ spec:
+     storage for your workloads, using a single namespace.
+ 
+     # Subscriptions
+-    OpenShift Data Foundation requires a matching 1:1 ratio with the OpenShift
+-    subscription used. The Essential subscription is included in the OpenShift
++    OKD Data Foundation requires a matching 1:1 ratio with the OKD
++    subscription used. The Essential subscription is included in the OKD
+     Platform Plus subscription. Disaster Recovery features, external mode, and
+-    KMS integration for encryption at rest require a bundle of OpenShift
+-    Platform Plus with OpenShift Data Foundation Advanced subscription.
++    KMS integration for encryption at rest require a bundle of OKD
++    Platform Plus with OKD Data Foundation Advanced subscription.
+ 
+     [1]: https://rook.io
+     [2]: https://www.noobaa.io
+diff --git a/hack/make-bundle-vars.mk b/hack/make-bundle-vars.mk
+index 91f36c55..f3eedebb 100644
+--- a/hack/make-bundle-vars.mk
++++ b/hack/make-bundle-vars.mk
+@@ -70,13 +70,13 @@ CRD_OPTIONS ?= "crd"
+ OCS_BUNDLE_NAME ?= ocs-operator
+ OCS_BUNDLE_IMG_NAME ?= $(OCS_BUNDLE_NAME)-bundle
+ OCS_BUNDLE_IMG_TAG ?= v4.15.0
+-OCS_BUNDLE_IMG_LOCATION ?= quay.io/ocs-dev
++OCS_BUNDLE_IMG_LOCATION ?= quay.io/okderators
+ OCS_BUNDLE_IMG ?= $(OCS_BUNDLE_IMG_LOCATION)/$(OCS_BUNDLE_IMG_NAME):$(OCS_BUNDLE_IMG_TAG)
+ 
+ NOOBAA_BUNDLE_NAME ?= noobaa-operator
+ NOOBAA_BUNDLE_IMG_NAME ?= $(NOOBAA_BUNDLE_NAME)-bundle
+ NOOBAA_BUNDLE_IMG_TAG ?= v5.14.0
+-NOOBAA_BUNDLE_IMG_LOCATION ?= quay.io/noobaa
++NOOBAA_BUNDLE_IMG_LOCATION ?= quay.io/okderators
+ NOOBAA_BUNDLE_IMG ?= $(NOOBAA_BUNDLE_IMG_LOCATION)/$(NOOBAA_BUNDLE_IMG_NAME):$(NOOBAA_BUNDLE_IMG_TAG)
+ 
+ CSIADDONS_BUNDLE_NAME ?= csi-addons
+@@ -93,7 +93,7 @@ IBM_BUNDLE_IMG ?= $(IBM_BUNDLE_IMG_LOCATION)/$(IBM_BUNDLE_IMG_NAME):$(IBM_BUNDLE
+ 
+ ODF_CONSOLE_IMG_NAME ?= odf-console
+ ODF_CONSOLE_IMG_TAG ?= latest
+-ODF_CONSOLE_IMG_LOCATION ?= quay.io/ocs-dev
++ODF_CONSOLE_IMG_LOCATION ?= quay.io/okderators
+ ODF_CONSOLE_IMG ?= $(ODF_CONSOLE_IMG_LOCATION)/$(ODF_CONSOLE_IMG_NAME):$(ODF_CONSOLE_IMG_TAG)
+ 
+ # A space-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0 example.com/operator-bundle:v0.2.0).
+diff --git a/hack/mirror-noobaa-images.sh b/hack/mirror-noobaa-images.sh
+index bfe1841d..8d97e42d 100755
+--- a/hack/mirror-noobaa-images.sh
++++ b/hack/mirror-noobaa-images.sh
+@@ -30,8 +30,8 @@ for image in noobaa-core noobaa-operator; do
+ 
+     docker pull "${latest_image}"
+ 
+-    quay_latest="quay.io/ocs-dev/${image}:${latest}"
+-    quay_master="quay.io/ocs-dev/${image}:master"
++    quay_latest="quay.io/okderators/${image}:${latest}"
++    quay_master="quay.io/okderators/${image}:master"
+     docker tag "${latest_image}" "${quay_latest}"
+     docker tag "${latest_image}" "${quay_master}"
+ 
+-- 
+2.40.0.windows.1
+

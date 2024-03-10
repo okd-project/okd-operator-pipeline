@@ -98,6 +98,9 @@ case $1 in
   "ocs-metrics-exporter")
     build_operand https://github.com/red-hat-storage/ocs-operator main ocs-metrics-exporter
     ;;
+  "odf-operator")
+    build_operator https://github.com/red-hat-storage/odf-operator main odf-operator
+    ;;
   *)
     echo "Usage: $0 <operand/operator name>"
     exit 1
