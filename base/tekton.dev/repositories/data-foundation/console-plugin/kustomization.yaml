@@ -1,0 +1,12 @@
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: odf-console-patch
+    namespace: okd-team
+    files:
+      - 0001-OKDify.patch
+
+resources:
+  - repository.yaml
+  - pvc.yaml

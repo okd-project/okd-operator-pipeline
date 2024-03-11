@@ -108,7 +108,7 @@ spec:
     - name: gitInitImage
       description: The image providing the git-init binary that this Task runs.
       type: string
-      default: "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.40.2"
+      default: "cgr.dev/chainguard/git:latest-nonroot"
     - name: userHome
       description: |
         Absolute path to the user's home directory.
@@ -229,16 +229,9 @@ spec:
         test -z "${PARAM_NO_PROXY}" || export NO_PROXY="${PARAM_NO_PROXY}"
 
         git config --global --add safe.directory "${WORKSPACE_OUTPUT_PATH}"
-        /ko-app/git-init \
-          -url="${PARAM_URL}" \
-          -revision="${PARAM_REVISION}" \
-          -refspec="${PARAM_REFSPEC}" \
-          -path="${CHECKOUT_DIR}" \
-          -sslVerify="${PARAM_SSL_VERIFY}" \
-          -submodules="${PARAM_SUBMODULES}" \
-          -depth="${PARAM_DEPTH}" \
-          -sparseCheckoutDirectories="${PARAM_SPARSE_CHECKOUT_DIRECTORIES}"
+        git clone "${PARAM_URL}" "${CHECKOUT_DIR}" --depth "${PARAM_DEPTH}" --no-single-branch --branch "${PARAM_REVISION}" --config advice.detachedHead=false
         cd "${CHECKOUT_DIR}"
+        git checkout -f "${PARAM_REVISION}"
         RESULT_SHA="$(git rev-parse HEAD)"
         EXIT_CODE="$?"
         if [ "${EXIT_CODE}" != 0 ] ; then

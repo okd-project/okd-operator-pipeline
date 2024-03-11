@@ -98,6 +98,9 @@ case $1 in
   "ocs-metrics-exporter")
     build_operand https://github.com/red-hat-storage/ocs-operator main ocs-metrics-exporter
     ;;
+  "odf-console")
+    build_operand https://github.com/red-hat-storage/odf-console release-4.15 odf-console
+    ;;
   "odf-operator")
     build_operator https://github.com/red-hat-storage/odf-operator main odf-operator
     ;;
