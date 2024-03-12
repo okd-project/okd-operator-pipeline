@@ -246,7 +246,7 @@ spec:
         git config --global user.name "OKD Build bot"
   
         # Apply patches
-        if [ -d "${WORKSPACE_PATCHES_PATH}" ] ; then
+        if ls $WORKSPACE_PATCHES_PATH/*.patch 1> /dev/null 2>&1; then
           cd "${CHECKOUT_DIR}"
           git am -3 ${WORKSPACE_PATCHES_PATH}/*.patch
         fi

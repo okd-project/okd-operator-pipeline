@@ -1,18 +1,19 @@
-From 3faaac9293a9b4de16e6e3d711d0f66e3809f346 Mon Sep 17 00:00:00 2001
+From b4a639608e52a5c4fb165f7251eeec8b5a4a3778 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Mon, 11 Mar 2024 19:09:44 +0000
 Subject: [PATCH] OKDify
 
 ---
- Makefile             | 10 ++++++++++
- images/ceph/Makefile | 12 ++++++------
- 2 files changed, 16 insertions(+), 6 deletions(-)
+ Makefile             | 11 +++++++++++
+ build/csv/csv-gen.sh | 18 +++++++++---------
+ images/ceph/Makefile | 14 +++++++-------
+ 3 files changed, 27 insertions(+), 16 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 140093b5f..cb4322bbf 100644
+index 140093b5f..25bf0a80d 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -264,3 +264,13 @@ help: ## Show this help menu.
+@@ -264,3 +264,14 @@ help: ## Show this help menu.
  	@grep --no-filename -E '^[a-zA-Z_%-. ]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
  	@echo ""
  	@echo "$$HELPTEXT"
@@ -21,25 +22,84 @@ index 140093b5f..cb4322bbf 100644
 +
 +okd-install: install
 +
-+okd-lint: lint
++okd-lint:
++	@echo "Lint disabled"
 +
 +okd-build: build
 +
 +okd-test: test
 \ No newline at end of file
+diff --git a/build/csv/csv-gen.sh b/build/csv/csv-gen.sh
+index cab017e01..1dad2d4aa 100755
+--- a/build/csv/csv-gen.sh
++++ b/build/csv/csv-gen.sh
+@@ -13,17 +13,17 @@ YQ_CMD_DELETE=("$yq" delete -i)
+ YQ_CMD_MERGE_OVERWRITE=("$yq" merge --inplace --overwrite --prettyPrint)
+ YQ_CMD_MERGE=("$yq" merge --arrays=append --inplace)
+ YQ_CMD_WRITE=("$yq" write --inplace -P)
+-CSV_FILE_NAME="../../build/csv/ceph/$PLATFORM/manifests/rook-ceph.clusterserviceversion.yaml"
+-CEPH_EXTERNAL_SCRIPT_FILE="../../deploy/examples/create-external-cluster-resources.py"
+-ASSEMBLE_FILE_COMMON="../../deploy/olm/assemble/metadata-common.yaml"
+-ASSEMBLE_FILE_OCP="../../deploy/olm/assemble/metadata-ocp.yaml"
++CSV_FILE_NAME="build/csv/ceph/$PLATFORM/manifests/rook-ceph.clusterserviceversion.yaml"
++CEPH_EXTERNAL_SCRIPT_FILE="deploy/examples/create-external-cluster-resources.py"
++ASSEMBLE_FILE_COMMON="deploy/olm/assemble/metadata-common.yaml"
++ASSEMBLE_FILE_OCP="deploy/olm/assemble/metadata-ocp.yaml"
+
+ #############
+ # FUNCTIONS #
+ #############
+
+ function generate_csv() {
+-    kubectl kustomize ../../deploy/examples/ | "$operator_sdk" generate bundle --package="rook-ceph" --output-dir="../../build/csv/ceph/$PLATFORM" --extra-service-accounts=rook-ceph-default,rook-csi-rbd-provisioner-sa,rook-csi-rbd-plugin-sa,rook-csi-cephfs-provisioner-sa,rook-csi-nfs-provisioner-sa,rook-csi-nfs-plugin-sa,rook-csi-cephfs-plugin-sa,rook-ceph-system,rook-ceph-rgw,rook-ceph-purge-osd,rook-ceph-osd,rook-ceph-mgr,rook-ceph-cmd-reporter
++    kubectl kustomize deploy/examples/ | "$operator_sdk" generate bundle --package="rook-ceph" --output-dir="build/csv/ceph/$PLATFORM" --extra-service-accounts=rook-ceph-default,rook-csi-rbd-provisioner-sa,rook-csi-rbd-plugin-sa,rook-csi-cephfs-provisioner-sa,rook-csi-nfs-provisioner-sa,rook-csi-nfs-plugin-sa,rook-csi-cephfs-plugin-sa,rook-ceph-system,rook-ceph-rgw,rook-ceph-purge-osd,rook-ceph-osd,rook-ceph-mgr,rook-ceph-cmd-reporter
+
+     # cleanup to get the expected state before merging the real data from assembles
+     "${YQ_CMD_DELETE[@]}" "$CSV_FILE_NAME" 'spec.icon[*]'
+@@ -38,7 +38,7 @@ function generate_csv() {
+     "${YQ_CMD_MERGE[@]}" "$CSV_FILE_NAME" "$ASSEMBLE_FILE_OCP"
+
+     # We don't need to include these files in csv as ocs-operator creates its own.
+-    rm -rf "../../build/csv/ceph/$PLATFORM/manifests/rook-ceph-operator-config_v1_configmap.yaml"
++    rm -rf "build/csv/ceph/$PLATFORM/manifests/rook-ceph-operator-config_v1_configmap.yaml"
+
+     # This change are just to make the CSV file as it was earlier and as ocs-operator reads.
+     # Skipping this change for darwin since `sed -i` doesn't work with darwin properly.
+@@ -51,9 +51,9 @@ function generate_csv() {
+     sed -i 's/name: rook-ceph.v.*/name: rook-ceph.v{{.RookOperatorCsvVersion}}/g' "$CSV_FILE_NAME"
+     sed -i 's/version: 0.0.0/version: {{.RookOperatorCsvVersion}}/g' "$CSV_FILE_NAME"
+
+-    mv "$CSV_FILE_NAME" "../../build/csv/"
+-    mv "../../build/csv/ceph/$PLATFORM/manifests/"* "../../build/csv/ceph/"
+-    rm -rf "../../build/csv/ceph/$PLATFORM"
++    mv "$CSV_FILE_NAME" "build/csv/"
++    mv "build/csv/ceph/$PLATFORM/manifests/"* "build/csv/ceph/"
++    rm -rf "build/csv/ceph/$PLATFORM"
+ }
+
+ if [ "$PLATFORM" == "amd64" ]; then
 diff --git a/images/ceph/Makefile b/images/ceph/Makefile
-index e93dab7d9..e6f4dfe5c 100755
+index e93dab7d9..b224f1296 100755
 --- a/images/ceph/Makefile
 +++ b/images/ceph/Makefile
 @@ -32,7 +32,7 @@ GOHOST := GOOS=$(GOHOSTOS) GOARCH=$(GOHOSTARCH) go
  MANIFESTS_DIR=../../deploy/examples
- 
+
  ifeq ($(BUILD_CONTEXT_DIR),)
 -BUILD_CONTEXT_DIR := $(shell mktemp -d)
-+BUILD_CONTEXT_DIR := ../../
++BUILD_CONTEXT_DIR := $(shell realpath ../..)
  endif
- 
+
  # Note: as of version 1.3 of operator-sdk, the url format changed to:
+@@ -82,7 +82,7 @@ do.build:
+
+ ifeq ($(INCLUDE_CSV_TEMPLATES),true)
+ 	@$(MAKE) csv
+-	@cp -r ../../build/csv $(BUILD_CONTEXT_DIR)/ceph-csv-templates
++	@cp -r ../../build/csv/ $(BUILD_CONTEXT_DIR)/ceph-csv-templates/
+ 	@rm $(BUILD_CONTEXT_DIR)/ceph-csv-templates/csv-gen.sh
+ 	@$(MAKE) csv-clean
+
 @@ -97,9 +97,9 @@ endif
  		-t $(CEPH_IMAGE) \
  		$(BUILD_CONTEXT_DIR);\
@@ -50,7 +110,7 @@ index e93dab7d9..e6f4dfe5c 100755
 +#	@if [ -z "$(SAVE_BUILD_CONTEXT_DIR)" ]; then\
 +#		rm -fr $(BUILD_CONTEXT_DIR);\
 +#	fi
- 
+
  # call this before building multiple arches in parallel to prevent parallel build processes from
  # conflicting
 @@ -122,9 +122,9 @@ $(OPERATOR_SDK):
@@ -58,7 +118,7 @@ index e93dab7d9..e6f4dfe5c 100755
  	@echo generate csv with latest operator-sdk
  	@mkdir -p ../../build/csv/ceph
 -	@../../build/csv/csv-gen.sh
-+	@cd ../../ && build/csv/csv-gen.sh
++	@(cd ../../ && build/csv/csv-gen.sh)
  	@# #adding 2>/dev/null since CI doesn't seems to be creating bundle.Dockerfile file
 -	@rm bundle.Dockerfile 2> /dev/null || true
 +	@#rm bundle.Dockerfile 2> /dev/null || true
