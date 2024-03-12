@@ -23,6 +23,7 @@ RUN sed -i -e 's|^#mount_program|mount_program|g' \
            chmod 644 /etc/containers/containers.conf
 # End Podman Adaption
 
+ENV OC_VERSION 4.15.0-0.okd-2024-03-10-010116
 
 ENV GOLANG_VERSION 1.21.7
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
@@ -40,6 +41,9 @@ ENV GOLANGCI_LINT_VERSION v1.56.2
 
 RUN npm install -g yarn
 
+RUN curl -fsSLo oc.tar.gz "https://github.com/okd-project/okd/releases/download/${OC_VERSION}/openshift-client-${OS}-${OC_VERSION}.tar.gz" \
+    && tar -C /usr/bin -xzf oc.tar.gz \
+    && rm oc.tar.gz
 
 RUN curl -fsSLo ${OPERATOR_SDK_BIN} "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_${OS}_${ARCH}" \
     && chmod 0755 $OPERATOR_SDK_BIN
