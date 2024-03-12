@@ -46,6 +46,7 @@ function build_operator() {
     --pod-template pod-template.yaml \
     -n $NAMESPACE \
     --showlog
+  echo "$ENV_MAP"
 }
 
 case $1 in
@@ -62,13 +63,13 @@ case $1 in
       -n okd-team
     ;;
   "gitops-console-plugin")
-    build_operand https://github.com/redhat-developer/gitops-console-plugin main gitops-console-plugin
+    build_operand https://github.com/redhat-developer/gitops-console-plugin "${BRANCH:-main}" gitops-console-plugin
     ;;
   "gitops-backend")
-    build_operand https://github.com/redhat-developer/gitops-backend master gitops-backend
+    build_operand https://github.com/redhat-developer/gitops-backend "${BRANCH:-master}" gitops-backend
     ;;
   "gitops-operator")
-    build_operator https://github.com/redhat-developer/gitops-operator master gitops-operator
+    build_operator https://github.com/redhat-developer/gitops-operator "${BRANCH:-master}" gitops-operator
     ;;
   "noobaa-core")
     tkn pipeline start operand-noobaa \
@@ -83,26 +84,29 @@ case $1 in
       -n okd-team
     ;;
   "noobaa-operator")
-    build_operator https://github.com/noobaa/noobaa-operator master noobaa-operator
+    build_operator https://github.com/noobaa/noobaa-operator "${BRANCH:-master}" noobaa-operator
     ;;
   "logging-view-plugin")
-    build_operand https://github.com/openshift/logging-view-plugin main logging-view-plugin
+    build_operand https://github.com/openshift/logging-view-plugin "${BRANCH:-main}" logging-view-plugin
     ;;
   "log-file-metric-exporter")
-    build_operand https://github.com/ViaQ/log-file-metric-exporter release-5.8 log-file-metric-exporter
+    build_operand https://github.com/ViaQ/log-file-metric-exporter "${BRANCH:-release-5.8}" log-file-metric-exporter
     ;;
   "ocs-operator")
-    build_operator https://github.com/red-hat-storage/ocs-operator main ocs-operator \
+    build_operator https://github.com/red-hat-storage/ocs-operator "${BRANCH:-main}" ocs-operator \
       "CSV_VERSION=999.999.999 NOOBAA_CORE_IMAGE=quay.io/okderators/noobaa-core:dev NOOBAA_DB_IMAGE=quay.io/sclorg/postgresql-16-c9s:latest ROOK_IMAGE=docker.io/rook/ceph:v1.13.4 CEPH_IMAGE=quay.io/ceph/ceph:v18.2.1 NOOBAA_BUNDLE_FULL_IMAGE_NAME=quay.io/okderators/noobaa-operator-bundle:dev OCS_IMAGE=quay.io/okderators/ocs-operator:dev OCS_METRICS_EXPORTER_IMAGE=quay.io/okderators/ocs-metrics-exporter:dev UX_BACKEND_OAUTH_IMAGE=quay.io/openshift/origin-oauth-proxy:latest"
     ;;
   "ocs-metrics-exporter")
-    build_operand https://github.com/red-hat-storage/ocs-operator main ocs-metrics-exporter
+    build_operand https://github.com/red-hat-storage/ocs-operator "${BRANCH:-main}" ocs-metrics-exporter
     ;;
   "odf-console")
-    build_operand https://github.com/red-hat-storage/odf-console release-4.15 odf-console
+    build_operand https://github.com/red-hat-storage/odf-console "${BRANCH:-release-4.15}" odf-console
     ;;
   "odf-operator")
-    build_operator https://github.com/red-hat-storage/odf-operator main odf-operator
+    build_operator https://github.com/red-hat-storage/odf-operator "${BRANCH:-main}" odf-operator
+    ;;
+  "rook-operator")
+    build_operator https://github.com/red-hat-storage/rook "${BRANCH:-master}" rook
     ;;
   *)
     echo "Usage: $0 <operand/operator name>"

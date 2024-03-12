@@ -4,13 +4,13 @@ FROM quay.io/centos/centos:stream9
 RUN dnf -y makecache && \
     dnf -y update && \
     rpm --setcaps shadow-utils 2>/dev/null && \
-    dnf install -y git gcc make unzip diffutils nodejs npm podman fuse-overlayfs --exclude container-selinux && \
+    dnf install -y which git gcc make unzip diffutils nodejs npm podman fuse-overlayfs --exclude container-selinux && \
     dnf -y clean all && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
 # Start Podman Adaption
 # https://github.com/containers/podman/blob/main/contrib/podmanimage/stable/Containerfile
-ARG _REPO_URL="https://raw.githubusercontent.com/containers/podman/main/contrib/podmanimage/stable"
+ARG _REPO_URL="https://raw.githubusercontent.com/containers/image_build/main/podman/stable"
 ADD $_REPO_URL/containers.conf /etc/containers/containers.conf
 ADD $_REPO_URL/podman-containers.conf /home/build/.config/containers/containers.conf
 

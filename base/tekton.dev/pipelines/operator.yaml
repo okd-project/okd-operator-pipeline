@@ -87,7 +87,7 @@ spec:
         - name: version
           value: $(tasks.get-id.results.build-id)
         - name: env-map
-          value: $(params.env-map)=
+          value: $(params.env-map)
       workspaces:
         - name: work
           workspace: workspace

@@ -1,10 +1,11 @@
-From 3b19fcf629697d6c773df68ffd6049b0f49319fd Mon Sep 17 00:00:00 2001
+From 86552e28bfcfe9730ebe14a612d90949967f8742 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Fri, 8 Mar 2024 16:12:18 +0000
 Subject: [PATCH] OKDify
 
 ---
- Makefile                                      | 13 +++++
+ Dockerfile                                    |  4 +-
+ Makefile                                      | 17 +++++++
  .../odf-operator.clusterserviceversion.yaml   | 50 +++++++++----------
  config/console/kustomization.yaml             |  2 +-
  config/install/kustomization.yaml             |  2 +-
@@ -12,15 +13,37 @@ Subject: [PATCH] OKDify
  config/manager/kustomization.yaml             |  2 +-
  .../odf-operator.clusterserviceversion.yaml   | 14 +++---
  .../odf-operator.csv.card-description.yaml    | 32 ++++++------
+ hack/golangci_lint.sh                         | 20 ++++++++
  hack/make-bundle-vars.mk                      |  6 +--
  hack/mirror-noobaa-images.sh                  |  4 +-
- 10 files changed, 69 insertions(+), 60 deletions(-)
+ 12 files changed, 95 insertions(+), 62 deletions(-)
+ create mode 100755 hack/golangci_lint.sh
 
+diff --git a/Dockerfile b/Dockerfile
+index e86d2a1e..76eddced 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,5 +1,5 @@
+ # Build the manager binary
+-FROM golang:1.20 as builder
++FROM quay.io/projectquay/golang:1.20 as builder
+
+ WORKDIR /workspace
+
+@@ -23,7 +23,7 @@ COPY main.go Makefile ./
+ RUN make go-test
+
+ # Build
+-RUN make go-build
++RUN GOBIN=/workspace/bin make go-build
+
+ # Use distroless as minimal base image to package the manager binary
+ # Refer to https://github.com/GoogleContainerTools/distroless for more details
 diff --git a/Makefile b/Makefile
-index 07130323..2a6cf8dd 100644
+index 07130323..980a375f 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -177,3 +177,16 @@ catalog-build: catalog ## Build a catalog image.
+@@ -177,3 +177,20 @@ catalog-build: catalog ## Build a catalog image.
  .PHONY: catalog-push
  catalog-push: ## Push a catalog image.
  	$(MAKE) docker-push IMG=$(CATALOG_IMG)
@@ -30,13 +53,17 @@ index 07130323..2a6cf8dd 100644
 +	go mod download && go mod vendor && go mod tidy
 +
 +.PHONY: okd-lint
-+okd-lint: lint
++okd-lint:
++	./hack/golangci_lint.sh
 +
 +.PHONY: okd-build
 +okd-build: build
 +
 +.PHONY: okd-test
 +okd-test: test
++
++.PHONY: okd-bundle
++okd-bundle:
 \ No newline at end of file
 diff --git a/bundle/manifests/odf-operator.clusterserviceversion.yaml b/bundle/manifests/odf-operator.clusterserviceversion.yaml
 index 678cc2bd..04c8503d 100644
@@ -77,7 +104,7 @@ index 678cc2bd..04c8503d 100644
    description: |
 -    **Red Hat OpenShift Data Foundation** deploys three operators.
 +    **OKD Data Foundation** deploys three operators.
- 
+
 -    ### OpenShift Data Foundation
 -    The OpenShift Data Foundation operator is the primary operator for
 -    OpenShift Data Foundation. It serves to facilitate the other operators in
@@ -87,35 +114,35 @@ index 678cc2bd..04c8503d 100644
 +    OKD Data Foundation. It serves to facilitate the other operators in
 +    OKD Data Foundation by performing administrative tasks outside their
      scope as well as watching and configuring their CustomResources.
- 
+
      ### Rook
 -    [Rook][1] deploys and manages Ceph on OpenShift, which provides block,
 +    [Rook][1] deploys and manages Ceph on OKD, which provides block,
      file and object storage.
- 
+
      ### NooBaa operator
      The NooBaa operator deploys and manages the [NooBaa][2] Multi-Cloud Gateway
 -    on OpenShift, which provides object storage.
 +    on OKD, which provides object storage.
- 
+
      # Core Capabilities
      * **Self-managing service:** No matter which supported storage technologies
 -    you choose, OpenShift Data Foundation ensures that resources can be
 +    you choose, OKD Data Foundation ensures that resources can be
      deployed and managed automatically.
- 
+
 -    * **Hyper-scale or hyper-converged:** With OpenShift Data Foundation you
 +    * **Hyper-scale or hyper-converged:** With OKD Data Foundation you
      can either build dedicated storage clusters or hyper-converged clusters
      where your apps run alongside storage.
- 
+
 -    * **File, Block, and Object provided by OpenShift Data Foundation:**
 -    OpenShift Data Foundation integrates Ceph with multiple storage
 +    * **File, Block, and Object provided by OKD Data Foundation:**
 +    OKD Data Foundation integrates Ceph with multiple storage
      presentations including object storage (compatible with S3), block storage,
      and POSIX-compliant shared file system.
- 
+
 -    * **Your data, protected:** OpenShift Data Foundation efficiently
 +    * **Your data, protected:** OKD Data Foundation efficiently
      distributes and replicates your data across your cluster to minimize the
@@ -123,7 +150,7 @@ index 678cc2bd..04c8503d 100644
      sleep over your data.
 @@ -130,15 +128,15 @@ spec:
      storage for your workloads, using a single namespace.
- 
+
      # Subscriptions
 -    OpenShift Data Foundation requires a matching 1:1 ratio with the OpenShift
 -    subscription used. The Essential subscription is included in the OpenShift
@@ -134,7 +161,7 @@ index 678cc2bd..04c8503d 100644
 -    Platform Plus with OpenShift Data Foundation Advanced subscription.
 +    KMS integration for encryption at rest require a bundle of OKD
 +    Platform Plus with OKD Data Foundation Advanced subscription.
- 
+
      [1]: https://rook.io
      [2]: https://www.noobaa.io
 -  displayName: OpenShift Data Foundation
@@ -267,7 +294,7 @@ index 86b9da08..b3aa9ab1 100644
    description: |
 -    **Red Hat OpenShift Data Foundation** deploys three operators.
 +    **OKD Data Foundation** deploys three operators.
- 
+
 -    ### OpenShift Data Foundation
 -    The OpenShift Data Foundation operator is the primary operator for
 -    OpenShift Data Foundation. It serves to facilitate the other operators in
@@ -277,35 +304,35 @@ index 86b9da08..b3aa9ab1 100644
 +    OKD Data Foundation. It serves to facilitate the other operators in
 +    OKD Data Foundation by performing administrative tasks outside their
      scope as well as watching and configuring their CustomResources.
- 
+
      ### Rook
 -    [Rook][1] deploys and manages Ceph on OpenShift, which provides block,
 +    [Rook][1] deploys and manages Ceph on OKD, which provides block,
      file and object storage.
- 
+
      ### NooBaa operator
      The NooBaa operator deploys and manages the [NooBaa][2] Multi-Cloud Gateway
 -    on OpenShift, which provides object storage.
 +    on OKD, which provides object storage.
- 
+
      # Core Capabilities
      * **Self-managing service:** No matter which supported storage technologies
 -    you choose, OpenShift Data Foundation ensures that resources can be
 +    you choose, OKD Data Foundation ensures that resources can be
      deployed and managed automatically.
- 
+
 -    * **Hyper-scale or hyper-converged:** With OpenShift Data Foundation you
 +    * **Hyper-scale or hyper-converged:** With OKD Data Foundation you
      can either build dedicated storage clusters or hyper-converged clusters
      where your apps run alongside storage.
- 
+
 -    * **File, Block, and Object provided by OpenShift Data Foundation:**
 -    OpenShift Data Foundation integrates Ceph with multiple storage
 +    * **File, Block, and Object provided by OKD Data Foundation:**
 +    OKD Data Foundation integrates Ceph with multiple storage
      presentations including object storage (compatible with S3), block storage,
      and POSIX-compliant shared file system.
- 
+
 -    * **Your data, protected:** OpenShift Data Foundation efficiently
 +    * **Your data, protected:** OKD Data Foundation efficiently
      distributes and replicates your data across your cluster to minimize the
@@ -313,7 +340,7 @@ index 86b9da08..b3aa9ab1 100644
      sleep over your data.
 @@ -47,11 +47,11 @@ spec:
      storage for your workloads, using a single namespace.
- 
+
      # Subscriptions
 -    OpenShift Data Foundation requires a matching 1:1 ratio with the OpenShift
 -    subscription used. The Essential subscription is included in the OpenShift
@@ -324,9 +351,35 @@ index 86b9da08..b3aa9ab1 100644
 -    Platform Plus with OpenShift Data Foundation Advanced subscription.
 +    KMS integration for encryption at rest require a bundle of OKD
 +    Platform Plus with OKD Data Foundation Advanced subscription.
- 
+
      [1]: https://rook.io
      [2]: https://www.noobaa.io
+diff --git a/hack/golangci_lint.sh b/hack/golangci_lint.sh
+new file mode 100755
+index 00000000..fc125287
+--- /dev/null
++++ b/hack/golangci_lint.sh
+@@ -0,0 +1,20 @@
++#!/usr/bin/env bash
++
++LOCALBIN="$(pwd)/bin"
++GOLANGCI_LINT_VERSION="v1.54.2"
++GOLANGCI_LINT="${LOCALBIN}/golangci-lint"
++
++GOLANGCI_LINT_DL_SCRIPT_URL="https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh"
++
++mkdir -p "${LOCALBIN}"
++
++if [ ! -x "${GOLANGCI_LINT}" ] || [ "v$(${GOLANGCI_LINT} --version | awk '{print $4}')" != "${GOLANGCI_LINT_VERSION}" ]; then
++  echo "Installing golangci-lint at ${GOLANGCI_LINT}"
++  curl -sSfL "${GOLANGCI_LINT_DL_SCRIPT_URL}" | sh -s -- -b "${LOCALBIN}" "${GOLANGCI_LINT_VERSION}"
++else
++  echo "Using golangci-lint present at ${GOLANGCI_LINT}"
++fi
++
++echo "Running golangci-lint"
++GOLANGCI_LINT_CACHE=/tmp/golangci-cache "${GOLANGCI_LINT}" run -E gosec --timeout=6m .
++exit
 diff --git a/hack/make-bundle-vars.mk b/hack/make-bundle-vars.mk
 index 91f36c55..f3eedebb 100644
 --- a/hack/make-bundle-vars.mk
