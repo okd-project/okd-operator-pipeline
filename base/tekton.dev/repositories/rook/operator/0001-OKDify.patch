@@ -1,4 +1,4 @@
-From b4a639608e52a5c4fb165f7251eeec8b5a4a3778 Mon Sep 17 00:00:00 2001
+From 13c427a3f98b1be161bf97d6ec2cee90bbdabaa6 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Mon, 11 Mar 2024 19:09:44 +0000
 Subject: [PATCH] OKDify
@@ -6,8 +6,8 @@ Subject: [PATCH] OKDify
 ---
  Makefile             | 11 +++++++++++
  build/csv/csv-gen.sh | 18 +++++++++---------
- images/ceph/Makefile | 14 +++++++-------
- 3 files changed, 27 insertions(+), 16 deletions(-)
+ images/ceph/Makefile | 28 ++++++++++++++--------------
+ 3 files changed, 34 insertions(+), 23 deletions(-)
 
 diff --git a/Makefile b/Makefile
 index 140093b5f..25bf0a80d 100644
@@ -79,7 +79,7 @@ index cab017e01..1dad2d4aa 100755
 
  if [ "$PLATFORM" == "amd64" ]; then
 diff --git a/images/ceph/Makefile b/images/ceph/Makefile
-index e93dab7d9..b224f1296 100755
+index e93dab7d9..6bc0670ce 100755
 --- a/images/ceph/Makefile
 +++ b/images/ceph/Makefile
 @@ -32,7 +32,7 @@ GOHOST := GOOS=$(GOHOSTOS) GOARCH=$(GOHOSTARCH) go
@@ -100,13 +100,27 @@ index e93dab7d9..b224f1296 100755
  	@rm $(BUILD_CONTEXT_DIR)/ceph-csv-templates/csv-gen.sh
  	@$(MAKE) csv-clean
 
-@@ -97,9 +97,9 @@ endif
- 		-t $(CEPH_IMAGE) \
- 		$(BUILD_CONTEXT_DIR);\
- 	fi
+@@ -90,16 +90,16 @@ else
+ 	mkdir $(BUILD_CONTEXT_DIR)/ceph-csv-templates
+ endif
+ 	@cd $(BUILD_CONTEXT_DIR) && $(SED_IN_PLACE) 's|BASEIMAGE|$(BASEIMAGE)|g' Dockerfile
+-	@if [ -z "$(BUILD_CONTAINER_IMAGE)" ]; then\
+-		$(DOCKERCMD) build $(BUILD_ARGS) \
+-		--build-arg S5CMD_VERSION=$(S5CMD_VERSION) \
+-		--build-arg S5CMD_ARCH=$(S5CMD_ARCH) \
+-		-t $(CEPH_IMAGE) \
+-		$(BUILD_CONTEXT_DIR);\
+-	fi
 -	@if [ -z "$(SAVE_BUILD_CONTEXT_DIR)" ]; then\
 -		rm -fr $(BUILD_CONTEXT_DIR);\
 -	fi
++#	@if [ -z "$(BUILD_CONTAINER_IMAGE)" ]; then\
++#		$(DOCKERCMD) build $(BUILD_ARGS) \
++#		--build-arg S5CMD_VERSION=$(S5CMD_VERSION) \
++#		--build-arg S5CMD_ARCH=$(S5CMD_ARCH) \
++#		-t $(CEPH_IMAGE) \
++#		$(BUILD_CONTEXT_DIR);\
++#	fi
 +#	@if [ -z "$(SAVE_BUILD_CONTEXT_DIR)" ]; then\
 +#		rm -fr $(BUILD_CONTEXT_DIR);\
 +#	fi
@@ -122,7 +136,7 @@ index e93dab7d9..b224f1296 100755
  	@# #adding 2>/dev/null since CI doesn't seems to be creating bundle.Dockerfile file
 -	@rm bundle.Dockerfile 2> /dev/null || true
 +	@#rm bundle.Dockerfile 2> /dev/null || true
- 
+
  csv-clean: ## Remove existing OLM files.
  	@rm -fr ../../build/csv/ceph/${go env GOARCH}
 -- 
