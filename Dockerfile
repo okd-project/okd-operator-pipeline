@@ -10,7 +10,7 @@ RUN dnf -y makecache && \
 
 # Start Podman Adaption
 # https://github.com/containers/podman/blob/main/contrib/podmanimage/stable/Containerfile
-ARG _REPO_URL="https://raw.githubusercontent.com/containers/image_build/main/podman/stable"
+ARG _REPO_URL="https://raw.githubusercontent.com/containers/image_build/main/podman"
 ADD $_REPO_URL/containers.conf /etc/containers/containers.conf
 ADD $_REPO_URL/podman-containers.conf /home/build/.config/containers/containers.conf
 
