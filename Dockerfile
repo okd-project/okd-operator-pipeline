@@ -4,7 +4,7 @@ FROM quay.io/centos/centos:stream9
 RUN dnf -y makecache && \
     dnf -y update && \
     rpm --setcaps shadow-utils 2>/dev/null && \
-    dnf install -y which git gcc make unzip diffutils nodejs npm podman fuse-overlayfs --exclude container-selinux && \
+    dnf install -y which git gcc make unzip diffutils nodejs npm podman slirp4netns shadow-utils fuse-overlayfs --exclude container-selinux && \
     dnf -y clean all && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
@@ -19,6 +19,7 @@ ADD $_REPO_URL/podman-containers.conf /home/build/.config/containers/containers.
 RUN sed -i -e 's|^#mount_program|mount_program|g' \
            -e '/additionalimage.*/a "/var/lib/shared",' \
            -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' \
+           -r 's/(driver = ")[a-z]+/\1vfs/' \
            /etc/containers/storage.conf && \
            chmod 644 /etc/containers/containers.conf
 # End Podman Adaption
