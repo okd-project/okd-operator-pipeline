@@ -1,27 +1,13 @@
-FROM quay.io/centos/centos:stream9
+FROM quay.io/buildah/stable:latest
 
 # gcc for cgo
 RUN dnf -y makecache && \
     dnf -y update && \
     rpm --setcaps shadow-utils 2>/dev/null && \
-    dnf install -y which git gcc make unzip diffutils nodejs npm podman slirp4netns shadow-utils fuse-overlayfs --exclude container-selinux && \
+    dnf install -y which git gcc make unzip diffutils nodejs npm --exclude container-selinux && \
     dnf -y clean all && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
-# Start Podman Adaption
-# https://github.com/containers/podman/blob/main/contrib/podmanimage/stable/Containerfile
-ARG _REPO_URL="https://raw.githubusercontent.com/containers/image_build/main/podman"
-ADD $_REPO_URL/containers.conf /etc/containers/containers.conf
-ADD $_REPO_URL/podman-containers.conf /home/build/.config/containers/containers.conf
-
-# Copy & modify the defaults to provide reference if runtime changes needed.
-# Changes here are required for running with fuse-overlay storage inside container.
-RUN sed -i -e 's|^#mount_program|mount_program|g' \
-           -e '/additionalimage.*/a "/var/lib/shared",' \
-           -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' \
-           -r 's/(driver = ")[a-z]+/\1vfs/' \
-           /etc/containers/storage.conf && \
-           chmod 644 /etc/containers/containers.conf
 # End Podman Adaption
 
 ENV OC_VERSION 4.15.0-0.okd-2024-03-10-010116
@@ -66,30 +52,20 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
 ENV PATH $PATH:/bin:/usr/local/go/bin:/usr/bin/:/home/build/bin/
 ENV GOPATH /home/build
 ENV GOCACHE /home/build/.cache/go-build
-env GOLANGCI_LINT_CACHE /home/build/.cache/golangci-lint
+ENV GOLANGCI_LINT_CACHE /home/build/.cache/golangci-lint
 ENV GOENV /home/build/.config/go/env
 
-RUN useradd -u 65532 -ms /bin/bash build && \
-    usermod --add-subuids 100000-165535 --add-subgids 100000-165535 build
-
-RUN mkdir -p /home/build/src /home/build/bin /home/build/pkg /home/build/build /home/build/.cache /home/build/.local/share/containers \
-    && chmod -R 0777 /home/build
+RUN usermod -u 65532 build \
+    && groupmod -g 65532 build \
+    && mkdir -p /home/build/src /home/build/bin /home/build/pkg /home/build/build /home/build/.cache /home/build/.local/share/containers \
+    && chmod -R 0777 /home/build \
+    && chown -R build:build /home/build
 
 RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@${CONTROLLER_TOOLS_VERSION} \
     && go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
-RUN chown -R 65532:65532 /home/build
-
-
-# Podman setup taken from https://www.redhat.com/sysadmin/rootless-podman-jenkins-openshift
-RUN  chmod u-s /usr/bin/new[gu]idmap && \
-    setcap cap_setuid+eip /usr/bin/newuidmap && \
-    setcap cap_setgid+eip /usr/bin/newgidmap && \
-    rm -f /var/logs/*
-
 WORKDIR /home/build/
 
 VOLUME /home/build/.local/share/containers
-
 
 USER build
