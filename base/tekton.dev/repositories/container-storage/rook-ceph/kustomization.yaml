@@ -2,7 +2,7 @@ generatorOptions:
   disableNameSuffixHash: true
 
 configMapGenerator:
-  - name: spark-operator-patch
+  - name: rook-ceph-patch
     namespace: okd-team
     files:
       - 0001-OKDify.patch

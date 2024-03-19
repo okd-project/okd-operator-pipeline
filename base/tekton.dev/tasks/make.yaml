@@ -17,21 +17,31 @@ spec:
     - name: args
       description: The arguments to pass to the make command
       type: array
+    - name: image-registry
+      description: The image registry to use for the build
+      type: string
+    - name: image-name
+      description: The image name to use for the build
+      type: string
     - name: version
       description: The version to use for the build
       type: string
-      default: ""
-    - name: normalized-version
-      description: The normalized version to use for the build
-      type: string
-      default: $(params.version)
     - name: env-map
       description: The env map
       type: string
       default: ""
+    - name: container-cmd
+      description: The container command
+      type: string
+      default: buildah
 
   workspaces:
     - name: work
+
+  volumes:
+    - name: docker-config
+      configMap:
+        name: docker-config
 
   steps:
     - name: run
@@ -46,11 +56,19 @@ spec:
         runAsNonRoot: true
         runAsUser: 65532
       env:
-        - name: "VERSION"
+        - name: "OKD_VERSION"
           value: "$(params.version)"
-        - name: "NORM_VERSION"
-          value: "$(params.normalized-version)"
+        - name: "OKD_IMAGE_REGISTRY"
+          value: "$(params.image-registry)"
+        - name: "OKD_IMAGE_NAME"
+          value: "$(params.image-name)"
+        - name: "OKD_CONTAINER_CMD"
+          value: "$(params.container-cmd)"
+        - name: DOCKER_CONFIG
+          value: /home/build/.docker/
       volumeMounts:
+        - name: docker-config
+          mountPath: /home/build/.docker/
         - name: $(workspaces.work.volume)
           mountPath: /var/lib/containers
           subPath: containers

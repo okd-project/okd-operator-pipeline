@@ -84,6 +84,10 @@ spec:
           value: repository
         - name: args
           value: ["okd-install"]
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-registry
+          value: $(params.base-image-registry)
         - name: version
           value: $(tasks.get-id.results.build-id)
         - name: env-map
@@ -103,6 +107,12 @@ spec:
             value: repository
           - name: args
             value: [ "okd-lint" ]
+          - name: image-name
+            value: $(params.image-name)
+          - name: image-registry
+            value: $(params.base-image-registry)
+          - name: version
+            value: $(tasks.get-id.results.build-id)
           - name: env-map
             value: $(params.env-map)
       workspaces:
@@ -120,6 +130,10 @@ spec:
           value: repository
         - name: args
           value: [ "okd-build" ]
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-registry
+          value: $(params.base-image-registry)
         - name: version
           value: $(tasks.get-id.results.build-id)
         - name: env-map
@@ -139,6 +153,10 @@ spec:
           value: repository
         - name: args
           value: [ "okd-test" ]
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-registry
+          value: $(params.base-image-registry)
         - name: version
           value: $(tasks.get-id.results.build-id)
         - name: env-map
@@ -147,36 +165,31 @@ spec:
         - name: work
           workspace: workspace
 
-    - name: build-operator
+    - name: deploy
       runAfter: [ test ]
       taskRef:
-        name: buildah-build
+        name: make
       params:
         - name: image
-          value: $(params.image-name)
+          value: $(params.build-image)
         - name: subdirectory
           value: repository
-      workspaces:
-        - name: source
-          workspace: workspace
-        - name: containers
-          workspace: workspace
-
-    - name: push-operator
-      runAfter: [ build-operator, get-id ]
-      taskRef:
-        name: buildah-push
-      params:
-        - name: image
+        - name: args
+          value: [ "okd-deploy" ]
+        - name: image-name
           value: $(params.image-name)
-        - name: remote
-          value: $(params.base-image-registry)/$(params.image-name):v$(tasks.get-id.results.build-id)
+        - name: image-registry
+          value: $(params.base-image-registry)
+        - name: version
+          value: $(tasks.get-id.results.build-id)
+        - name: env-map
+          value: $(params.env-map)
       workspaces:
-        - name: containers
+        - name: work
           workspace: workspace
 
-    - name: make-bundle
-      runAfter: [ push-operator, clone-and-patch, get-id ]
+    - name: bundle
+      runAfter: [ deploy ]
       taskRef:
         name: make
       params:
@@ -194,36 +207,6 @@ spec:
           value: $(params.env-map)
       workspaces:
         - name: work
-          workspace: workspace
-
-    - name: build-bundle
-      runAfter: [ make-bundle ]
-      taskRef:
-        name: buildah-build
-      params:
-        - name: image
-          value: $(params.image-name)-bundle
-        - name: dockerfile
-          value: bundle.Dockerfile
-        - name: subdirectory
-          value: repository
-      workspaces:
-        - name: source
-          workspace: workspace
-        - name: containers
-          workspace: workspace
-
-    - name: push-bundle
-      runAfter: [ build-bundle ]
-      taskRef:
-        name: buildah-push
-      params:
-        - name: image
-          value: $(params.image-name)-bundle
-        - name: remote
-          value: $(params.base-image-registry)/$(params.image-name)-bundle:v$(tasks.get-id.results.build-id)
-      workspaces:
-        - name: containers
           workspace: workspace
 
 #    - name: deploy-bundle

@@ -24,6 +24,10 @@ spec:
       description: The build image
       type: string
       default: quay.io/okderators/bundle-tools:vdev
+    - name: enable-timestamp
+      description: Enable timestamp
+      type: string
+      default: "true"
     - name: env-map
       description: The env map
       type: string
@@ -54,8 +58,17 @@ spec:
         - name: patches
           workspace: patches
 
+    - name: get-id
+      taskRef:
+        name: build-id
+      params:
+        - name: version
+          value: $(params.image-version)
+        - name: enable-timestamp
+          value: $(params.enable-timestamp)
+
     - name: install
-      runAfter: [ clone-and-patch ]
+      runAfter: [ clone-and-patch, get-id ]
       taskRef:
         name: make
       params:
@@ -65,6 +78,12 @@ spec:
           value: repository
         - name: args
           value: ["okd-install"]
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-registry
+          value: $(params.base-image-registry)
+        - name: version
+          value: $(tasks.get-id.results.build-id)
         - name: env-map
           value: $(params.env-map)
       workspaces:
@@ -72,7 +91,7 @@ spec:
           workspace: workspace
 
     - name: build
-      runAfter: [ install ]
+      runAfter: [ install,  ]
       taskRef:
         name: make
       params:
@@ -82,6 +101,12 @@ spec:
           value: repository
         - name: args
           value: [ "okd-build" ]
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-registry
+          value: $(params.base-image-registry)
+        - name: version
+          value: $(tasks.get-id.results.build-id)
         - name: env-map
           value: $(params.env-map)
       workspaces:
@@ -99,6 +124,12 @@ spec:
           value: repository
         - name: args
           value: [ "okd-lint" ]
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-registry
+          value: $(params.base-image-registry)
+        - name: version
+          value: $(tasks.get-id.results.build-id)
         - name: env-map
           value: $(params.env-map)
       workspaces:
@@ -116,36 +147,37 @@ spec:
           value: repository
         - name: args
           value: [ "okd-test" ]
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-registry
+          value: $(params.base-image-registry)
+        - name: version
+          value: $(tasks.get-id.results.build-id)
         - name: env-map
           value: $(params.env-map)
       workspaces:
         - name: work
           workspace: workspace
 
-    - name: image-build
+    - name: deploy
       runAfter: [ test ]
       taskRef:
-        name: buildah-build
+        name: make
       params:
         - name: image
-          value: $(params.image-name)
+          value: $(params.build-image)
         - name: subdirectory
           value: repository
-      workspaces:
-        - name: source
-          workspace: workspace
-        - name: containers
-          workspace: workspace
-
-    - name: image-push
-      runAfter: [ image-build ]
-      taskRef:
-        name: buildah-push
-      params:
-        - name: image
+        - name: args
+          value: [ "okd-deploy" ]
+        - name: image-name
           value: $(params.image-name)
-        - name: remote
-          value: $(params.base-image-registry)/$(params.image-name):v$(params.image-version)
+        - name: image-registry
+          value: $(params.base-image-registry)
+        - name: version
+          value: $(tasks.get-id.results.build-id)
+        - name: env-map
+          value: $(params.env-map)
       workspaces:
-        - name: containers
+        - name: work
           workspace: workspace

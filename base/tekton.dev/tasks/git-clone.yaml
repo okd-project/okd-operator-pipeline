@@ -108,12 +108,12 @@ spec:
     - name: gitInitImage
       description: The image providing the git-init binary that this Task runs.
       type: string
-      default: "cgr.dev/chainguard/git:latest-nonroot"
+      default: "quay.io/okderators/git:vdev"
     - name: userHome
       description: |
         Absolute path to the user's home directory.
       type: string
-      default: "/home/git"
+      default: "/home/build"
   results:
     - name: commit
       description: The precise commit SHA that was fetched by this Task.

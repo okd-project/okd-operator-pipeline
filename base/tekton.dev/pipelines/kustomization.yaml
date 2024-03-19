@@ -1,5 +1,4 @@
 resources:
   - operand.yaml
   - operator.yaml
-  - operand-noobaa.yaml
   - image-build.yaml

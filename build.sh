@@ -20,6 +20,7 @@ function build_operand() {
     --param image-version=$VERSION \
     --param build-image=$BUILD_IMAGE \
     --param env-map="$ENV_MAP" \
+    --param enable-timestamp=$ENABLE_TIMESTAMP \
     --workspace name=workspace,claimName=$NAME-volume \
     --workspace name=patches,config=$NAME-patch \
     --pod-template pod-template.yaml \
@@ -49,18 +50,27 @@ function build_operator() {
   echo "$ENV_MAP"
 }
 
+function build_image() {
+    tkn pipeline start image-build \
+          --param repo-url=$1 \
+          --param repo-ref=$2 \
+          --param base-image-registry=$BASE_IMAGE_REGISTRY \
+          --param image-name=$3 \
+          --param image-version=dev \
+          --param Dockerfile=$4 \
+          --workspace name=workspace,claimName=bundle-tools-volume \
+          --workspace name=patches,config=bundle-tools-patch \
+          --pod-template pod-template.yaml \
+          -n $NAMESPACE \
+          --showlog
+}
+
 case $1 in
   "bundle-tools")
-    tkn pipeline start image-build \
-      --param repo-url=https://github.com/okd-project/okd-operator-pipeline \
-      --param repo-ref=ocs \
-      --param base-image-registry=$BASE_IMAGE_REGISTRY \
-      --param image-name=bundle-tools \
-      --param image-version=dev \
-      --workspace name=workspace,claimName=bundle-tools-volume \
-      --workspace name=patches,config=bundle-tools-patch \
-      --pod-template pod-template.yaml \
-      -n okd-team
+    build_image https://github.com/okd-project/okd-operator-pipeline ocs bundle-tools images/tools.Containerfile
+    ;;
+  "git-image")
+    build_image https://github.com/okd-project/okd-operator-pipeline ocs git images/git.Containerfile
     ;;
   "gitops-console-plugin")
     build_operand https://github.com/redhat-developer/gitops-console-plugin "${BRANCH:-main}" gitops-console-plugin
@@ -72,16 +82,7 @@ case $1 in
     build_operator https://github.com/redhat-developer/gitops-operator "${BRANCH:-master}" gitops-operator
     ;;
   "noobaa-core")
-    tkn pipeline start operand-noobaa \
-      --param repo-url=https://github.com/noobaa/noobaa-core \
-      --param repo-ref=master \
-      --param base-image-registry=$BASE_IMAGE_REGISTRY \
-      --param image-name=noobaa-core \
-      --param image-version=dev \
-      --workspace name=workspace,claimName=noobaa-core-volume \
-      --workspace name=patches,config=noobaa-core-patch \
-      --pod-template pod-template.yaml \
-      -n okd-team
+    build_operand https://github.com/noobaa/noobaa-core "${BRANCH:-master}" noobaa-core
     ;;
   "noobaa-operator")
     build_operator https://github.com/noobaa/noobaa-operator "${BRANCH:-master}" noobaa-operator
@@ -105,8 +106,8 @@ case $1 in
   "odf-operator")
     build_operator https://github.com/red-hat-storage/odf-operator "${BRANCH:-main}" odf-operator
     ;;
-  "rook-operator")
-    build_operator https://github.com/red-hat-storage/rook "${BRANCH:-master}" rook
+  "rook-ceph")
+    build_operand https://github.com/red-hat-storage/rook "${BRANCH:-master}" rook-ceph
     ;;
   *)
     echo "Usage: $0 <operand/operator name>"

@@ -20,6 +20,10 @@ spec:
     - name: image-version
       description: The image version
       type: string
+    - name: Dockerfile
+      description: The path to the Dockerfile to build
+      type: string
+      default: Dockerfile
 
   workspaces:
     - name: workspace
@@ -55,6 +59,8 @@ spec:
           value: $(params.image-name)
         - name: subdirectory
           value: repository
+        - name: dockerfile
+          value: $(params.Dockerfile)
       workspaces:
         - name: source
           workspace: workspace
@@ -70,6 +76,8 @@ spec:
           value: $(params.image-name)
         - name: remote
           value: $(params.base-image-registry)/$(params.image-name):v$(params.image-version)
+        - name: dockerfile
+          value: $(params.Dockerfile)
       workspaces:
         - name: containers
           workspace: workspace
