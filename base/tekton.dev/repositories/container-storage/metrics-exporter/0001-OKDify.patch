@@ -1,19 +1,19 @@
-From 19373e650dd6c54b9297f4042995018143b1df83 Mon Sep 17 00:00:00 2001
+From cabab957d2acdd8d98d19e0b6c0de4cf77179262 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
-Date: Tue, 5 Mar 2024 16:43:40 +0000
+Date: Tue, 2 Apr 2024 14:30:22 +0100
 Subject: [PATCH] OKDify
 
 ---
- Makefile                       | 17 +++++++++++++++++
- hack/build-metrics-exporter.sh |  5 +++--
+ Makefile                       | 34 ++++++++++++++++++++++++++++++++++
+ hack/build-metrics-exporter.sh |  3 +--
  metrics/Dockerfile             |  2 +-
- 3 files changed, 21 insertions(+), 3 deletions(-)
+ 3 files changed, 36 insertions(+), 3 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 5f76fe3e..2b36a66a 100644
+index cc9402fd..d9b5cd77 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -187,3 +187,20 @@ install-noobaa: operator-sdk
+@@ -189,3 +189,37 @@ install-noobaa: operator-sdk
  install-ocs: operator-sdk
  	@echo "Installing ocs operator"
  	hack/install-ocs.sh
@@ -28,38 +28,53 @@ index 5f76fe3e..2b36a66a 100644
 +VERSION ?= $(shell git describe --tags --always --dirty)
 +
 +.PHONY: okd-build
-+okd-build: ocs-metrics-exporter
-+	cp -f metrics/Dockerfile Dockerfile
++okd-build: build
++	@go build -tags netgo,osusergo -o metrics-exporter metrics/main.go
 +
 +.PHONY: okd-test
 +okd-test:
 +	@echo "Nothing to test for metrics-exporter"
++
++OKD_CONTAINER_CMD ?= podman
++ifndef OKD_IMAGE_REGISTRY
++   $(error OKD_IMAGE_REGISTRY is not set)
++endif
++ifndef OKD_IMAGE_NAME
++   $(error OKD_IMAGE_NAME is not set)
++endif
++ifndef OKD_VERSION
++   $(error OKD_VERSION is not set)
++endif
++
++.PHONY: okd-deploy
++okd-deploy: build
++	@echo "Deploying metrics-exporter"
++	@METRICS_EXPORTER_FULL_IMAGE_NAME=$(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME):v$(OKD_VERSION) IMAGE_BUILD_CMD=$(OKD_CONTAINER_CMD) hack/build-metrics-exporter.sh
++	@$(OKD_CONTAINER_CMD) push $(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME):v$(OKD_VERSION)
 diff --git a/hack/build-metrics-exporter.sh b/hack/build-metrics-exporter.sh
-index 79e8be2a..a64b996f 100755
+index f7755f3a..01344533 100755
 --- a/hack/build-metrics-exporter.sh
 +++ b/hack/build-metrics-exporter.sh
-@@ -6,6 +6,7 @@ source hack/common.sh
+@@ -5,5 +5,4 @@ set -e
+ source hack/common.sh
  source hack/docker-common.sh
- 
- pushd metrics
--${IMAGE_BUILD_CMD} build --no-cache -f Dockerfile -t "${METRICS_EXPORTER_FULL_IMAGE_NAME}" . \
+
+-${IMAGE_BUILD_CMD} build --no-cache -f metrics/Dockerfile -t "${METRICS_EXPORTER_FULL_IMAGE_NAME}" . \
 -    --build-arg="GOOS=${GOOS}" --build-arg="GOARCH=${GOARCH}" --build-arg="LDFLAGS=${LDFLAGS}"
-+#${IMAGE_BUILD_CMD} build --no-cache -f Dockerfile -t "${METRICS_EXPORTER_FULL_IMAGE_NAME}" . \
-+#    --build-arg="GOOS=${GOOS}" --build-arg="GOARCH=${GOARCH}" --build-arg="LDFLAGS=${LDFLAGS}"
-+GOOS="$GOOS" GOARCH="$GOARCH" go build -ldflags "$LDFLAGS" -tags netgo,osusergo -o metrics-exporter main.go
- popd
++${IMAGE_BUILD_CMD} build --no-cache -f metrics/Dockerfile --build-arg="GOOS=${GOOS}" --build-arg="GOARCH=${GOARCH}" --build-arg="LDFLAGS=${LDFLAGS}" -t "${METRICS_EXPORTER_FULL_IMAGE_NAME}" .
+\ No newline at end of file
 diff --git a/metrics/Dockerfile b/metrics/Dockerfile
-index fc8f2441..724235b3 100644
+index 3cf6e36a..2aea5868 100644
 --- a/metrics/Dockerfile
 +++ b/metrics/Dockerfile
 @@ -1,6 +1,6 @@
  # Build stage 1
- 
--FROM golang:1.21 as builder
-+FROM quay.io/projectquay/golang:1.21 as builder
- 
+
+-FROM golang:1.20 as builder
++FROM quay.io/projectquay/golang:1.20 as builder
+
  WORKDIR /workspace
- 
--- 
-2.40.0.windows.1
+
+--
+2.43.2
 
