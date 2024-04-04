@@ -5,7 +5,7 @@ RUN dnf -y makecache && \
     dnf module -y enable nodejs:20 && \
     dnf -y update && \
     rpm --setcaps shadow-utils 2>/dev/null && \
-    dnf install -y which git gcc make unzip diffutils nodejs npm buildah fuse-overlayfs cpp --exclude container-selinux && \
+    dnf install -y which git gcc make unzip diffutils nodejs npm buildah fuse-overlayfs cpp g++ --exclude container-selinux && \
     dnf -y clean all && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
