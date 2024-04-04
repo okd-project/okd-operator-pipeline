@@ -2,6 +2,7 @@ FROM quay.io/centos/centos:stream9
 
 # gcc for cgo
 RUN dnf -y makecache && \
+    dnf module -y enable nodejs:20 && \
     dnf -y update && \
     rpm --setcaps shadow-utils 2>/dev/null && \
     dnf install -y which git gcc make unzip diffutils nodejs npm buildah fuse-overlayfs cpp --exclude container-selinux && \
