@@ -94,8 +94,16 @@ case $1 in
     build_operand https://github.com/ViaQ/log-file-metric-exporter "${BRANCH:-release-5.8}" log-file-metric-exporter
     ;;
   "ocs-operator")
-    build_operator https://github.com/red-hat-storage/ocs-operator "${BRANCH:-main}" ocs-operator \
-      "CSV_VERSION=999.999.999 NOOBAA_CORE_IMAGE=quay.io/okderators/noobaa-core:dev NOOBAA_DB_IMAGE=quay.io/sclorg/postgresql-16-c9s:latest ROOK_IMAGE=docker.io/rook/ceph:v1.13.4 CEPH_IMAGE=quay.io/ceph/ceph:v18.2.1 NOOBAA_BUNDLE_FULL_IMAGE_NAME=quay.io/okderators/noobaa-operator-bundle:dev OCS_IMAGE=quay.io/okderators/ocs-operator:dev OCS_METRICS_EXPORTER_IMAGE=quay.io/okderators/ocs-metrics-exporter:dev UX_BACKEND_OAUTH_IMAGE=quay.io/openshift/origin-oauth-proxy:latest"
+    NOOBAA_DB_IMAGE=${NOOBAA_DB_IMAGE:-quay.io/sclorg/postgresql-16-c9s:latest}
+    NOOBAA_CORE_IMAGE=${NOOBAA_CORE_IMAGE:-quay.io/okderators/noobaa-core:dev}
+    ROOK_IMAGE=${ROOK_IMAGE:-quay.io/okderators/rook-ceph:dev}
+    CEPH_IMAGE=${CEPH_IMAGE:-quay.io/ceph/ceph:v18.2.1}
+    NOOBAA_BUNDLE_FULL_IMAGE_NAME=${NOOBAA_BUNDLE_FULL_IMAGE_NAME:-quay.io/okderators/noobaa-operator-bundle:dev}
+    OCS_IMAGE=${OCS_IMAGE:-quay.io/okderators/ocs-operator:dev}
+    OCS_METRICS_EXPORTER_IMAGE=${OCS_METRICS_EXPORTER_IMAGE:-quay.io/okderators/ocs-metrics-exporter:dev}
+    UX_BACKEND_OAUTH_IMAGE=${UX_BACKEND_OAUTH_IMAGE:-quay.io/openshift/origin-oauth-proxy:latest}
+    build_operator https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-operator \
+      "CSV_VERSION=999.999.999 NOOBAA_CORE_IMAGE=$NOOBAA_CORE_IMAGE NOOBAA_DB_IMAGE=$NOOBAA_DB_IMAGE ROOK_IMAGE=$ROOK_IMAGE CEPH_IMAGE=$CEPH_IMAGE NOOBAA_BUNDLE_FULL_IMAGE_NAME=$NOOBAA_BUNDLE_FULL_IMAGE_NAME OCS_IMAGE=$OCS_IMAGE OCS_METRICS_EXPORTER_IMAGE=$OCS_METRICS_EXPORTER_IMAGE UX_BACKEND_OAUTH_IMAGE=$UX_BACKEND_OAUTH_IMAGE"
     ;;
   "ocs-metrics-exporter")
     build_operand https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-metrics-exporter

@@ -195,14 +195,16 @@ spec:
       params:
         - name: image
           value: $(params.build-image)
-        - name: args
-          value: [ "okd-bundle" ]
-        - name: version
-          value: $(tasks.get-id.results.build-id)
         - name: subdirectory
           value: repository
-        - name: normalized-version
-          value: $(params.image-version)
+        - name: args
+          value: [ "okd-bundle" ]
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-registry
+          value: $(params.base-image-registry)
+        - name: version
+          value: $(tasks.get-id.results.build-id)
         - name: env-map
           value: $(params.env-map)
       workspaces:

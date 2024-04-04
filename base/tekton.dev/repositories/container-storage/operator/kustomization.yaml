@@ -5,8 +5,7 @@ configMapGenerator:
   - name: ocs-operator-patch
     namespace: okd-team
     files:
-      - 0001-Prefer-create-and-cp-over-cat-and-ls-manipulation.patch
-      - 0002-OKDify.patch
+      - 0001-OKDify.patch
 
 resources:
   - repository.yaml
