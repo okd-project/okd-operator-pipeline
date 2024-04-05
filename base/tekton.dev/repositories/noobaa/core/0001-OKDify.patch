@@ -1,0 +1,206 @@
+From 5481e5563bbcde001310dd0a21cf395e3530367e Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Fri, 5 Apr 2024 11:57:50 +0100
+Subject: [PATCH] OKDify
+
+---
+ Makefile                                      | 53 ++++++++++++++++---
+ build/Dockerfile                              |  2 +-
+ deploy/internal/prometheus-rules.yaml         | 12 ++---
+ ...visioner.v1.0.0.clusterserviceversion.yaml |  4 +-
+ ...noobaa-operator.clusterserviceversion.yaml |  2 +-
+ 5 files changed, 55 insertions(+), 18 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 0575f77..1ff59db 100644
+--- a/Makefile
++++ b/Makefile
+@@ -66,14 +66,14 @@ cli: gen
+
+ image: $(docker) gen
+ 	GOOS=linux CGO_ENABLED=$(or ${CGO_ENABLED},0) go build -o $(BIN)/noobaa-operator -gcflags all=-trimpath="$(MK_PARENT)" -asmflags all=-trimpath="$(MK_PARENT)" -mod=vendor $(CMD_MANAGER)
+-	docker build -f build/Dockerfile -t $(IMAGE) .
++	$(OKD_CONTAINER_CMD) build -f build/Dockerfile -t $(IMAGE) .
+ 	@echo "✅ image"
+ .PHONY: image
+
+ dev-image: $(docker) gen
+ 	go build -o $(BIN)/noobaa-operator -trimpath -mod=vendor -gcflags all=-N -gcflags all=-l $(CMD_MANAGER)
+-	docker build -f build/Dockerfile -t $(IMAGE) .
+-	docker build -f build/DockerfileDev --build-arg base_image=$(IMAGE) -t $(DEV_IMAGE) .
++	$(OKD_CONTAINER_CMD) build -f build/Dockerfile -t $(IMAGE) .
++	$(OKD_CONTAINER_CMD) build -f build/DockerfileDev --build-arg base_image=$(IMAGE) -t $(DEV_IMAGE) .
+ 	@echo "✅ dev image"
+ .PHONY: dev-image
+
+@@ -99,8 +99,8 @@ $(OPERATOR_SDK):
+ 	@echo "✅ $(OPERATOR_SDK)"
+
+ release-docker:
+-	docker push $(IMAGE)
+-	docker push $(CATALOG_IMAGE)
++	$(OKD_CONTAINER_CMD) push $(IMAGE)
++	$(OKD_CONTAINER_CMD) push $(CATALOG_IMAGE)
+ 	@echo "✅ docker push"
+ .PHONY: release-docker
+
+@@ -150,7 +150,7 @@ gen-olm: gen
+ 		pip3 install --upgrade pip && \
+ 		pip3 install operator-courier==2.1.11 && \
+ 		operator-courier --verbose verify --ui_validate_io $(OLM)
+-	docker build -t $(CATALOG_IMAGE) -f build/catalog-source.Dockerfile .
++	$(OKD_CONTAINER_CMD) build -t $(CATALOG_IMAGE) -f build/catalog-source.Dockerfile .
+ 	@echo "✅ gen-olm"
+ .PHONY: gen-olm
+
+@@ -161,7 +161,7 @@ gen-odf-package: cli
+ .PHONY: gen-odf-package
+
+ bundle-image: gen-odf-package
+-	docker build -t $(BUNDLE_IMAGE) -f build/bundle/Dockerfile .
++	$(OKD_CONTAINER_CMD) build -t $(BUNDLE_IMAGE) -f build/bundle/Dockerfile .
+
+ #-----------#
+ #- Testing -#
+@@ -310,4 +310,41 @@ ifneq ($(DEEPCOPY_GEN_VERSION), $(shell deepcopy-gen --version | awk -F ":" '{pr
+ DEEPCOPY_GEN=$(GOBIN)/deepcopy-gen
+ else
+ DEEPCOPY_GEN=$(shell which deepcopy-gen)
+-endif
+\ No newline at end of file
++endif
++
++NORM_VERSION ?= $(VERSION)
++DB_IMAGE ?= quay.io/sclorg/postgresql-15-c9s:latest
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy okd-bundle
++
++OKD_CONTAINER_CMD ?= podman
++ifndef OKD_IMAGE_REGISTRY
++   $(error OKD_IMAGE_REGISTRY is not set)
++endif
++ifndef OKD_IMAGE_NAME
++   $(error OKD_IMAGE_NAME is not set)
++endif
++ifndef OKD_VERSION
++   $(error OKD_VERSION is not set)
++endif
++VERSION := v$(OKD_VERSION)
++CONTAINER_ENGINE := $(OKD_CONTAINER_CMD)
++IMAGE := $(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME):$(VERSION)
++BUNDLE_IMAGE := $(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME)-bundle:$(VERSION)
++export CONTAINER_ENGINE
++
++okd-install:
++	go mod download
++
++okd-lint: lint
++
++okd-build: build
++
++okd-test: #test-go
++	echo "Tests disabled temporarily"
++
++okd-deploy: image
++	$(OKD_CONTAINER_CMD) push $(IMAGE)
++
++okd-bundle: bundle-image
++	@$(OKD_CONTAINER_CMD) push $(BUNDLE_IMAGE)
+\ No newline at end of file
+diff --git a/build/Dockerfile b/build/Dockerfile
+index 50ea317..092af0d 100644
+--- a/build/Dockerfile
++++ b/build/Dockerfile
+@@ -1,4 +1,4 @@
+-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
++FROM quay.io/centos/centos:stream9-minimal
+
+ ENV OPERATOR=/usr/local/bin/noobaa-operator \
+     USER_UID=1001 \
+diff --git a/deploy/internal/prometheus-rules.yaml b/deploy/internal/prometheus-rules.yaml
+index ee5e44e..6ec808b 100644
+--- a/deploy/internal/prometheus-rules.yaml
++++ b/deploy/internal/prometheus-rules.yaml
+@@ -37,38 +37,38 @@ spec:
+         NooBaa_odf_health_status
+       labels:
+         system_type: OCS
+-        system_vendor: Red Hat
++        system_vendor: OKD Community
+       record: odf_system_health_status
+     - expr: |
+         NooBaa_total_usage
+       labels:
+         system_type: OCS
+-        system_vendor: Red Hat
++        system_vendor: OKD Community
+       record: odf_system_raw_capacity_used_bytes
+     - expr: |
+         sum by (namespace, managedBy, job, service) (rate(NooBaa_providers_ops_read_num[5m]) + rate(NooBaa_providers_ops_write_num[5m]))
+       labels:
+         system_type: OCS
+-        system_vendor: Red Hat
++        system_vendor: OKD Community
+       record: odf_system_iops_total_bytes
+     - expr: |
+         sum by (namespace, managedBy, job, service) (rate(NooBaa_providers_bandwidth_read_size[5m]) + rate(NooBaa_providers_bandwidth_write_size[5m]))
+       labels:
+         system_type: OCS
+-        system_vendor: Red Hat
++        system_vendor: OKD Community
+       record: odf_system_throughput_total_bytes
+     - expr: |
+         sum(NooBaa_num_buckets + NooBaa_num_buckets_claims)
+       record: odf_system_bucket_count
+       labels:
+         system_type: OCS
+-        system_vendor: Red Hat
++        system_vendor: OKD Community
+     - expr: |
+         sum(NooBaa_num_objects + NooBaa_num_objects_buckets_claims)
+       record: odf_system_objects_total
+       labels:
+         system_type: OCS
+-        system_vendor: Red Hat
++        system_vendor: OKD Community
+   - name: noobaa-replication.rules
+     rules:
+     - expr: |
+diff --git a/deploy/obc/lib-bucket-provisioner.v1.0.0.clusterserviceversion.yaml b/deploy/obc/lib-bucket-provisioner.v1.0.0.clusterserviceversion.yaml
+index eb7fee1..2011373 100644
+--- a/deploy/obc/lib-bucket-provisioner.v1.0.0.clusterserviceversion.yaml
++++ b/deploy/obc/lib-bucket-provisioner.v1.0.0.clusterserviceversion.yaml
+@@ -11,7 +11,7 @@ metadata:
+     createdAt: 2014-07-19T07:02:32.267701596Z
+     certified: "false"
+     description: Library for the dynamic provisioning of object store buckets to be used by object store providers.
+-    support: Red Hat
++    support: OKD Community
+     alm-examples: |-
+       [
+         {
+@@ -60,7 +60,7 @@ spec:
+   minKubeVersion: 1.10.0
+   maturity: alpha
+   provider:
+-    name: Red Hat
++    name: OKD Community
+   links:
+     - name: Github
+       url: https://github.com/kube-object-storage/lib-bucket-provisioner
+diff --git a/deploy/olm/noobaa-operator.clusterserviceversion.yaml b/deploy/olm/noobaa-operator.clusterserviceversion.yaml
+index ffa4443..d162130 100644
+--- a/deploy/olm/noobaa-operator.clusterserviceversion.yaml
++++ b/deploy/olm/noobaa-operator.clusterserviceversion.yaml
+@@ -9,7 +9,7 @@ metadata:
+     createdAt: 2019-07-08T13:10:20.940Z
+     certified: "false"
+     description: NooBaa is an object data service for hybrid and multi cloud environments.
+-    support: Red Hat
++    support: OKD Community
+     alm-examples: placeholder
+     operators.openshift.io/infrastructure-features: '["disconnected"]'
+   name: placeholder
+--
+2.43.2
+

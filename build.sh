@@ -82,10 +82,17 @@ case $1 in
     build_operator https://github.com/redhat-developer/gitops-operator "${BRANCH:-master}" gitops-operator
     ;;
   "noobaa-core")
-    build_operand https://github.com/noobaa/noobaa-core "${BRANCH:-master}" noobaa-core
+    build_operand https://github.com/noobaa/noobaa-core "${BRANCH:-5.15}" noobaa-core
     ;;
   "noobaa-operator")
-    build_operator https://github.com/noobaa/noobaa-operator "${BRANCH:-master}" noobaa-operator
+    NOOBAA_DB_IMAGE=${NOOBAA_DB_IMAGE:-quay.io/sclorg/postgresql-16-c9s:latest}
+    NOOBAA_CORE_IMAGE=${NOOBAA_CORE_IMAGE:-quay.io/okderators/noobaa-core:dev}
+    SKIP_RANGE=${SKIP_RANGE:-"1.0.0-1.0.0"}
+    REPLACES=${REPLACES:-"0.0.0"}
+    CSV_NAME=${CSV_NAME:-noobaa-operator.v${VERSION}}
+    PSQL_12_IMAGE=${PSQL_12_IMAGE:-quay.io/sclorg/postgresql-12-c9s:latest}
+    build_operator https://github.com/noobaa/noobaa-operator "${BRANCH:-5.15}" noobaa-operator \
+      "CORE_IMAGE=\"$NOOBAA_CORE_IMAGE\" DB_IMAGE=\"$NOOBAA_DB_IMAGE\" SKIP_RANGE=\"$SKIP_RANGE\" REPLACES=\"$REPLACES\" CSV_NAME=\"$CSV_NAME\" PSQL_12_IMAGE=\"$PSQL_12_IMAGE\""
     ;;
   "logging-view-plugin")
     build_operand https://github.com/openshift/logging-view-plugin "${BRANCH:-main}" logging-view-plugin

@@ -4,8 +4,8 @@ generatorOptions:
 configMapGenerator:
   - name: noobaa-core-patch
     namespace: okd-team
-#    files:
-#      - repo.patch
+    files:
+      - 0001-OKDify.patch
 
 resources:
   - repository.yaml
