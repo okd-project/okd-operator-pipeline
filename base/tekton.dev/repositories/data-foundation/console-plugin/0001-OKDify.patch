@@ -1,27 +1,27 @@
-From f7ae363e2ccae1e1a0a23eeabbc52d5e1132fcb8 Mon Sep 17 00:00:00 2001
+From 6fdeae451ba6c59d281c5c29d0ff8522a1feb1c1 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Sun, 10 Mar 2024 19:36:57 +0000
 Subject: [PATCH] OKDify
 
 ---
- Dockerfile.prod                                   | 12 ++++++++----
- Makefile                                          | 15 +++++++++++++++
- cypress/consts.ts                                 |  2 +-
- cypress/support.ts                                |  2 +-
- locales/en/plugin__odf-console.json               |  4 ++--
- locales/ja/plugin__odf-console.json               |  4 ++--
- locales/ko/plugin__odf-console.json               |  2 +-
- locales/zh/plugin__odf-console.json               |  6 +++---
- openshift-ci/odf-catalog-source.yaml              |  2 +-
- package.json                                      |  2 +-
- .../status-card/status-card.spec.tsx              | 12 ++++++------
- .../object-service/details-card/details-card.tsx  |  4 +---
- .../persistent-external/details-card.tsx          |  4 +---
- .../system-connection-details.tsx                 |  2 +-
- .../storage-consumers/onboarding-modal.tsx        |  2 +-
- packages/odf/constants/common.ts                  |  2 +-
- scripts/set-branch.sh                             |  7 +++++++
- 17 files changed, 53 insertions(+), 31 deletions(-)
+ Dockerfile.prod                               | 12 ++++---
+ Makefile                                      | 31 +++++++++++++++++++
+ cypress/consts.ts                             |  2 +-
+ cypress/support.ts                            |  2 +-
+ locales/en/plugin__odf-console.json           |  4 +--
+ locales/ja/plugin__odf-console.json           |  4 +--
+ locales/ko/plugin__odf-console.json           |  2 +-
+ locales/zh/plugin__odf-console.json           |  6 ++--
+ openshift-ci/odf-catalog-source.yaml          |  2 +-
+ package.json                                  |  2 +-
+ .../status-card/status-card.spec.tsx          | 12 +++----
+ .../details-card/details-card.tsx             |  4 +--
+ .../persistent-external/details-card.tsx      |  4 +--
+ .../system-connection-details.tsx             |  2 +-
+ .../storage-consumers/onboarding-modal.tsx    |  2 +-
+ packages/odf/constants/common.ts              |  2 +-
+ scripts/set-branch.sh                         |  7 +++++
+ 17 files changed, 69 insertions(+), 31 deletions(-)
  create mode 100644 Makefile
  create mode 100755 scripts/set-branch.sh
 
@@ -33,7 +33,7 @@ index 93ed8a23..14b6fc97 100644
 -FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder:v2.5.0_18-11 AS builder
 +FROM quay.io/sclorg/nodejs-20-c9s AS builder
  ARG TARGET_BRANCH=master
- 
+
 +USER root
 +WORKDIR /
 +
@@ -44,7 +44,7 @@ index 93ed8a23..14b6fc97 100644
 @@ -15,7 +19,7 @@ RUN yarn install --prod --frozen-lockfile
  RUN yarn build
  RUN mv ./plugins/odf/dist ../compatibility
- 
+
 -FROM registry.redhat.io/ubi9/nginx-120
 +FROM registry.access.redhat.com/ubi9/nginx-120
  COPY --from=builder /app .
@@ -62,25 +62,42 @@ index 93ed8a23..14b6fc97 100644
  LABEL io.openshift.tags="odf"
 diff --git a/Makefile b/Makefile
 new file mode 100644
-index 00000000..96057f8a
+index 00000000..f3c5b9f9
 --- /dev/null
 +++ b/Makefile
-@@ -0,0 +1,15 @@
-+.PHONY: okd-install
+@@ -0,0 +1,31 @@
++OKD_CONTAINER_CMD ?= podman
++ifndef OKD_IMAGE_REGISTRY
++   $(error OKD_IMAGE_REGISTRY is not set)
++endif
++ifndef OKD_IMAGE_NAME
++   $(error OKD_IMAGE_NAME is not set)
++endif
++ifndef OKD_VERSION
++   $(error OKD_VERSION is not set)
++endif
++VERSION := v$(OKD_VERSION)
++OPERATOR_FULL_IMAGE_NAME := $(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME):$(VERSION)
++BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++
 +okd-install:
-+	yarn install --frozen-lockfile
++	@yarn install --frozen-lockfile
 +
-+.PHONY: okd-lint
 +okd-lint:
-+	yarn lint
++	@yarn lint
 +
-+.PHONY: okd-build
 +okd-build:
-+	yarn build && cp Dockerfile.prod Dockerfile && ./scripts/set-branch.sh
++	@yarn build
 +
-+.PHONY: okd-test
 +okd-test:
-+	yarn test
++	@yarn test
++
++okd-deploy:
++	@$(OKD_CONTAINER_CMD) build -t $(OPERATOR_FULL_IMAGE_NAME) --build-arg TARGET_BRANCH=$(BRANCH) -f Dockerfile.prod .
++	@$(OKD_CONTAINER_CMD) push $(OPERATOR_FULL_IMAGE_NAME)
+\ No newline at end of file
 diff --git a/cypress/consts.ts b/cypress/consts.ts
 index 617af409..e696308f 100644
 --- a/cypress/consts.ts
@@ -88,7 +105,7 @@ index 617af409..e696308f 100644
 @@ -1,7 +1,7 @@
  export const KUBEADMIN_USERNAME = 'kubeadmin';
  export const KUBEADMIN_IDP = 'kube:admin';
- 
+
 -export const ODF_OPERATOR_NAME = 'OpenShift Data Foundation';
 +export const ODF_OPERATOR_NAME = 'OKD Data Foundation';
  export const CLUSTER_NAMESPACE = 'openshift-storage';
@@ -108,10 +125,10 @@ index 6c8ad3de..a34ee534 100644
        cy.byLegacyTestID('horizontal-link-Storage System').click();
        cy.byTestID('item-create').click();
 diff --git a/locales/en/plugin__odf-console.json b/locales/en/plugin__odf-console.json
-index ac0b151d..489144f6 100644
+index d19d21c5..d60c467e 100644
 --- a/locales/en/plugin__odf-console.json
 +++ b/locales/en/plugin__odf-console.json
-@@ -488,7 +488,7 @@
+@@ -421,7 +421,7 @@
    "Data Consumption Graph": "Data Consumption Graph",
    "GET {{GETLatestValue}}": "GET {{GETLatestValue}}",
    "PUT {{PUTLatestValue}}": "PUT {{PUTLatestValue}}",
@@ -120,7 +137,7 @@ index ac0b151d..489144f6 100644
    "System name": "System name",
    "Multicloud Object Gateway": "Multicloud Object Gateway",
    "RADOS Object Gateway": "RADOS Object Gateway",
-@@ -1031,7 +1031,7 @@
+@@ -965,7 +965,7 @@
    "Copy to clipboard": "Copy to clipboard",
    "How to use this token?": "How to use this token?",
    "To onboard the client cluster, the provider cluster requires the onboarding token.": "To onboard the client cluster, the provider cluster requires the onboarding token.",
@@ -209,7 +226,7 @@ index 3ef0e839..a7d1a90e 100644
    updateStrategy:
      registryPoll:
 diff --git a/package.json b/package.json
-index 68a6e1dd..e1e4d494 100644
+index ca86bcca..8df4921b 100644
 --- a/package.json
 +++ b/package.json
 @@ -14,7 +14,7 @@
@@ -284,14 +301,14 @@ index 5fba603f..37aa0a9d 100644
 --- a/packages/ocs/dashboards/object-service/details-card/details-card.tsx
 +++ b/packages/ocs/dashboards/object-service/details-card/details-card.tsx
 @@ -67,9 +67,7 @@ export const ObjectServiceDetailsCard: React.FC<{}> = () => {
- 
+
    const serviceVersion = getOperatorVersion(csv);
- 
+
 -  const serviceName = isODF
 -    ? t('Data Foundation')
 -    : t('OpenShift Container Storage');
 +  const serviceName = isODF ? t('Data Foundation') : t('OKD Container Storage');
- 
+
    const { namespace: clusterNs } = useParams<ODFSystemParams>();
    const { systemFlags } = useODFSystemFlagsSelector();
 diff --git a/packages/ocs/dashboards/persistent-external/details-card.tsx b/packages/ocs/dashboards/persistent-external/details-card.tsx
@@ -299,22 +316,22 @@ index 58b1f365..02ed238a 100644
 --- a/packages/ocs/dashboards/persistent-external/details-card.tsx
 +++ b/packages/ocs/dashboards/persistent-external/details-card.tsx
 @@ -81,9 +81,7 @@ export const DetailsCard: React.FC = () => {
- 
+
    const subscriptionVersion = getOperatorVersion(csv);
- 
+
 -  const serviceName = isODF
 -    ? t('Data Foundation')
 -    : t('OpenShift Container Storage');
 +  const serviceName = isODF ? t('Data Foundation') : t('OKD Container Storage');
    const cephLink = getCephLink(resourcesObj['secret'].data as K8sResourceKind);
- 
+
    return (
 diff --git a/packages/odf/components/create-storage-system/external-ceph-storage/system-connection-details.tsx b/packages/odf/components/create-storage-system/external-ceph-storage/system-connection-details.tsx
-index 364102b9..be15468b 100644
+index 44bc3106..b6f141f9 100644
 --- a/packages/odf/components/create-storage-system/external-ceph-storage/system-connection-details.tsx
 +++ b/packages/odf/components/create-storage-system/external-ceph-storage/system-connection-details.tsx
-@@ -240,7 +240,7 @@ export const rhcsCanGoToNextStep: CanGoToNextStep<RHCSState> = (state) =>
- 
+@@ -225,7 +225,7 @@ export const rhcsCanGoToNextStep: CanGoToNextStep<RHCSState> = (state) =>
+
  export const EXTERNAL_CEPH_STORAGE: ExternalStorage[] = [
    {
 -    displayName: 'Red Hat Ceph Storage',
@@ -342,7 +359,7 @@ index db30f36d..1e0ef22f 100644
 @@ -5,7 +5,7 @@ import {
  import { Toleration, Taint } from '@odf/shared/types';
  import { TFunction } from 'i18next';
- 
+
 -export const CEPH_BRAND_NAME = 'Red Hat Ceph Storage';
 +export const CEPH_BRAND_NAME = 'OKD Ceph Storage';
  export const NO_PROVISIONER = 'kubernetes.io/no-provisioner';
@@ -362,6 +379,6 @@ index 00000000..9ba97c7e
 +
 +sed -r 's/(TARGET_BRANCH=).*/\1'"$BRANCH"'/' -i Dockerfile
 \ No newline at end of file
--- 
-2.43.0
+--
+2.43.2
 

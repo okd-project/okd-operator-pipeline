@@ -1,7 +1,9 @@
 #!/bin/bash
 
 NAMESPACE=${NAMESPACE:-okd-team}
-BASE_IMAGE_REGISTRY=${BASE_IMAGE_REGISTRY:-quay.io/okderators}
+IMAGE_REGISTRY=${IMAGE_REGISTRY:-quay.io}
+REGISTRY_NAMESPACE=${REGISTRY_NAMESPACE:-okderators}
+BASE_IMAGE_REGISTRY=${BASE_IMAGE_REGISTRY:-$IMAGE_REGISTRY/$REGISTRY_NAMESPACE}
 CHANNEL=${CHANNEL:-dev}
 DEFAULT_CHANNEL=${DEFAULT_CHANNEL:-stable}
 VERSION=${VERSION:-dev}
@@ -101,6 +103,7 @@ case $1 in
     build_operand https://github.com/ViaQ/log-file-metric-exporter "${BRANCH:-release-5.8}" log-file-metric-exporter
     ;;
   "ocs-operator")
+    CSV_VERSION=${CSV_VERSION:-999.999.999}
     NOOBAA_DB_IMAGE=${NOOBAA_DB_IMAGE:-quay.io/sclorg/postgresql-16-c9s:latest}
     NOOBAA_CORE_IMAGE=${NOOBAA_CORE_IMAGE:-quay.io/okderators/noobaa-core:dev}
     ROOK_IMAGE=${ROOK_IMAGE:-quay.io/okderators/rook-ceph:dev}
@@ -110,7 +113,7 @@ case $1 in
     OCS_METRICS_EXPORTER_IMAGE=${OCS_METRICS_EXPORTER_IMAGE:-quay.io/okderators/ocs-metrics-exporter:dev}
     UX_BACKEND_OAUTH_IMAGE=${UX_BACKEND_OAUTH_IMAGE:-quay.io/openshift/origin-oauth-proxy:latest}
     build_operator https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-operator \
-      "CSV_VERSION=999.999.999 NOOBAA_CORE_IMAGE=$NOOBAA_CORE_IMAGE NOOBAA_DB_IMAGE=$NOOBAA_DB_IMAGE ROOK_IMAGE=$ROOK_IMAGE CEPH_IMAGE=$CEPH_IMAGE NOOBAA_BUNDLE_FULL_IMAGE_NAME=$NOOBAA_BUNDLE_FULL_IMAGE_NAME OCS_IMAGE=$OCS_IMAGE OCS_METRICS_EXPORTER_IMAGE=$OCS_METRICS_EXPORTER_IMAGE UX_BACKEND_OAUTH_IMAGE=$UX_BACKEND_OAUTH_IMAGE"
+      "CSV_VERSION=$CSV_VERSION} NOOBAA_CORE_IMAGE=$NOOBAA_CORE_IMAGE NOOBAA_DB_IMAGE=$NOOBAA_DB_IMAGE ROOK_IMAGE=$ROOK_IMAGE CEPH_IMAGE=$CEPH_IMAGE NOOBAA_BUNDLE_FULL_IMAGE_NAME=$NOOBAA_BUNDLE_FULL_IMAGE_NAME OCS_IMAGE=$OCS_IMAGE OCS_METRICS_EXPORTER_IMAGE=$OCS_METRICS_EXPORTER_IMAGE UX_BACKEND_OAUTH_IMAGE=$UX_BACKEND_OAUTH_IMAGE"
     ;;
   "ocs-metrics-exporter")
     build_operand https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-metrics-exporter
@@ -119,10 +122,14 @@ case $1 in
     build_operand https://github.com/red-hat-storage/odf-console "${BRANCH:-release-4.15}" odf-console
     ;;
   "odf-operator")
-    build_operator https://github.com/red-hat-storage/odf-operator "${BRANCH:-main}" odf-operator
+    OCS_BUNDLE_IMG=${OCS_BUNDLE_IMG:-quay.io/okderators/ocs-operator-bundle:dev}
+    NOOBAA_BUNDLE_IMG=${NOOBAA_BUNDLE_IMG:-quay.io/okderators/noobaa-operator-bundle:dev}
+    ODF_CONSOLE_IMAGE=${ODF_CONSOLE_IMAGE:-quay.io/okderators/odf-console:dev}
+    build_operator https://github.com/red-hat-storage/odf-operator "${BRANCH:-release-4.15}" odf-operator \
+      "IMAGE_REGISTRY=$IMAGE_REGISTRY REGISTRY_NAMESPACE=$REGISTRY_NAMESPACE OCS_BUNDLE_IMG=$OCS_BUNDLE_IMG NOOBAA_BUNDLE_IMG=$NOOBAA_BUNDLE_IMG ODF_CONSOLE_IMAGE=$ODF_CONSOLE_IMAGE"
     ;;
   "rook-ceph")
-    build_operand https://github.com/red-hat-storage/rook "${BRANCH:-master}" rook-ceph
+    build_operand https://github.com/red-hat-storage/rook "${BRANCH:-release-4.15}" rook-ceph
     ;;
   *)
     echo "Usage: $0 <operand/operator name>"

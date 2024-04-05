@@ -1,11 +1,11 @@
-From 86552e28bfcfe9730ebe14a612d90949967f8742 Mon Sep 17 00:00:00 2001
+From e242b3764e015e701b81cf4c6f899d45f2782872 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
-Date: Fri, 8 Mar 2024 16:12:18 +0000
+Date: Fri, 5 Apr 2024 16:46:47 +0100
 Subject: [PATCH] OKDify
 
 ---
  Dockerfile                                    |  4 +-
- Makefile                                      | 17 +++++++
+ Makefile                                      | 34 +++++++++++--
  .../odf-operator.clusterserviceversion.yaml   | 50 +++++++++----------
  config/console/kustomization.yaml             |  2 +-
  config/install/kustomization.yaml             |  2 +-
@@ -16,7 +16,7 @@ Subject: [PATCH] OKDify
  hack/golangci_lint.sh                         | 20 ++++++++
  hack/make-bundle-vars.mk                      |  6 +--
  hack/mirror-noobaa-images.sh                  |  4 +-
- 12 files changed, 95 insertions(+), 62 deletions(-)
+ 12 files changed, 109 insertions(+), 65 deletions(-)
  create mode 100755 hack/golangci_lint.sh
 
 diff --git a/Dockerfile b/Dockerfile
@@ -40,30 +40,63 @@ index e86d2a1e..76eddced 100644
  # Use distroless as minimal base image to package the manager binary
  # Refer to https://github.com/GoogleContainerTools/distroless for more details
 diff --git a/Makefile b/Makefile
-index 07130323..980a375f 100644
+index 07130323..624f4f8e 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -177,3 +177,20 @@ catalog-build: catalog ## Build a catalog image.
+@@ -105,10 +105,10 @@ run: manifests generate fmt vet ## Run a controller from your host.
+ 	go run ./main.go
+
+ docker-build: godeps-update test-setup ## Build docker image with the manager.
+-	docker build -t ${IMG} .
++	$(OKD_CONTAINER_CMD) build -t ${IMG} .
+
+ docker-push: ## Push docker image with the manager.
+-	docker push ${IMG}
++	$(OKD_CONTAINER_CMD) push ${IMG}
+
+ ##@ Deployment
+
+@@ -152,7 +152,7 @@ bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metada
+
+ .PHONY: bundle-build
+ bundle-build: bundle ## Build the bundle image.
+-	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
++	$(OKD_CONTAINER_CMD) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+ .PHONY: bundle-push
+ bundle-push: ## Push the bundle image.
+@@ -177,3 +177,31 @@ catalog-build: catalog ## Build a catalog image.
  .PHONY: catalog-push
  catalog-push: ## Push a catalog image.
  	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 +
-+.PHONY: okd-install
++OKD_CONTAINER_CMD ?= podman
++ifdef OKD_IMAGE_NAME
++	IMAGE_NAME := $(OKD_IMAGE_NAME)
++endif
++ifdef OKD_VERSION
++   VERSION := $(OKD_VERSION)
++   IMAGE_TAG := v$(VERSION)
++endif
++IMAGE_BUILD_CMD := $(OKD_CONTAINER_CMD)
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy okd-bundle
 +okd-install:
 +	go mod download && go mod vendor && go mod tidy
 +
-+.PHONY: okd-lint
 +okd-lint:
 +	./hack/golangci_lint.sh
 +
-+.PHONY: okd-build
 +okd-build: build
 +
-+.PHONY: okd-test
 +okd-test: test
 +
-+.PHONY: okd-bundle
-+okd-bundle:
++okd-deploy: docker-build
++	@$(OKD_CONTAINER_CMD) build -t $(IMG) .
++	@$(OKD_CONTAINER_CMD) push $(IMG)
++
++okd-bundle: bundle-build
++	$(OKD_CONTAINER_CMD) push $(BUNDLE_IMG)
 \ No newline at end of file
 diff --git a/bundle/manifests/odf-operator.clusterserviceversion.yaml b/bundle/manifests/odf-operator.clusterserviceversion.yaml
 index 678cc2bd..04c8503d 100644
@@ -391,39 +424,39 @@ index 91f36c55..f3eedebb 100644
 -OCS_BUNDLE_IMG_LOCATION ?= quay.io/ocs-dev
 +OCS_BUNDLE_IMG_LOCATION ?= quay.io/okderators
  OCS_BUNDLE_IMG ?= $(OCS_BUNDLE_IMG_LOCATION)/$(OCS_BUNDLE_IMG_NAME):$(OCS_BUNDLE_IMG_TAG)
- 
+
  NOOBAA_BUNDLE_NAME ?= noobaa-operator
  NOOBAA_BUNDLE_IMG_NAME ?= $(NOOBAA_BUNDLE_NAME)-bundle
  NOOBAA_BUNDLE_IMG_TAG ?= v5.14.0
 -NOOBAA_BUNDLE_IMG_LOCATION ?= quay.io/noobaa
 +NOOBAA_BUNDLE_IMG_LOCATION ?= quay.io/okderators
  NOOBAA_BUNDLE_IMG ?= $(NOOBAA_BUNDLE_IMG_LOCATION)/$(NOOBAA_BUNDLE_IMG_NAME):$(NOOBAA_BUNDLE_IMG_TAG)
- 
+
  CSIADDONS_BUNDLE_NAME ?= csi-addons
 @@ -93,7 +93,7 @@ IBM_BUNDLE_IMG ?= $(IBM_BUNDLE_IMG_LOCATION)/$(IBM_BUNDLE_IMG_NAME):$(IBM_BUNDLE
- 
+
  ODF_CONSOLE_IMG_NAME ?= odf-console
  ODF_CONSOLE_IMG_TAG ?= latest
 -ODF_CONSOLE_IMG_LOCATION ?= quay.io/ocs-dev
 +ODF_CONSOLE_IMG_LOCATION ?= quay.io/okderators
  ODF_CONSOLE_IMG ?= $(ODF_CONSOLE_IMG_LOCATION)/$(ODF_CONSOLE_IMG_NAME):$(ODF_CONSOLE_IMG_TAG)
- 
+
  # A space-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0 example.com/operator-bundle:v0.2.0).
 diff --git a/hack/mirror-noobaa-images.sh b/hack/mirror-noobaa-images.sh
 index bfe1841d..8d97e42d 100755
 --- a/hack/mirror-noobaa-images.sh
 +++ b/hack/mirror-noobaa-images.sh
 @@ -30,8 +30,8 @@ for image in noobaa-core noobaa-operator; do
- 
+
      docker pull "${latest_image}"
- 
+
 -    quay_latest="quay.io/ocs-dev/${image}:${latest}"
 -    quay_master="quay.io/ocs-dev/${image}:master"
 +    quay_latest="quay.io/okderators/${image}:${latest}"
 +    quay_master="quay.io/okderators/${image}:master"
      docker tag "${latest_image}" "${quay_latest}"
      docker tag "${latest_image}" "${quay_master}"
- 
--- 
-2.40.0.windows.1
+
+--
+2.43.2
 
