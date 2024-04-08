@@ -2,7 +2,7 @@ FROM quay.io/centos/centos:stream9
 
 # gcc for cgo
 RUN dnf -y makecache && \
-    dnf module -y enable nodejs:20 && \
+    dnf module -y enable nodejs:18 && \
     dnf config-manager --set-enabled crb && \
     dnf install -y epel-release epel-next-release && \
     dnf -y update && \
