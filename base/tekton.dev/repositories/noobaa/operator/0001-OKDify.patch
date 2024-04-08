@@ -1,18 +1,21 @@
-From b06eaeb4380940082d791e7318ae62aa6bdd705d Mon Sep 17 00:00:00 2001
+From 52af2f6def58c373da675978ed8c4ed5ec779162 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Fri, 5 Apr 2024 11:57:50 +0100
 Subject: [PATCH] OKDify
 
 ---
- Makefile                                      | 55 ++++++++++++++++---
+ Makefile                                      | 58 ++++++++++++++++---
  build/Dockerfile                              |  2 +-
+ build/gen-odf-package.sh                      |  3 +-
+ build/tools/releaser-post.sh                  | 14 ++++-
  deploy/internal/prometheus-rules.yaml         | 12 ++--
  ...visioner.v1.0.0.clusterserviceversion.yaml |  4 +-
  ...noobaa-operator.clusterserviceversion.yaml |  2 +-
- 5 files changed, 56 insertions(+), 19 deletions(-)
+ pkg/olm/olm.go                                | 17 ++++--
+ 8 files changed, 85 insertions(+), 27 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 0575f77..5f2131f 100644
+index 0575f77..2431a5b 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -66,14 +66,14 @@ cli: gen
@@ -56,7 +59,7 @@ index 0575f77..5f2131f 100644
  gen-odf-package: cli
  	rm -rf $(MANIFESTS)
 -	MANIFESTS="$(MANIFESTS)" CSV_NAME="$(csv-name)" SKIP_RANGE="$(skip-range)" REPLACES="$(replaces)" CORE_IMAGE="$(core-image)" DB_IMAGE="$(db-image)" OPERATOR_IMAGE="$(operator-image)" COSI_SIDECAR_IMAGE="$(cosi-sidecar-image)" OBC_CRD="$(obc-crd)" PSQL_12_IMAGE="$(psql-12-image)" build/gen-odf-package.sh
-+	MANIFESTS="$(MANIFESTS)" CSV_NAME="$(CSV_NAME)" SKIP_RANGE="$(SKIP_RANGE)" REPLACES="$(REPLACES)" CORE_IMAGE="$(CORE_IMAGE)" DB_IMAGE="$(DB_IMAGE)" OPERATOR_IMAGE="$(IMAGE)" COSI_SIDECAR_IMAGE="$(cosi-sidecar-image)" OBC_CRD="$(obc-crd)" PSQL_12_IMAGE="$(PSQL_12_IMAGE)" build/gen-odf-package.sh
++	VERSION="$(VERSION)" MANIFESTS="$(MANIFESTS)" CSV_NAME="$(CSV_NAME)" SKIP_RANGE="$(SKIP_RANGE)" REPLACES="$(REPLACES)" CORE_IMAGE="$(CORE_IMAGE)" DB_IMAGE="$(DB_IMAGE)" OPERATOR_IMAGE="$(IMAGE)" COSI_SIDECAR_IMAGE="$(cosi-sidecar-image)" OBC_CRD="$(obc-crd)" PSQL_12_IMAGE="$(PSQL_12_IMAGE)" build/gen-odf-package.sh
  	@echo "✅ gen-odf-package"
  .PHONY: gen-odf-package
 
@@ -66,7 +69,7 @@ index 0575f77..5f2131f 100644
 
  #-----------#
  #- Testing -#
-@@ -310,4 +310,41 @@ ifneq ($(DEEPCOPY_GEN_VERSION), $(shell deepcopy-gen --version | awk -F ":" '{pr
+@@ -310,4 +310,44 @@ ifneq ($(DEEPCOPY_GEN_VERSION), $(shell deepcopy-gen --version | awk -F ":" '{pr
  DEEPCOPY_GEN=$(GOBIN)/deepcopy-gen
  else
  DEEPCOPY_GEN=$(shell which deepcopy-gen)
@@ -80,23 +83,26 @@ index 0575f77..5f2131f 100644
 +.PHONY: okd-install okd-lint okd-build okd-test okd-deploy okd-bundle
 +
 +OKD_CONTAINER_CMD ?= podman
-+ifndef OKD_IMAGE_REGISTRY
-+   $(error OKD_IMAGE_REGISTRY is not set)
-+endif
-+ifndef OKD_IMAGE_NAME
-+   $(error OKD_IMAGE_NAME is not set)
-+endif
-+ifndef OKD_VERSION
-+   $(error OKD_VERSION is not set)
-+endif
 +VERSION := v$(OKD_VERSION)
 +CONTAINER_ENGINE := $(OKD_CONTAINER_CMD)
 +IMAGE := $(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME):$(VERSION)
 +BUNDLE_IMAGE := $(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME)-bundle:$(VERSION)
 +export CONTAINER_ENGINE
 +
++okd-check-envs:
++	@ifndef OKD_IMAGE_REGISTRY
++	   $(error OKD_IMAGE_REGISTRY is not set)
++	endif
++	@ifndef OKD_IMAGE_NAME
++	   $(error OKD_IMAGE_NAME is not set)
++	endif
++	@ifndef OKD_VERSION
++	   $(error OKD_VERSION is not set)
++	endif
++
 +okd-install:
-+	go mod download
++	@go mod download
++	@CORE_IMAGE=$(CORE_IMAGE) ./build/tools/releaser-post.sh
 +
 +okd-lint: lint
 +
@@ -105,10 +111,10 @@ index 0575f77..5f2131f 100644
 +okd-test: #test-go
 +	echo "Tests disabled temporarily"
 +
-+okd-deploy: image
++okd-deploy: okd-check-envs image
 +	$(OKD_CONTAINER_CMD) push $(IMAGE)
 +
-+okd-bundle: bundle-image
++okd-bundle: okd-check-envs bundle-image
 +	@$(OKD_CONTAINER_CMD) push $(BUNDLE_IMAGE)
 \ No newline at end of file
 diff --git a/build/Dockerfile b/build/Dockerfile
@@ -121,6 +127,60 @@ index 50ea317..092af0d 100644
 
  ENV OPERATOR=/usr/local/bin/noobaa-operator \
      USER_UID=1001 \
+diff --git a/build/gen-odf-package.sh b/build/gen-odf-package.sh
+index d2ff44e..000b975 100755
+--- a/build/gen-odf-package.sh
++++ b/build/gen-odf-package.sh
+@@ -19,7 +19,8 @@ echo "--obc-crd=${OBC_CRD}"
+ --psql-12-image ${PSQL_12_IMAGE} \
+ --operator-image ${OPERATOR_IMAGE} \
+ --cosi-sidecar-image ${COSI_SIDECAR_IMAGE} \
+---obc-crd=${OBC_CRD}
++--obc-crd=${OBC_CRD} \
++--version ${OKD_VERSION}
+
+ temp_csv=$(mktemp)
+
+diff --git a/build/tools/releaser-post.sh b/build/tools/releaser-post.sh
+index a45e2c8..7cff5c8 100644
+--- a/build/tools/releaser-post.sh
++++ b/build/tools/releaser-post.sh
+@@ -16,7 +16,9 @@ dir=$(dirname "$0")
+ # Source the utilities
+ source $dir/utils.sh
+
+-version=$(bump_semver_patch $(get_noobaa_version))
++echo "$CORE_IMAGE"
++IFS=: read -r IMAGE version <<< $CORE_IMAGE
++IFS=/ read -r REGISTRY NAMESPACE NAME <<< $IMAGE
+ DRY_RUN=${DRY_RUN:="false"}
+
+ # Update version of the CLI in version/version.go
+@@ -35,6 +37,13 @@ function update_core_container_image_tag() {
+   finline_replace ".*ContainerImageTag = \".*\"" "	ContainerImageTag = \"${version}\"" $options_file
+ }
+
++function update_core_container_org() {
++  local options_file=pkg/options/options.go
++  # Replace version line with new version using perl because sed is not compatible with both mac and linux
++  # and awk solution is clumsy
++  finline_replace ".*ContainerImageOrg = \".*\"" "	ContainerImageOrg = \"${NAMESPACE}\"" $options_file
++}
++
+ # Run make gen
+ function run_make_gen() {
+   make gen
+@@ -56,8 +65,9 @@ function commit_changes() {
+ function main() {
+   update_version
+   update_core_container_image_tag
++  update_core_container_org
+   run_make_gen
+-  commit_changes
++#  commit_changes
+ }
+
+ main "$@"
 diff --git a/deploy/internal/prometheus-rules.yaml b/deploy/internal/prometheus-rules.yaml
 index ee5e44e..6ec808b 100644
 --- a/deploy/internal/prometheus-rules.yaml
@@ -205,6 +265,86 @@ index ffa4443..d162130 100644
      alm-examples: placeholder
      operators.openshift.io/infrastructure-features: '["disconnected"]'
    name: placeholder
+diff --git a/pkg/olm/olm.go b/pkg/olm/olm.go
+index e98d960..6880098 100644
+--- a/pkg/olm/olm.go
++++ b/pkg/olm/olm.go
+@@ -46,6 +46,7 @@ type generateCSVParams struct {
+ 	OBCMode   string
+ 	SkipRange string
+ 	Replaces  string
++	Version   string
+ }
+
+ // Cmd returns a CLI command
+@@ -80,6 +81,7 @@ func CmdCatalog() *cobra.Command {
+ 	cmd.Flags().String("csv-name", "", "File name for the CSV YAML")
+ 	cmd.Flags().String("skip-range", "", "set the olm.skipRange annotation in the CSV")
+ 	cmd.Flags().String("replaces", "", "set the replaces property in the CSV")
++	cmd.Flags().String("version", version.Version, "The version to use in the CSV")
+ 	return cmd
+ }
+
+@@ -172,6 +174,10 @@ func RunCatalog(cmd *cobra.Command, args []string) {
+ 		log.Fatalf(`Invalid value for --obc-crd: %s. should be [%s|%s|%s]`, obcMode, OBCOwned, OBCRequired, OBCNone)
+ 	}
+
++	ver, _ := cmd.Flags().GetString("version")
++	if ver == "" {
++		ver = version.Version
++	}
+ 	skipRange, _ := cmd.Flags().GetString("skip-range")
+ 	replaces, _ := cmd.Flags().GetString("replaces")
+ 	csvParams := &generateCSVParams{
+@@ -179,11 +185,12 @@ func RunCatalog(cmd *cobra.Command, args []string) {
+ 		OBCMode:   obcMode,
+ 		SkipRange: skipRange,
+ 		Replaces:  replaces,
++		Version: ver,
+ 	}
+ 	if forODF {
+ 		versionDir = dir
+ 	} else {
+-		versionDir = dir + version.Version + "/"
++		versionDir = dir + ver + "/"
+ 	}
+
+ 	pkgBytes, err := sigyaml.Marshal(unObj{
+@@ -191,14 +198,14 @@ func RunCatalog(cmd *cobra.Command, args []string) {
+ 		"defaultChannel": "alpha",
+ 		"channels": unArr{unObj{
+ 			"name":       "alpha",
+-			"currentCSV": "noobaa-operator.v" + version.Version,
++			"currentCSV": "noobaa-operator.v" + ver,
+ 		}},
+ 	})
+ 	util.Panic(err)
+
+ 	csvFileName, _ := cmd.Flags().GetString("csv-name")
+ 	if csvFileName == "" {
+-		csvFileName = versionDir + "noobaa-operator.v" + version.Version + ".clusterserviceversion.yaml"
++		csvFileName = versionDir + "noobaa-operator.v" + ver + ".clusterserviceversion.yaml"
+ 	} else {
+ 		csvFileName = versionDir + csvFileName
+ 	}
+@@ -236,7 +243,7 @@ func GenerateCSV(opConf *operator.Conf, csvParams *generateCSVParams) *operv1.Cl
+
+ 	o := util.KubeObject(bundle.File_deploy_olm_noobaa_operator_clusterserviceversion_yaml)
+ 	csv := o.(*operv1.ClusterServiceVersion)
+-	csv.Name = "noobaa-operator.v" + version.Version
++	csv.Name = "noobaa-operator.v" + csvParams.Version
+ 	csv.Namespace = options.Namespace
+ 	csv.Annotations["containerImage"] = options.OperatorImage
+ 	// this annotation hides the operator in OCP console
+@@ -245,7 +252,7 @@ func GenerateCSV(opConf *operator.Conf, csvParams *generateCSVParams) *operv1.Cl
+ 	csv.Annotations["operators.openshift.io/infrastructure-features"] = "ֿ'[\"disconnected\"]'"
+ 	// annotation for OpenShift AWS STS cluster
+ 	csv.Annotations["features.operators.openshift.io/token-auth-aws"] = "true"
+-	csv.Spec.Version.Version = semver.MustParse(version.Version)
++	csv.Spec.Version.Version = semver.MustParse(csvParams.Version)
+ 	csv.Spec.Description = bundle.File_deploy_olm_description_md
+ 	csv.Spec.Icon[0].Data = bundle.File_deploy_olm_noobaa_icon_base64
+ 	csv.Spec.InstallStrategy.StrategySpec.ClusterPermissions = []operv1.StrategyDeploymentPermissions{}
 --
-2.43.2
+2.44.0
 
