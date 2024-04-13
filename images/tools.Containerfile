@@ -44,6 +44,7 @@ RUN useradd build -u 65532 && \
 # in such case storage will choose a runroot in `/var/tmp`.
 RUN sed -e 's|^#mount_program|mount_program|g' \
         -e 's|^graphroot|#graphroot|g' \
+        -e 's|driver = "overlay"|driver = "vfs"|g' \
         -e 's|^runroot|#runroot|g' \
         /etc/containers/storage.conf \
         > /home/build/.config/containers/storage.conf && \
