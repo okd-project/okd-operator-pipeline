@@ -1,4 +1,4 @@
-FROM quay.io/centos/centos:stream9-minimal
+FROM quay.io/fedora/fedora-minimal
 
 RUN microdnf update -y && \
     microdnf install -y git && \
