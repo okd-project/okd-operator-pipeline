@@ -16,6 +16,8 @@ if [ "$ENABLE_TIMESTAMP" = "true" ] && [ "$1" != "kube-rbac-proxy" ]; then
   VERSION="${VERSION}-$(date "+%Y-%m-%d-%H%M%S")"
 fi
 
+echo "Using version: $VERSION"
+
 function build_operand() {
   NAME=$3
   ENV_MAP="$ENV $4"
@@ -99,12 +101,11 @@ case $1 in
   "noobaa-operator")
     NOOBAA_DB_IMAGE=${NOOBAA_DB_IMAGE:-quay.io/sclorg/postgresql-16-c9s:latest}
     NOOBAA_CORE_IMAGE=${NOOBAA_CORE_IMAGE:-quay.io/okderators/noobaa-core:dev}
-    SKIP_RANGE=${SKIP_RANGE:-"1.0.0-1.0.0"}
-    REPLACES=${REPLACES:-"0.0.0"}
+    SKIP_RANGE=${SKIP_RANGE:-"<=4.15.0"}
+    REPLACES=${REPLACES:-"4.15.0"}
     CSV_NAME=${CSV_NAME:-noobaa-operator.v${VERSION}}
-    PSQL_12_IMAGE=${PSQL_12_IMAGE:-quay.io/sclorg/postgresql-16-c9s:latest}
     build_operator https://github.com/red-hat-storage/noobaa-operator "${BRANCH:-release-4.15}" noobaa-operator \
-      "CORE_IMAGE=\"$NOOBAA_CORE_IMAGE\" DB_IMAGE=\"$NOOBAA_DB_IMAGE\" SKIP_RANGE=\"$SKIP_RANGE\" REPLACES=\"$REPLACES\" CSV_NAME=\"$CSV_NAME\" PSQL_12_IMAGE=\"$PSQL_12_IMAGE\""
+      "CORE_IMAGE=$NOOBAA_CORE_IMAGE DB_IMAGE=$NOOBAA_DB_IMAGE SKIP_RANGE=$SKIP_RANGE REPLACES=$REPLACES CSV_NAME=$CSV_NAME"
     ;;
   "logging-view-plugin")
     build_operand https://github.com/openshift/logging-view-plugin "${BRANCH:-main}" logging-view-plugin

@@ -17,15 +17,15 @@ spec:
       - name: repo-url
         expression: repoURL
       - name: base-image-registry
-        value: quay.io/okderators
+        expression: "'quay.io/okderators'"
       - name: image-name
-        value: noobaa-operator
+        expression: "'noobaa-operator'"
       - name: image-version
-        value: dev
+        expression: "'dev'"
       - name: channel
-        value: dev
+        expression: "'dev'"
       - name: default-channel
-        value: stable
+        expression: "'stable'"
     workspaces:
       - name: output
         persistentVolumeClaim:
