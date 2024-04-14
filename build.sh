@@ -4,12 +4,17 @@ NAMESPACE=${NAMESPACE:-okd-team}
 IMAGE_REGISTRY=${IMAGE_REGISTRY:-quay.io}
 REGISTRY_NAMESPACE=${REGISTRY_NAMESPACE:-okderators}
 BASE_IMAGE_REGISTRY=${BASE_IMAGE_REGISTRY:-$IMAGE_REGISTRY/$REGISTRY_NAMESPACE}
-CHANNEL=${CHANNEL:-dev}
-DEFAULT_CHANNEL=${DEFAULT_CHANNEL:-stable}
-VERSION=${VERSION:-dev}
-ENV=${ENV:-""}
+CHANNEL=${CHANNEL:-alpha}
+DEFAULT_CHANNEL=${DEFAULT_CHANNEL:-alpha}
+CHANNELS=${CHANNELS:-alpha}
+VERSION=${VERSION:-4.15.0}
 BUILD_IMAGE=${BUILD_IMAGE:-quay.io/okderators/bundle-tools:vdev}
 ENABLE_TIMESTAMP=${ENABLE_TIMESTAMP:-true}
+
+# Check if enabled timestamp is set to true
+if [ "$ENABLE_TIMESTAMP" = "true" ] && [ "$1" != "kube-rbac-proxy" ]; then
+  VERSION="${VERSION}-$(date "+%Y-%m-%d-%H%M%S")"
+fi
 
 function build_operand() {
   NAME=$3
@@ -19,10 +24,9 @@ function build_operand() {
     --param repo-ref=$2 \
     --param base-image-registry=$BASE_IMAGE_REGISTRY \
     --param image-name=$3 \
-    --param image-version=$VERSION \
-    --param build-image=$BUILD_IMAGE \
+    --param version=$VERSION \
+    --param make-image=$BUILD_IMAGE \
     --param env-map="$ENV_MAP" \
-    --param enable-timestamp=$ENABLE_TIMESTAMP \
     --workspace name=workspace,claimName=$NAME-volume \
     --workspace name=patches,config=$NAME-patch \
     --pod-template pod-template.yaml \
@@ -41,8 +45,7 @@ function build_operator() {
     --param image-version=$VERSION \
     --param channel=$CHANNEL \
     --param default-channel=$DEFAULT_CHANNEL \
-    --param build-image=$BUILD_IMAGE \
-    --param enable-timestamp=$ENABLE_TIMESTAMP \
+    --param make-image=$BUILD_IMAGE \
     --param env-map="$ENV_MAP" \
     --workspace name=workspace,claimName=$NAME-volume \
     --workspace name=patches,config=$NAME-patch \
@@ -74,6 +77,9 @@ case $1 in
   "git-image")
     build_image https://github.com/okd-project/okd-operator-pipeline ocs git images/git.Containerfile
     ;;
+  "kube-rbac-proxy")
+    build_operand https://github.com/openshift/kube-rbac-proxy "${BRANCH:-release-4.15}" kube-rbac-proxy
+    ;;
   "gitops-console-plugin")
     build_operand https://github.com/redhat-developer/gitops-console-plugin "${BRANCH:-main}" gitops-console-plugin
     ;;
@@ -81,7 +87,11 @@ case $1 in
     build_operand https://github.com/redhat-developer/gitops-backend "${BRANCH:-master}" gitops-backend
     ;;
   "gitops-operator")
-    build_operator https://github.com/redhat-developer/gitops-operator "${BRANCH:-master}" gitops-operator
+    CONSOLE_IMAGE=${CONSOLE_IMAGE:-quay.io/okderators/gitops-console-plugin}
+    CONSOLE_IMAGE_TAG=${CONSOLE_IMAGE_TAG:-v0.0.1}
+    BACKEND_IMG=${BACKEND_IMG:-quay.io/okderators/gitops-backend:v0.0.1}
+    build_operator https://github.com/redhat-developer/gitops-operator "${BRANCH:-v1.12}" gitops-operator \
+      "CONSOLE_IMAGE=$CONSOLE_IMAGE CONSOLE_IMAGE_TAG=$CONSOLE_IMAGE_TAG BACKEND_IMG=$BACKEND_IMG"
     ;;
   "noobaa-core")
     build_operand https://github.com/red-hat-storage/noobaa-core "${BRANCH:-release-4.15}" noobaa-core

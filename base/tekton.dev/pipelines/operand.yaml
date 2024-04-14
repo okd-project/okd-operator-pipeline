@@ -17,21 +17,17 @@ spec:
     - name: image-name
       description: The image name
       type: string
-    - name: image-version
-      description: The image version
+    - name: version
+      description: The version
       type: string
-    - name: build-image
+    - name: make-image
       description: The build image
       type: string
       default: quay.io/okderators/bundle-tools:vdev
-    - name: enable-timestamp
-      description: Enable timestamp
-      type: string
-      default: "true"
     - name: env-map
       description: The env map
-      type: string
-      default: ""
+      type: array
+      default: []
   
   workspaces:
     - name: workspace
@@ -51,133 +47,30 @@ spec:
         - name: verbose
           value: 'true'
         - name: subdirectory
-          value: repository
+          value: $(params.image-name)
       workspaces:
         - name: output
           workspace: workspace
         - name: patches
           workspace: patches
 
-    - name: get-id
-      taskRef:
-        name: build-id
-      params:
-        - name: version
-          value: $(params.image-version)
-        - name: enable-timestamp
-          value: $(params.enable-timestamp)
-
-    - name: install
-      runAfter: [ clone-and-patch, get-id ]
-      taskRef:
-        name: make
-      params:
-        - name: image
-          value: $(params.build-image)
-        - name: subdirectory
-          value: repository
-        - name: args
-          value: ["okd-install"]
-        - name: image-name
-          value: $(params.image-name)
-        - name: image-registry
-          value: $(params.base-image-registry)
-        - name: version
-          value: $(tasks.get-id.results.build-id)
-        - name: env-map
-          value: $(params.env-map)
-      workspaces:
-        - name: work
-          workspace: workspace
-
     - name: build
-      runAfter: [ install,  ]
+      runAfter: [ clone-and-patch ]
       taskRef:
-        name: make
+        name: make-operand
       params:
         - name: image
-          value: $(params.build-image)
+          value: $(params.make-image)
         - name: subdirectory
-          value: repository
-        - name: args
-          value: [ "okd-build" ]
+          value: $(params.image-name)
         - name: image-name
           value: $(params.image-name)
         - name: image-registry
           value: $(params.base-image-registry)
         - name: version
-          value: $(tasks.get-id.results.build-id)
+          value: $(params.version)
         - name: env-map
-          value: $(params.env-map)
-      workspaces:
-        - name: work
-          workspace: workspace
-
-    - name: lint
-      runAfter: [ build ]
-      taskRef:
-        name: make
-      params:
-        - name: image
-          value: $(params.build-image)
-        - name: subdirectory
-          value: repository
-        - name: args
-          value: [ "okd-lint" ]
-        - name: image-name
-          value: $(params.image-name)
-        - name: image-registry
-          value: $(params.base-image-registry)
-        - name: version
-          value: $(tasks.get-id.results.build-id)
-        - name: env-map
-          value: $(params.env-map)
-      workspaces:
-        - name: work
-          workspace: workspace
-
-    - name: test
-      runAfter: [ lint ]
-      taskRef:
-        name: make
-      params:
-        - name: image
-          value: $(params.build-image)
-        - name: subdirectory
-          value: repository
-        - name: args
-          value: [ "okd-test" ]
-        - name: image-name
-          value: $(params.image-name)
-        - name: image-registry
-          value: $(params.base-image-registry)
-        - name: version
-          value: $(tasks.get-id.results.build-id)
-        - name: env-map
-          value: $(params.env-map)
-      workspaces:
-        - name: work
-          workspace: workspace
-
-    - name: deploy
-      runAfter: [ test ]
-      taskRef:
-        name: make
-      params:
-        - name: image
-          value: $(params.build-image)
-        - name: subdirectory
-          value: repository
-        - name: args
-          value: [ "okd-deploy" ]
-        - name: image-name
-          value: $(params.image-name)
-        - name: image-registry
-          value: $(params.base-image-registry)
-        - name: version
-          value: $(tasks.get-id.results.build-id)
-        - name: env-map
-          value: $(params.env-map)
+          value: $(params.env-map[*])
       workspaces:
         - name: work
           workspace: workspace

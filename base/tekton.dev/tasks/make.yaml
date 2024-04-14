@@ -3,9 +3,6 @@ kind: Task
 metadata:
   name: make
   namespace: okd-team
-  annotations:
-    io.openshift.podman-fuse: ""
-    io.kubernetes.cri-o.Devices: "/dev/fuse"
 spec:
   params:
     - name: image

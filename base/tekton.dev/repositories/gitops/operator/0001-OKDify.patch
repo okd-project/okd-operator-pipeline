@@ -1,16 +1,18 @@
-From 960b788ecae4c5cb6094f70cefc60058fea7569e Mon Sep 17 00:00:00 2001
+From 4bbd60d9d270f30e569ae57ada927a3f8cb6faec Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+suprememortal@users.noreply.github.com>
 Date: Sun, 7 Apr 2024 19:24:54 +0100
 Subject: [PATCH] OKDify
 
 ---
  Dockerfile                                    |  2 +-
- Makefile                                      | 57 ++++++++++++++-----
- ...gitops-operator.clusterserviceversion.yaml |  6 +-
- config/manifests/patches/description.yaml     | 14 ++---
+ Makefile                                      | 35 ++++++++++++++++++-
+ ...gitops-operator.clusterserviceversion.yaml |  2 +-
+ config/default/manager_auth_proxy_patch.yaml  |  2 +-
+ ...gitops-operator.clusterserviceversion.yaml |  6 ++--
+ config/manifests/patches/description.yaml     | 14 ++++----
  config/manifests/patches/icon.yaml            |  2 +-
  controllers/gitopsservice_controller.go       |  2 +-
- 6 files changed, 57 insertions(+), 26 deletions(-)
+ 8 files changed, 49 insertions(+), 16 deletions(-)
 
 diff --git a/Dockerfile b/Dockerfile
 index 6ec4196..ddc4f54 100644
@@ -24,47 +26,27 @@ index 6ec4196..ddc4f54 100644
  WORKDIR /workspace
  # Copy the Go Modules manifests
 diff --git a/Makefile b/Makefile
-index 3e2efd8..db152db 100644
+index 3e2efd8..433c2ca 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -180,22 +180,23 @@ kustomize: ## Download kustomize locally if necessary.
- 
- # go-get-tool will 'go install' any package $2 and install it to $1.
- PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
--define go-get-tool
--@[ -f $(1) ] || { \
--set -e ;\
--TMP_DIR=$$(mktemp -d) ;\
--cd $$TMP_DIR ;\
--go mod init tmp ;\
--echo "Downloading $(2)" ;\
--currentver=$$(go version | { read _ _ v _; echo $$v; } | sed  's/go//g') ;\
--requiredver="1.19" ;\
--if [ $$(printf '%s\n' $$requiredver $$currentver | sort -V | head -n1) = $$requiredver ]; then export GOFLAGS=""; GOBIN=$(PROJECT_DIR)/bin go install $(2);  else  GOBIN=$(PROJECT_DIR)/bin go get $(2); fi;\
--rm -rf $$TMP_DIR ;\
--}
--endef
-+#define go-get-tool
-+#@[ -f $(1) ] || { \
-+#set -e ;\
-+#TMP_DIR=$$(mktemp -d) ;\
-+#cd $$TMP_DIR ;\
-+#go mod init tmp ;\
-+#echo "Downloading $(2)" ;\
-+#currentver=$$(go version | { read _ _ v _; echo $$v; } | sed  's/go//g') ;\
-+#requiredver="1.19" ;\
-+#if [ $$(printf '%s\n' $$requiredver $$currentver | sort -V | head -n1) = $$requiredver ]; then export GOFLAGS=""; GOBIN=$(PROJECT_DIR)/bin go install $(2);  else  GOBIN=$(PROJECT_DIR)/bin go get $(2); fi;\
-+#rm -rf $$TMP_DIR ;\
-+#}
-+#endef
- 
+@@ -172,7 +172,7 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
+
+ CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
+ controller-gen: ## Download controller-gen locally if necessary.
+-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
++	@$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
+
+ KUSTOMIZE = $(shell pwd)/bin/kustomize
+ kustomize: ## Download kustomize locally if necessary.
+@@ -196,6 +196,7 @@ endef
+
  .PHONY: bundle
  bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
 +	@sed -i 's|containerImage: .*|containerImage: $(IMAGE)|g' config/manifests/bases/gitops-operator.clusterserviceversion.yaml
  	operator-sdk generate kustomize manifests -q
  	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
  	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-@@ -267,3 +268,33 @@ catalog-build: opm ## Build a catalog image.
+@@ -267,3 +268,35 @@ catalog-build: opm ## Build a catalog image.
  .PHONY: catalog-push
  catalog-push: ## Push a catalog image.
  	$(MAKE) docker-push IMG=$(CATALOG_IMG)
@@ -75,29 +57,57 @@ index 3e2efd8..db152db 100644
 +BACKEND_IMAGE ?= quay.io/redhat-developer/gitops-backend
 +BACKEND_IMAGE_TAG ?= v0.0.1
 +BACKEND_IMG ?= $(BACKEND_IMAGE):$(BACKEND_IMAGE_TAG)
++BUILD_CMD ?= podman
 +
 +.PHONY: okd-install okd-lint okd-build okd-test okd-deploy okd-bundle
 +
 +okd-install:
 +	@go mod download
-+	@sed -i 's|DefaultConsoleImage = ".*"|DefaultConsoleImage = "$(CONSOLE_IMAGE)"|g; q1' common/common.go
++	@sed -i 's|DefaultConsoleImage = ".*"|DefaultConsoleImage = "$(CONSOLE_IMAGE)"|g' common/common.go
 +	@sed -i 's|DefaultConsoleVersion = ".*"|DefaultConsoleVersion = "$(CONSOLE_IMAGE_TAG)"|g' common/common.go
 +	@sed -i 's|backendImage                    string = ".*"|backendImage                    string = "$(BACKEND_IMG)"|g' controllers/gitopsservice_controller.go
 +
 +okd-lint:
 +	@echo "Project has no lint"
 +
-+okd-test: test
++okd-test: #test
++	@echo "Tests require running in an OKD cluster"
 +
 +okd-build: build
 +
 +okd-deploy:
-+	@$(OKD_CONTAINER_CMD) build -t $(IMG) .
-+	@$(OKD_CONTAINER_CMD) push $(IMG)
++	@$(BUILD_CMD) build -t $(IMG) .
++	@$(BUILD_CMD) push $(IMG)
 +
 +okd-bundle: bundle
-+	@$(OKD_CONTAINER_CMD) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
-+	@$(OKD_CONTAINER_CMD) push $(BUNDLE_IMG)
++	@$(BUILD_CMD) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
++	@$(BUILD_CMD) push $(BUNDLE_IMG)
+diff --git a/bundle/manifests/gitops-operator.clusterserviceversion.yaml b/bundle/manifests/gitops-operator.clusterserviceversion.yaml
+index 42045ae..accad0a 100644
+--- a/bundle/manifests/gitops-operator.clusterserviceversion.yaml
++++ b/bundle/manifests/gitops-operator.clusterserviceversion.yaml
+@@ -979,7 +979,7 @@ spec:
+                 - --logtostderr=true
+                 - --allow-paths=/metrics
+                 - --http2-disable
+-                image: registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.13
++                image: quay.io/okderators/kube-rbac-proxy:4.15
+                 name: kube-rbac-proxy
+                 ports:
+                 - containerPort: 8443
+diff --git a/config/default/manager_auth_proxy_patch.yaml b/config/default/manager_auth_proxy_patch.yaml
+index 3fff472..276fb6e 100644
+--- a/config/default/manager_auth_proxy_patch.yaml
++++ b/config/default/manager_auth_proxy_patch.yaml
+@@ -13,7 +13,7 @@ spec:
+     spec:
+       containers:
+       - name: kube-rbac-proxy
+-        image: registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.13
++        image: quay.io/okderators/kube-rbac-proxy:4.15
+         args:
+         - --secure-listen-address=0.0.0.0:8443
+         - --upstream=http://127.0.0.1:8080
 diff --git a/config/manifests/bases/gitops-operator.clusterserviceversion.yaml b/config/manifests/bases/gitops-operator.clusterserviceversion.yaml
 index 0326d31..cebd8a5 100644
 --- a/config/manifests/bases/gitops-operator.clusterserviceversion.yaml
@@ -193,6 +203,6 @@ index 2794b8b..2fc872d 100644
  	backendImageEnvName                    = "BACKEND_IMAGE"
  	serviceName                            = "cluster"
  	insecureEnvVar                         = "INSECURE"
--- 
+--
 2.44.0
 

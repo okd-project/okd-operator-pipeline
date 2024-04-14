@@ -2,5 +2,5 @@ resources:
   - git-clone.yaml
   - buildah-build.yaml
   - buildah-push.yaml
-  - make.yaml
-  - build-id.yaml
+  - make-operator.yaml
+  - make-operand.yaml

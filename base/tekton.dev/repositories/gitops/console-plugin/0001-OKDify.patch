@@ -1,4 +1,4 @@
-From ef99201282a02ddf12071736378e39c6fe09ad80 Mon Sep 17 00:00:00 2001
+From 87165ab0fb9ea61ad7ba674b7aec89a2651d0f41 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Sun, 7 Apr 2024 20:26:19 +0100
 Subject: [PATCH] OKDify
@@ -24,7 +24,7 @@ index 4785713..a03e382 100644
  RUN chown -R 1001:0 /opt/app-root/src
 diff --git a/Makefile b/Makefile
 new file mode 100644
-index 0000000..f075867
+index 0000000..0c989df
 --- /dev/null
 +++ b/Makefile
 @@ -0,0 +1,23 @@
@@ -32,7 +32,7 @@ index 0000000..f075867
 +IMAGE ?= quay.io/okderators/gitops-console-plugin
 +IMG ?= $(IMAGE):v$(VERSION)
 +
-+IMAGE_CMD ?= podman
++OKD_CONTAINER_CMD ?= podman
 +
 +.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
 +
@@ -46,11 +46,11 @@ index 0000000..f075867
 +	@yarn build
 +
 +okd-test:
-+	@yarn test
++	@echo "No tests available"
 +
 +okd-deploy:
-+	@$(IMAGE_CMD) build -t $(IMG) .
-+	@$(IMAGE_CMD) push $(IMG)
++	@$(OKD_CONTAINER_CMD) build -t $(IMG) .
++	@$(OKD_CONTAINER_CMD) push $(IMG)
 --
-2.44.0
+2.40.0.windows.1
 

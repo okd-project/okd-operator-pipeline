@@ -2,7 +2,7 @@ generatorOptions:
   disableNameSuffixHash: true
 
 configMapGenerator:
-  - name: gitops-console-plugin-patch
+  - name: kube-rbac-proxy-patch
     namespace: okd-team
     files:
       - 0001-OKDify.patch
