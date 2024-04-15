@@ -1,33 +1,28 @@
-From 318a8d2a94e79888a9264833e5d487d5da19299a Mon Sep 17 00:00:00 2001
+From 40d33785cabe4d0769e62149b579cacbdc03fddf Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
-Date: Tue, 19 Mar 2024 14:42:28 +0000
+Date: Sun, 14 Apr 2024 20:16:23 +0100
 Subject: [PATCH] OKDify
 
 ---
- Makefile                | 24 ++++++++++++++++++++++++
- build/makelib/common.mk |  6 +++++-
- images/Makefile         |  2 +-
- images/ceph/Makefile    |  1 +
- 4 files changed, 31 insertions(+), 2 deletions(-)
+ Makefile        | 21 +++++++++++++++++++++
+ images/Makefile |  2 +-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index 140093b5f..6a8339d8b 100644
+index 140093b5f..211519ee0 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -264,3 +264,27 @@ help: ## Show this help menu.
+@@ -264,3 +264,24 @@ help: ## Show this help menu.
  	@grep --no-filename -E '^[a-zA-Z_%-. ]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
  	@echo ""
  	@echo "$$HELPTEXT"
 +
 +.PHONY: okd-install okd-lint okd-build okd-deploy okd-bundle
 +
-+OKD_CONTAINER_CMD ?= podman
-+ifndef OKD_IMAGE_REGISTRY
-+   $(error OKD_IMAGE_REGISTRY is not set)
-+endif
-+ifndef OKD_IMAGE_NAME
-+   $(error OKD_IMAGE_NAME is not set)
-+endif
++BUILD_CMD ?= podman
++DOCKERCMD := $(BUILD_CMD)
++IMAGE ?= quay.io/okderators/rook-ceph
++IMG ?= $(IMAGE):$(VERSION)
 +
 +okd-install: install
 +
@@ -40,26 +35,9 @@ index 140093b5f..6a8339d8b 100644
 +okd-test: test
 +
 +okd-deploy:
-+	@$(MAKE) -C images PLATFORM=linux_$(GOHOSTARCH) CEPH_IMAGE="$(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME):$(VERSION)" DOCKERCMD=$(OKD_CONTAINER_CMD)
-+	@$(OKD_CONTAINER_CMD) push "$(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME):$(VERSION)"
++	@$(MAKE) -C images PLATFORM=linux_$(GOHOSTARCH) CEPH_IMAGE="$(IMG)" DOCKERCMD=$(BUILD_CMD)
++	@$(BUILD_CMD) push "$(IMG)"
 \ No newline at end of file
-diff --git a/build/makelib/common.mk b/build/makelib/common.mk
-index d61242293..9e7d6949f 100644
---- a/build/makelib/common.mk
-+++ b/build/makelib/common.mk
-@@ -61,7 +61,11 @@ REAL_HOST_PLATFORM=$(shell go env GOHOSTOS)_$(GOHOSTARCH)
- # set the version number. you should not need to do this
- # for the majority of scenarios.
- ifeq ($(origin VERSION), undefined)
--VERSION := $(shell git describe --dirty --always --tags | sed 's/-/./2' | sed 's/-/./2' )
-+	ifdef OKD_VERSION
-+		VERSION := "v$(OKD_VERSION)"
-+	else
-+		VERSION := $(shell git describe --dirty --always --tags | sed 's/-/./2' | sed 's/-/./2' )
-+	endif
- endif
- export VERSION
-
 diff --git a/images/Makefile b/images/Makefile
 index c4ce52ea9..0486b8805 100644
 --- a/images/Makefile
@@ -73,18 +51,6 @@ index c4ce52ea9..0486b8805 100644
 
  do.build: ceph.$(PLATFORM) ;
  build.all: ## Build images for all platforms.
-diff --git a/images/ceph/Makefile b/images/ceph/Makefile
-index 88f10dd95..ff496ffba 100755
---- a/images/ceph/Makefile
-+++ b/images/ceph/Makefile
-@@ -90,6 +90,7 @@ else
- 	mkdir $(BUILD_CONTEXT_DIR)/ceph-csv-templates
- endif
- 	@cd $(BUILD_CONTEXT_DIR) && $(SED_IN_PLACE) 's|BASEIMAGE|$(BASEIMAGE)|g' Dockerfile
-+	@echo "CEPH_IMAGE=$(CEPH_IMAGE)"
- 	@if [ -z "$(BUILD_CONTAINER_IMAGE)" ]; then\
- 		$(DOCKERCMD) build $(BUILD_ARGS) \
- 		--build-arg S5CMD_VERSION=$(S5CMD_VERSION) \
--- 
-2.43.2
+--
+2.44.0
 

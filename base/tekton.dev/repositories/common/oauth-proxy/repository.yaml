@@ -1,0 +1,18 @@
+apiVersion: polling.tekton.dev/v1alpha1
+kind: Repository
+metadata:
+  name: oauth-proxy-repository
+  namespace: okd-team
+spec:
+  url: https://github.com/openshift/oauth-proxy
+  ref: master
+  frequency: 5m
+  type: github
+  pipelineRef:
+    name: operator-golang
+    namespace: okd-team
+    params:
+      - name: repo-ref
+        expression: commit.sha
+      - name: repo-url
+        expression: repoURL

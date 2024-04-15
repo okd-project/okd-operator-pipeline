@@ -1,0 +1,58 @@
+From b587b2482832ebafecea049fda0ac4f52417b018 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Mon, 15 Apr 2024 19:01:45 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile |  4 ++--
+ Makefile   | 21 +++++++++++++++++++++
+ 2 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index 2c9a120a..7c2ec012 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,8 +1,8 @@
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.20-openshift-4.15 AS builder
++FROM quay.io/projectquay/golang:1.20 AS builder
+ WORKDIR  /go/src/github.com/openshift/oauth-proxy
+ COPY . .
+ RUN go build .
+
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-base-openshift-4.15
++FROM quay.io/centos/centos:stream9-minimal
+ COPY --from=builder /go/src/github.com/openshift/oauth-proxy/oauth-proxy /usr/bin/oauth-proxy
+ ENTRYPOINT ["/usr/bin/oauth-proxy"]
+diff --git a/Makefile b/Makefile
+index 1c94be40..5350baad 100644
+--- a/Makefile
++++ b/Makefile
+@@ -33,3 +33,24 @@ test-e2e: GO_TEST_FLAGS += -count 1
+ test-e2e: GO_TEST_FLAGS += -p 1
+ test-e2e: test-unit
+ .PHONY: test-e2e
++
++VERSION ?= $(shell git describe --tags --always --dirty)
++IMAGE ?= quay.io/okderators/oauth-proxy
++IMG ?= $(IMAGE):$(VERSION)
++BUILD_CMD ?= podman
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++
++okd-install:
++	go mod download
++
++okd-lint:
++	@echo "No linting available"
++
++okd-build: build
++
++okd-test: test-unit
++
++okd-deploy:
++	$(BUILD_CMD) build -t $(IMG) .
++	$(BUILD_CMD) push $(IMG)
+\ No newline at end of file
+--
+2.44.0
+

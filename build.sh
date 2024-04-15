@@ -12,7 +12,7 @@ BUILD_IMAGE=${BUILD_IMAGE:-quay.io/okderators/bundle-tools:vdev}
 ENABLE_TIMESTAMP=${ENABLE_TIMESTAMP:-true}
 
 # Check if enabled timestamp is set to true
-if [ "$ENABLE_TIMESTAMP" = "true" ] && [ "$1" != "kube-rbac-proxy" ]; then
+if [ "$ENABLE_TIMESTAMP" = "true" ] && [ "$1" != "kube-rbac-proxy" ] && [ "$1" != "oauth-proxy" ]; then
   VERSION="${VERSION}-$(date "+%Y-%m-%d-%H%M%S")"
 fi
 
@@ -81,6 +81,9 @@ case $1 in
     ;;
   "kube-rbac-proxy")
     build_operand https://github.com/openshift/kube-rbac-proxy "${BRANCH:-release-4.15}" kube-rbac-proxy
+    ;;
+  "oauth-proxy")
+    build_operand https://github.com/openshift/oauth-proxy "${BRANCH:-release-4.15}" oauth-proxy
     ;;
   "gitops-console-plugin")
     build_operand https://github.com/redhat-developer/gitops-console-plugin "${BRANCH:-main}" gitops-console-plugin
