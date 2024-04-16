@@ -145,6 +145,11 @@ case $1 in
   "rook-ceph")
     build_operand https://github.com/red-hat-storage/rook "${BRANCH:-release-4.15}" rook-ceph
     ;;
+  "local-storage-operator")
+    KUBE_RBAC_PROXY_IMAGE=${KUBE_RBAC_PROXY_IMAGE:-quay.io/okderators/kube-rbac-proxy:4.15}
+    build_operator https://github.com/openshift/local-storage-operator "${BRANCH:-release-4.15}" local-storage-operator \
+      "KUBE_RBAC_PROXY_IMAGE=$KUBE_RBAC_PROXY_IMAGE"
+    ;;
   *)
     echo "Usage: $0 <operand/operator name>"
     exit 1
