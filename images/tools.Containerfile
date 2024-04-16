@@ -65,6 +65,8 @@ ENV OPERATOR_SDK_VERSION v1.33.0
 ENV OPERATOR_SDK_BIN /usr/bin/operator-sdk
 ENV KUSTOMIZE_VERSION v5.3.0
 ENV OPM_VERSION v1.36.0
+ENV YQ_VERSION v4.43.1
+ENV YQ_BIN /usr/bin/yq
 ENV OPM_BIN /usr/bin/opm
 ENV OS linux
 ENV ARCH amd64
@@ -85,6 +87,9 @@ RUN curl -fsSLo kustomize.tar.gz "https://github.com/kubernetes-sigs/kustomize/r
 
 RUN curl -fsSLo ${OPM_BIN} "https://github.com/operator-framework/operator-registry/releases/download/${OPM_VERSION}/${OS}-${ARCH}-opm" \
     && chmod 0755 ${OPM_BIN}
+
+RUN curl -fsSLo ${YQ_BIN} "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCH}" \
+    && chmod 0755 ${YQ_BIN}
 
 RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
     && echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - \
