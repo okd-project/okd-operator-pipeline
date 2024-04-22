@@ -1,4 +1,4 @@
-From 1711f3e89f823c00e803d3c40dc5de395ef1ceb5 Mon Sep 17 00:00:00 2001
+From 4ba0bd0b792ca8038d308a85361a0dd35a8eed51 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Tue, 16 Apr 2024 00:42:23 +0100
 Subject: [PATCH] OKDify
@@ -7,11 +7,11 @@ Subject: [PATCH] OKDify
  Dockerfile.diskmaker.rhel7                    |  8 +--
  Dockerfile.mustgather                         |  8 ++-
  Dockerfile.rhel7                              |  8 +--
- Makefile                                      | 56 ++++++++++++-------
+ Makefile                                      | 61 +++++++++++++------
  .../localmetrics/prometheus-rule.yaml         |  2 +-
- ...torage-operator.clusterserviceversion.yaml | 16 +++---
- hack/create-bundle.sh                         | 12 ++--
- 7 files changed, 65 insertions(+), 45 deletions(-)
+ ...torage-operator.clusterserviceversion.yaml | 16 ++---
+ hack/create-bundle.sh                         | 30 +++++----
+ 7 files changed, 81 insertions(+), 52 deletions(-)
 
 diff --git a/Dockerfile.diskmaker.rhel7 b/Dockerfile.diskmaker.rhel7
 index 846d5a27..809a9aa1 100644
@@ -77,10 +77,10 @@ index da4254a0..3a196187 100644
 +      io.k8s.description="This is a component of OKD and manages local volumes." \
          maintainer="Hemant Kumar <hekumar@redhat.com>"
 diff --git a/Makefile b/Makefile
-index 4699a233..a288e342 100644
+index 4699a233..2b3f2f98 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -1,31 +1,30 @@
+@@ -1,31 +1,31 @@
  # To generate a bundle for a specific REGISTRY, REPO, and VERSION, you can:
  # make bundle REGISTRY=quay.io/username REPO=lso VERSION=latest
 -ifeq ($(REGISTRY),)
@@ -97,6 +97,7 @@ index 4699a233..a288e342 100644
 +IMAGE_NAME ?= local-storage-operator
 +REPO ?= $(IMAGE_NAME)
 +VERSION ?= latest
++export VERSION
 
  # Use podman or docker to build containers. Can bet set explicitly.
  # make bundle REGISTRY=quay.io/username TOOL_BIN=`which docker`
@@ -128,7 +129,7 @@ index 4699a233..a288e342 100644
  REV=$(shell git describe --long --tags --match='v*' --dirty 2>/dev/null || git rev-list -n1 HEAD)
 
  # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-@@ -113,7 +112,7 @@ push: images
+@@ -113,7 +113,7 @@ push: images
  .PHONY: push
 
  must-gather:
@@ -137,7 +138,7 @@ index 4699a233..a288e342 100644
  .PHONY: must-gather
 
  # this is ugly, but allows us to build dev containers without tripping over yum install
-@@ -129,7 +128,7 @@ operator-container:
+@@ -129,7 +129,7 @@ operator-container:
  	$(TOOL_BIN) build -t $(OPERATOR_IMAGE) -f $(CURPATH)/Dockerfile.rhel7 .
  .PHONY: operator-container
 
@@ -146,7 +147,7 @@ index 4699a233..a288e342 100644
  	./hack/create-bundle.sh $(OPERATOR_IMAGE) $(DISKMAKER_IMAGE) $(BUNDLE_IMAGE) $(INDEX_IMAGE)
  .PHONY: bundle
 
-@@ -140,3 +139,22 @@ clean:
+@@ -140,3 +140,26 @@ clean:
  test_e2e:
  	./hack/test-e2e.sh
  .PHONY: test_e2e
@@ -154,6 +155,10 @@ index 4699a233..a288e342 100644
 +.PHONY: okd-install okd-lint okd-build okd-test okd-deploy okd-bundle
 +
 +OKD ?= $(shell curl -s https://api.github.com/repos/okd-project/okd/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
++CHANNEL ?= alpha
++DEFAULT_CHANNEL ?= alpha
++export CHANNEL
++export DEFAULT_CHANNEL
 +
 +okd-install: controller-gen
 +	go mod download
@@ -233,7 +238,7 @@ index 55a5e314..27cd6804 100644
          specDescriptors:
            - description: User requested management state of this object
 diff --git a/hack/create-bundle.sh b/hack/create-bundle.sh
-index b68b84ec..41235a53 100755
+index b68b84ec..3343c70c 100755
 --- a/hack/create-bundle.sh
 +++ b/hack/create-bundle.sh
 @@ -12,10 +12,10 @@ if [ "$#" -ne "4" ]; then
@@ -251,7 +256,36 @@ index b68b84ec..41235a53 100755
  TOOL_BIN=${TOOL_BIN:-$DEFAULT_TOOL_BIN}
 
  OPM_BIN=$(which opm 2>/dev/null)
-@@ -50,8 +50,8 @@ $TOOL_BIN build -t $BUNDLE_IMAGE -f bundle.Dockerfile .
+@@ -32,12 +32,12 @@ DISKMAKER_IMAGE=$2
+ BUNDLE_IMAGE=$3
+ INDEX_IMAGE=$4
+
+-# Prepare output dir
+-mkdir -p opm-bundle
+-pushd opm-bundle
+-cp -r -v ../config/* .
++## Prepare output dir
++#mkdir -p opm-bundle
++#pushd opm-bundle
++#cp -r -v ../config/* .
+
+-MANIFEST=manifests/stable/local-storage-operator.clusterserviceversion.yaml
++MANIFEST=config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+
+ # Replace images in the manifest - error prone, needs to be in sync with image-references.
+ sed -i.bak -e "s~quay.io/openshift/origin-local-storage-operator:latest~$OPERATOR_IMAGE~" \
+@@ -45,13 +45,19 @@ sed -i.bak -e "s~quay.io/openshift/origin-local-storage-operator:latest~$OPERATO
+ 	$MANIFEST
+ rm $MANIFEST.bak
+
++# Generate OKD bundle
++rm -rf bundle/
++operator-sdk generate bundle --overwrite -q --input-dir config/manifests/stable --version=${VERSION} --channels=${CHANNEL} --default-channel=${DEFAULT_CHANNEL}
++# Apply install spec
++yq '.spec.install += load("config/manifests/stable/local-storage-operator.clusterserviceversion.yaml").spec.install' bundle/manifests/local-storage-operator.clusterserviceversion.yaml > bundle/manifests/local-storage-operator.clusterserviceversion.yaml.tmp
++mv bundle/manifests/local-storage-operator.clusterserviceversion.yaml.tmp bundle/manifests/local-storage-operator.clusterserviceversion.yaml
+ # Build the bundle and push it
+ $TOOL_BIN build -t $BUNDLE_IMAGE -f bundle.Dockerfile .
  $TOOL_BIN push $BUNDLE_IMAGE
 
  # Build the index image and push it
@@ -262,6 +296,12 @@ index b68b84ec..41235a53 100755
 
 
  echo
+@@ -75,5 +81,3 @@ EOF
+ REAL_EOF
+
+ echo
+-
+-popd
 --
 2.44.0
 
