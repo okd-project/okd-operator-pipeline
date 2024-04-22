@@ -68,6 +68,7 @@ ENV OPM_VERSION v1.36.0
 ENV YQ_VERSION v4.43.1
 ENV YQ_BIN /usr/bin/yq
 ENV OPM_BIN /usr/bin/opm
+ENV PROTO_BUF_VERSION 26.1
 ENV OS linux
 ENV ARCH amd64
 ENV GOLANGCI_LINT_VERSION v1.56.2
@@ -90,6 +91,10 @@ RUN curl -fsSLo ${OPM_BIN} "https://github.com/operator-framework/operator-regis
 
 RUN curl -fsSLo ${YQ_BIN} "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCH}" \
     && chmod 0755 ${YQ_BIN}
+
+RUN curl -fsSLo protoc.zip "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTO_BUF_VERSION}/protoc-${PROTO_BUF_VERSION}-linux-$(uname -m).zip" \
+    && unzip protoc.zip -d /usr/local \
+    && rm protoc.zip
 
 RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
     && echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - \
