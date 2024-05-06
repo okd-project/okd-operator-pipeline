@@ -7,12 +7,25 @@ BASE_IMAGE_REGISTRY=${BASE_IMAGE_REGISTRY:-$IMAGE_REGISTRY/$REGISTRY_NAMESPACE}
 CHANNEL=${CHANNEL:-alpha}
 DEFAULT_CHANNEL=${DEFAULT_CHANNEL:-alpha}
 CHANNELS=${CHANNELS:-alpha}
-VERSION=${VERSION:-4.15.0}
 BUILD_IMAGE=${BUILD_IMAGE:-quay.io/okderators/bundle-tools:vdev}
 ENABLE_TIMESTAMP=${ENABLE_TIMESTAMP:-true}
 
+# Account for edge cases
+case $1 in
+  "kube-rbac-proxy"|"oauth-proxy")
+    VERSION=${VERSION:-4.15}
+    ENABLE_TIMESTAMP=false
+    ;;
+  "vector"|"log-file-metric-exporter"|"fluentd"|"logging-view-plugin"|"cluster-logging-operator"|"loki")
+    VERSION=${VERSION:-5.9.0}
+    ;;
+  *)
+    VERSION=${VERSION:-4.15.0}
+    ;;
+esac
+
 # Check if enabled timestamp is set to true
-if [ "$ENABLE_TIMESTAMP" = "true" ] && [ "$1" != "kube-rbac-proxy" ] && [ "$1" != "oauth-proxy" ]; then
+if [ "$ENABLE_TIMESTAMP" = "true" ]; then
   VERSION="${VERSION}-$(date "+%Y-%m-%d-%H%M%S")"
 fi
 
@@ -110,24 +123,37 @@ case $1 in
     build_operator https://github.com/red-hat-storage/noobaa-operator "${BRANCH:-release-4.15}" noobaa-operator \
       "CORE_IMAGE=$NOOBAA_CORE_IMAGE DB_IMAGE=$NOOBAA_DB_IMAGE SKIP_RANGE=$SKIP_RANGE REPLACES=$REPLACES CSV_NAME=$CSV_NAME"
     ;;
+  "loki")
+    build_operator https://github.com/openshift/loki "${BRANCH:-release-5.9}" loki
+    ;;
+  "vector")
+    build_operand https://github.com/ViaQ/vector "${BRANCH:-release-5.9}" vector
+    ;;
+  "fluentd")
+    build_operand https://github.com/ViaQ/logging-fluentd "${BRANCH:-v1.16.x}" fluentd
+    ;;
   "logging-view-plugin")
-    build_operand https://github.com/openshift/logging-view-plugin "${BRANCH:-main}" logging-view-plugin
+    build_operand https://github.com/openshift/logging-view-plugin "${BRANCH:-release-5.9}" logging-view-plugin
     ;;
   "log-file-metric-exporter")
-    build_operand https://github.com/ViaQ/log-file-metric-exporter "${BRANCH:-release-5.8}" log-file-metric-exporter
+    build_operand https://github.com/ViaQ/log-file-metric-exporter "${BRANCH:-release-5.9}" log-file-metric-exporter
+    ;;
+  "cluster-logging-operator")
+    FLUENTD=${FLUENTD:-quay.io/okderators/fluentd:latest}
+    VECTOR=${VECTOR:-quay.io/okderators/vector:latest}
+    LOG_FILE_METRIC_EXPORTER=${LOG_FILE_METRIC_EXPORTER:-quay.io/okderators/log-file-metric-exporter:latest}
+    LOGGING_VIEW_PLUGIN=${LOGGING_VIEW_PLUGIN:-quay.io/okderators/logging-view-plugin:latest}
+    build_operator https://github.com/openshift/cluster-logging-operator "${BRANCH:-release-5.9}" cluster-logging-operator \
+      "IMAGE_LOGGING_FLUENTD=$FLUENTD IMAGE_LOGGING_VECTOR=$VECTOR IMAGE_LOGFILEMETRICEXPORTER=$LOG_FILE_METRIC_EXPORTER IMAGE_LOGGING_CONSOLE_PLUGIN=$LOGGING_VIEW_PLUGIN"
     ;;
   "ocs-operator")
-    CSV_VERSION=${CSV_VERSION:-999.999.999}
-    NOOBAA_DB_IMAGE=${NOOBAA_DB_IMAGE:-quay.io/sclorg/postgresql-16-c9s:latest}
-    NOOBAA_CORE_IMAGE=${NOOBAA_CORE_IMAGE:-quay.io/okderators/noobaa-core:dev}
-    ROOK_IMAGE=${ROOK_IMAGE:-quay.io/okderators/rook-ceph:dev}
-    CEPH_IMAGE=${CEPH_IMAGE:-quay.io/ceph/ceph:v18.2.1}
-    NOOBAA_BUNDLE_FULL_IMAGE_NAME=${NOOBAA_BUNDLE_FULL_IMAGE_NAME:-quay.io/okderators/noobaa-operator-bundle:dev}
-    OCS_IMAGE=${OCS_IMAGE:-quay.io/okderators/ocs-operator:dev}
-    OCS_METRICS_EXPORTER_IMAGE=${OCS_METRICS_EXPORTER_IMAGE:-quay.io/okderators/ocs-metrics-exporter:dev}
-    UX_BACKEND_OAUTH_IMAGE=${UX_BACKEND_OAUTH_IMAGE:-quay.io/openshift/origin-oauth-proxy:latest}
+    NOOBAA_DB_IMG=${NOOBAA_DB_IMG:-quay.io/sclorg/postgresql-16-c9s:latest}
+    NOOBAA_CORE_IMG=${NOOBAA_CORE_IMG:-quay.io/okderators/noobaa-core:dev}
+    ROOK_IMG=${ROOK_IMG:-quay.io/okderators/rook-ceph:dev}
+    CEPH_IMG=${CEPH_IMG:-quay.io/ceph/ceph:v18.2.1}
+    OAUTH_PROXY_IMG=${OAUTH_PROXY_IMG:-quay.io/openshift/origin-oauth-proxy:4.15}
     build_operator https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-operator \
-      "CSV_VERSION=$CSV_VERSION} NOOBAA_CORE_IMAGE=$NOOBAA_CORE_IMAGE NOOBAA_DB_IMAGE=$NOOBAA_DB_IMAGE ROOK_IMAGE=$ROOK_IMAGE CEPH_IMAGE=$CEPH_IMAGE NOOBAA_BUNDLE_FULL_IMAGE_NAME=$NOOBAA_BUNDLE_FULL_IMAGE_NAME OCS_IMAGE=$OCS_IMAGE OCS_METRICS_EXPORTER_IMAGE=$OCS_METRICS_EXPORTER_IMAGE UX_BACKEND_OAUTH_IMAGE=$UX_BACKEND_OAUTH_IMAGE"
+      "NOOBAA_CORE_IMG=$NOOBAA_CORE_IMG NOOBAA_DB_IMG=$NOOBAA_DB_IMG ROOK_IMG=$ROOK_IMG CEPH_IMG=$CEPH_IMG OAUTH_PROXY_IMG=$OAUTH_PROXY_IMG"
     ;;
   "ocs-metrics-exporter")
     build_operand https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-metrics-exporter
@@ -149,6 +175,9 @@ case $1 in
     KUBE_RBAC_PROXY_IMAGE=${KUBE_RBAC_PROXY_IMAGE:-quay.io/okderators/kube-rbac-proxy:4.15}
     build_operator https://github.com/openshift/local-storage-operator "${BRANCH:-release-4.15}" local-storage-operator \
       "KUBE_RBAC_PROXY_IMAGE=$KUBE_RBAC_PROXY_IMAGE"
+    ;;
+  "csi-addons")
+    build_operator https://github.com/red-hat-storage/kubernetes-csi-addons "${BRANCH:-release-4.15}" csi-addons
     ;;
   *)
     echo "Usage: $0 <operand/operator name>"

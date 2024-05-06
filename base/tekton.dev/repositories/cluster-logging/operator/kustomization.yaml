@@ -2,11 +2,10 @@ generatorOptions:
   disableNameSuffixHash: true
 
 configMapGenerator:
-  - name: log-file-metric-exporter-patch
+  - name: cluster-logging-operator-patch
     namespace: okd-team
     files:
       - 0001-OKDify.patch
 
 resources:
-  - repository.yaml
   - pvc.yaml

@@ -1,0 +1,74 @@
+From 5a5b65e4eb31fd54545daeba14a58fb141cf5227 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sat, 4 May 2024 12:42:24 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile      |  4 ++--
+ Dockerfile.unit |  2 +-
+ Makefile        | 23 +++++++++++++++++++++++
+ 3 files changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index 9e0c8defbb..f57d6cf797 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,4 +1,4 @@
+-FROM registry.redhat.io/ubi9/ubi:latest as builder
++FROM quay.io/centos/centos:stream9 as builder
+
+ RUN INSTALL_PKGS=" \
+       gcc-c++ \
+@@ -28,7 +28,7 @@ COPY . /src
+
+ RUN PROTOC=/src/thirdparty/protoc/protoc-linux-$(arch) make build
+
+-FROM registry.access.redhat.com/ubi9/ubi-minimal
++FROM quay.io/centos/centos:stream9-minimal
+
+ RUN microdnf install -y systemd tar && \
+     microdnf clean all
+diff --git a/Dockerfile.unit b/Dockerfile.unit
+index 39fca94d30..af72b77ac2 100644
+--- a/Dockerfile.unit
++++ b/Dockerfile.unit
+@@ -1,4 +1,4 @@
+-FROM registry.redhat.io/ubi9/ubi:latest
++FROM quay.io/centos/centos:stream9
+
+ RUN INSTALL_PKGS=" \
+       cmake \
+diff --git a/Makefile b/Makefile
+index f6317a4ab8..8467cd54df 100644
+--- a/Makefile
++++ b/Makefile
+@@ -685,3 +685,26 @@ cargo-install-%:
+ .PHONY: ci-generate-publish-metadata
+ ci-generate-publish-metadata: ## Generates the necessary metadata required for building/publishing Vector.
+ 	cargo vdev build publish-metadata
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++
++BUILD_CMD ?= podman
++VERSION ?= $(shell git branch --show-current | cut -d '-' -f 2)
++BASE_REGISTRY ?= quay.io/okderators
++IMAGE ?= $(BASE_REGISTRY)/vector
++IMG ?= $(IMAGE):$(VERSION)
++
++okd-install:
++	@echo "Nothing to do"
++
++okd-lint:
++	@echo "Nothing to do"
++
++okd-build:
++	$(BUILD_CMD) build -t $(IMG) .
++
++okd-test:
++	$(BUILD_CMD) build
++
++okd-deploy:
++	$(BUILD_CMD) push $(IMG)
+--
+2.44.0
+

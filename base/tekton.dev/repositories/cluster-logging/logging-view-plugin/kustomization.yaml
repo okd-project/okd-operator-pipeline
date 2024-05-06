@@ -5,7 +5,7 @@ configMapGenerator:
   - name: logging-view-plugin-patch
     namespace: okd-team
     files:
-      - repo.patch
+      - 0001-OKDify.patch
 
 resources:
   - repository.yaml

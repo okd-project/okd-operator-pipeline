@@ -68,6 +68,7 @@ spec:
           workspace: workspace
 
     - name: image-push
+      retries: 3
       runAfter: [ image-build ]
       taskRef:
         name: buildah-push

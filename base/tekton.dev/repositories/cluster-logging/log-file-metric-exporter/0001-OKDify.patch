@@ -1,0 +1,106 @@
+From a1fde9ac87e292b8c75e4e10f0e1ced30cf7d7c5 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sat, 4 May 2024 14:04:11 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile |  8 ++++----
+ Makefile   | 32 +++++++++++++++++++++++++-------
+ 2 files changed, 29 insertions(+), 11 deletions(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index e83029a..4d4e27f 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -21,12 +21,12 @@ RUN chmod +x /usr/local/bin/log-file-metric-exporter
+ RUN chmod +x /usr/local/bin/log-file-metric-exporter.sh
+
+ LABEL \
+-        io.k8s.display-name="OpenShift LogFileMetric Exporter" \
+-        io.k8s.description="OpenShift LogFileMetric Exporter component of OpenShift Cluster Logging" \
++        io.k8s.display-name="OKD LogFileMetric Exporter" \
++        io.k8s.description="OKD LogFileMetric Exporter component of OKD Cluster Logging" \
+         License="Apache-2.0" \
+-        name="openshift-logging/log-file-metric-exporter" \
++        name="okderators/log-file-metric-exporter" \
+         com.redhat.component="log-file-metric-exporter-container" \
+-        io.openshift.maintainer.product="OpenShift Container Platform" \
++        io.openshift.maintainer.product="OKD" \
+         io.openshift.maintainer.component="Logging" \
+         version=v1.1.0
+
+diff --git a/Makefile b/Makefile
+index dab9a4b..2344cef 100755
+--- a/Makefile
++++ b/Makefile
+@@ -5,15 +5,19 @@ export GO111MODULE=on
+ ARTIFACT_DIR?=./tmp
+ CURPATH=$(PWD)
+ GOFLAGS?=
+-CLO_RELEASE_VERSION?=5.8
++VERSION ?= $(shell git branch --show-current | cut -d '-' -f 2)
++CLO_RELEASE_VERSION?= $(VERSION)
+ BIN_NAME=log-file-metric-exporter
+-IMAGE_REPOSITORY_NAME=quay.io/openshift-logging/origin-${BIN_NAME}:${CLO_RELEASE_VERSION}
++BASE_REGISTRY ?= quay.io/okderators
++IMAGE ?= $(BASE_REGISTRY)/$(BIN_NAME)
++IMAGE_REPOSITORY_NAME=$(IMAGE):${CLO_RELEASE_VERSION}
+ LOCAL_IMAGE_TAG=127.0.0.1:5000/openshift/origin-${BIN_NAME}:${CLO_RELEASE_VERSION}
+ #just for testing purpose pushing it to docker.io
+ MAIN_PKG=cmd/main.go
+ TARGET_DIR=$(CURPATH)/_output
+ TARGET=$(CURPATH)/bin/$(BIN_NAME)
+ BUILD_GOPATH=$(TARGET_DIR)
++BUILD_CMD ?= podman
+
+ #inputs to 'run' which may need to change
+ TLS_CERTS_BASEDIR=_output
+@@ -43,13 +47,13 @@ build: fmt
+ .PHONY: build
+
+ image:
+-	podman build -f Dockerfile -t $(LOCAL_IMAGE_TAG) .
+-	podman tag ${LOCAL_IMAGE_TAG} ${IMAGE_REPOSITORY_NAME}
++	$(BUILD_CMD) build -f Dockerfile -t $(LOCAL_IMAGE_TAG) .
++	$(BUILD_CMD) tag ${LOCAL_IMAGE_TAG} ${IMAGE_REPOSITORY_NAME}
+ .PHONY: image
+
+ image-src:
+-	podman build -f Dockerfile.src -t $(LOCAL_IMAGE_TAG)-src .
+-	podman tag ${LOCAL_IMAGE_TAG}-src ${IMAGE_REPOSITORY_NAME}-src
++	$(BUILD_CMD) build -f Dockerfile.src -t $(LOCAL_IMAGE_TAG)-src .
++	$(BUILD_CMD) tag ${LOCAL_IMAGE_TAG}-src ${IMAGE_REPOSITORY_NAME}-src
+ .PHONY: image-src
+
+ deploy-image: image
+@@ -71,7 +75,7 @@ test: artifactdir
+ .PHONY: test
+
+ test-container-local: image-src
+-	podman run -it $(LOCAL_IMAGE_TAG)-src make test
++	$(BUILD_CMD) run -it $(LOCAL_IMAGE_TAG)-src make test
+ .PHONY: test-container-local
+
+ test-container-on-cluster: push-image-src
+@@ -86,3 +90,17 @@ push-image-src: image-src
+ lint:
+ 	@hack/run-linter
+ .PHONY: lint
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++
++okd-install:
++	go mod download
++
++okd-lint: lint
++
++okd-build: build
++
++okd-test: test
++
++okd-deploy: image
++	$(BUILD_CMD) push ${IMAGE_REPOSITORY_NAME}
+\ No newline at end of file
+--
+2.44.0
+
