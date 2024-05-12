@@ -1,4 +1,3 @@
 resources:
   - operator/
-  - metrics-exporter/
   - rook-ceph/

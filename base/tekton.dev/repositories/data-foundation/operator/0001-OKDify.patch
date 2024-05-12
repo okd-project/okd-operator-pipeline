@@ -1,22 +1,18 @@
-From e242b3764e015e701b81cf4c6f899d45f2782872 Mon Sep 17 00:00:00 2001
+From b0f528dba70285242fd78e7f1b51272c5535b0c1 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
-Date: Fri, 5 Apr 2024 16:46:47 +0100
+Date: Mon, 22 Apr 2024 12:30:56 +0100
 Subject: [PATCH] OKDify
 
 ---
  Dockerfile                                    |  4 +-
- Makefile                                      | 34 +++++++++++--
- .../odf-operator.clusterserviceversion.yaml   | 50 +++++++++----------
- config/console/kustomization.yaml             |  2 +-
- config/install/kustomization.yaml             |  2 +-
+ Makefile                                      | 23 ++++++++--
+ .../odf-operator.clusterserviceversion.yaml   | 44 +++++++++----------
  config/install/odf-catalogsource.yaml         |  4 +-
- config/manager/kustomization.yaml             |  2 +-
- .../odf-operator.clusterserviceversion.yaml   | 14 +++---
- .../odf-operator.csv.card-description.yaml    | 32 ++++++------
- hack/golangci_lint.sh                         | 20 ++++++++
- hack/make-bundle-vars.mk                      |  6 +--
- hack/mirror-noobaa-images.sh                  |  4 +-
- 12 files changed, 109 insertions(+), 65 deletions(-)
+ .../odf-operator.clusterserviceversion.yaml   | 12 +++--
+ .../odf-operator.csv.card-description.yaml    | 32 +++++++-------
+ hack/golangci_lint.sh                         | 20 +++++++++
+ hack/make-bundle-vars.mk                      | 21 ++++-----
+ 8 files changed, 97 insertions(+), 63 deletions(-)
  create mode 100755 hack/golangci_lint.sh
 
 diff --git a/Dockerfile b/Dockerfile
@@ -40,7 +36,7 @@ index e86d2a1e..76eddced 100644
  # Use distroless as minimal base image to package the manager binary
  # Refer to https://github.com/GoogleContainerTools/distroless for more details
 diff --git a/Makefile b/Makefile
-index 07130323..624f4f8e 100644
+index 07130323..ff84e110 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -105,10 +105,10 @@ run: manifests generate fmt vet ## Run a controller from your host.
@@ -48,11 +44,11 @@ index 07130323..624f4f8e 100644
 
  docker-build: godeps-update test-setup ## Build docker image with the manager.
 -	docker build -t ${IMG} .
-+	$(OKD_CONTAINER_CMD) build -t ${IMG} .
++	$(BUILD_CMD) build -t ${IMG} .
 
  docker-push: ## Push docker image with the manager.
 -	docker push ${IMG}
-+	$(OKD_CONTAINER_CMD) push ${IMG}
++	$(BUILD_CMD) push ${IMG}
 
  ##@ Deployment
 
@@ -61,24 +57,16 @@ index 07130323..624f4f8e 100644
  .PHONY: bundle-build
  bundle-build: bundle ## Build the bundle image.
 -	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
-+	$(OKD_CONTAINER_CMD) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
++	$(BUILD_CMD) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
  .PHONY: bundle-push
  bundle-push: ## Push the bundle image.
-@@ -177,3 +177,31 @@ catalog-build: catalog ## Build a catalog image.
+@@ -177,3 +177,20 @@ catalog-build: catalog ## Build a catalog image.
  .PHONY: catalog-push
  catalog-push: ## Push a catalog image.
  	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 +
-+OKD_CONTAINER_CMD ?= podman
-+ifdef OKD_IMAGE_NAME
-+	IMAGE_NAME := $(OKD_IMAGE_NAME)
-+endif
-+ifdef OKD_VERSION
-+   VERSION := $(OKD_VERSION)
-+   IMAGE_TAG := v$(VERSION)
-+endif
-+IMAGE_BUILD_CMD := $(OKD_CONTAINER_CMD)
++BUILD_CMD ?= podman
 +
 +.PHONY: okd-install okd-lint okd-build okd-test okd-deploy okd-bundle
 +okd-install:
@@ -91,23 +79,17 @@ index 07130323..624f4f8e 100644
 +
 +okd-test: test
 +
-+okd-deploy: docker-build
-+	@$(OKD_CONTAINER_CMD) build -t $(IMG) .
-+	@$(OKD_CONTAINER_CMD) push $(IMG)
++okd-deploy: docker-build docker-push
 +
-+okd-bundle: bundle-build
-+	$(OKD_CONTAINER_CMD) push $(BUNDLE_IMG)
++okd-bundle: bundle-build bundle-push
 \ No newline at end of file
 diff --git a/bundle/manifests/odf-operator.clusterserviceversion.yaml b/bundle/manifests/odf-operator.clusterserviceversion.yaml
-index 678cc2bd..04c8503d 100644
+index 678cc2bd..ab24abda 100644
 --- a/bundle/manifests/odf-operator.clusterserviceversion.yaml
 +++ b/bundle/manifests/odf-operator.clusterserviceversion.yaml
-@@ -34,10 +34,10 @@ metadata:
-     capabilities: Deep Insights
-     categories: Storage
+@@ -36,8 +36,8 @@ metadata:
      console.openshift.io/plugins: '["odf-console"]'
--    containerImage: quay.io/ocs-dev/odf-operator:latest
-+    containerImage: quay.io/okderators/odf-operator:latest
+     containerImage: quay.io/ocs-dev/odf-operator:latest
      createdAt: "2024-02-09T04:53:49Z"
 -    description: OpenShift Data Foundation provides a common control plane for storage
 -      solutions on OpenShift Container Platform.
@@ -202,24 +184,6 @@ index 678cc2bd..04c8503d 100644
    icon:
    - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTQ1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2UwMDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlJlZEhhdC1Mb2dvLUhhdC1Db2xvcjwvdGl0bGU+PHBhdGggZD0iTTE1Ny43Nyw2Mi42MWExNCwxNCwwLDAsMSwuMzEsMy40MmMwLDE0Ljg4LTE4LjEsMTcuNDYtMzAuNjEsMTcuNDZDNzguODMsODMuNDksNDIuNTMsNTMuMjYsNDIuNTMsNDRhNi40Myw2LjQzLDAsMCwxLC4yMi0xLjk0bC0zLjY2LDkuMDZhMTguNDUsMTguNDUsMCwwLDAtMS41MSw3LjMzYzAsMTguMTEsNDEsNDUuNDgsODcuNzQsNDUuNDgsMjAuNjksMCwzNi40My03Ljc2LDM2LjQzLTIxLjc3LDAtMS4wOCwwLTEuOTQtMS43My0xMC4xM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMjcuNDcsODMuNDljMTIuNTEsMCwzMC42MS0yLjU4LDMwLjYxLTE3LjQ2YTE0LDE0LDAsMCwwLS4zMS0zLjQybC03LjQ1LTMyLjM2Yy0xLjcyLTcuMTItMy4yMy0xMC4zNS0xNS43My0xNi42QzEyNC44OSw4LjY5LDEwMy43Ni41LDk3LjUxLjUsOTEuNjkuNSw5MCw4LDgzLjA2LDhjLTYuNjgsMC0xMS42NC01LjYtMTcuODktNS42LTYsMC05LjkxLDQuMDktMTIuOTMsMTIuNSwwLDAtOC40MSwyMy43Mi05LjQ5LDI3LjE2QTYuNDMsNi40MywwLDAsMCw0Mi41Myw0NGMwLDkuMjIsMzYuMywzOS40NSw4NC45NCwzOS40NU0xNjAsNzIuMDdjMS43Myw4LjE5LDEuNzMsOS4wNSwxLjczLDEwLjEzLDAsMTQtMTUuNzQsMjEuNzctMzYuNDMsMjEuNzdDNzguNTQsMTA0LDM3LjU4LDc2LjYsMzcuNTgsNTguNDlhMTguNDUsMTguNDUsMCwwLDEsMS41MS03LjMzQzIyLjI3LDUyLC41LDU1LC41LDc0LjIyYzAsMzEuNDgsNzQuNTksNzAuMjgsMTMzLjY1LDcwLjI4LDQ1LjI4LDAsNTYuNy0yMC40OCw1Ni43LTM2LjY1LDAtMTIuNzItMTEtMjcuMTYtMzAuODMtMzUuNzgiLz48L3N2Zz4=
      mediatype: image/svg+xml
-@@ -434,7 +432,7 @@ spec:
-                 envFrom:
-                 - configMapRef:
-                     name: odf-operator-manager-config
--                image: quay.io/ocs-dev/odf-operator:latest
-+                image: quay.io/okderators/odf-operator:latest
-                 livenessProbe:
-                   httpGet:
-                     path: /healthz
-@@ -483,7 +481,7 @@ spec:
-                 app: odf-console
-             spec:
-               containers:
--              - image: quay.io/ocs-dev/odf-console:latest
-+              - image: quay.io/okderators/odf-console:latest
-                 livenessProbe:
-                   httpGet:
-                     path: /plugin-manifest.json
 @@ -592,5 +590,5 @@ spec:
      name: Red Hat Support
    maturity: alpha
@@ -227,28 +191,6 @@ index 678cc2bd..04c8503d 100644
 -    name: Red Hat
 +    name: OKD Community
    version: 4.15.0
-diff --git a/config/console/kustomization.yaml b/config/console/kustomization.yaml
-index c0333b64..72feb9d1 100644
---- a/config/console/kustomization.yaml
-+++ b/config/console/kustomization.yaml
-@@ -11,5 +11,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
- kind: Kustomization
- images:
- - name: odf-console
--  newName: quay.io/ocs-dev/odf-console
-+  newName: quay.io/okderators/odf-console
-   newTag: latest
-diff --git a/config/install/kustomization.yaml b/config/install/kustomization.yaml
-index 288ae4f9..ad172a1b 100644
---- a/config/install/kustomization.yaml
-+++ b/config/install/kustomization.yaml
-@@ -11,5 +11,5 @@ configurations:
- # replace catalogsource image
- images:
- - name: catalog-img
--  newName: quay.io/ocs-dev/odf-operator-catalog
-+  newName: quay.io/okderators/odf-operator-catalog
-   newTag: latest
 diff --git a/config/install/odf-catalogsource.yaml b/config/install/odf-catalogsource.yaml
 index c2262d16..681d531a 100644
 --- a/config/install/odf-catalogsource.yaml
@@ -261,29 +203,16 @@ index c2262d16..681d531a 100644
 -  publisher: Red Hat
 +  displayName: OKD Data Foundation
 +  publisher: OKD Community
-diff --git a/config/manager/kustomization.yaml b/config/manager/kustomization.yaml
-index b14ba087..cfedd213 100644
---- a/config/manager/kustomization.yaml
-+++ b/config/manager/kustomization.yaml
-@@ -14,5 +14,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
- kind: Kustomization
- images:
- - name: controller
--  newName: quay.io/ocs-dev/odf-operator
-+  newName: quay.io/okderators/odf-operator
-   newTag: latest
 diff --git a/config/manifests/bases/odf-operator.clusterserviceversion.yaml b/config/manifests/bases/odf-operator.clusterserviceversion.yaml
-index 1c4ccf74..c48c54cf 100644
+index 1c4ccf74..ef26d7ba 100644
 --- a/config/manifests/bases/odf-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/odf-operator.clusterserviceversion.yaml
-@@ -6,9 +6,9 @@ metadata:
-     capabilities: Deep Insights
+@@ -7,8 +7,8 @@ metadata:
      categories: Storage
      console.openshift.io/plugins: '["odf-console"]'
--    containerImage: quay.io/ocs-dev/odf-operator:latest
+     containerImage: quay.io/ocs-dev/odf-operator:latest
 -    description: OpenShift Data Foundation provides a common control plane for storage
 -      solutions on OpenShift Container Platform.
-+    containerImage: quay.io/okderators/odf-operator:latest
 +    description: OKD Data Foundation provides a common control plane for storage
 +      solutions on OKD Container Platform.
      features.operators.openshift.io/token-auth-aws: "true"
@@ -414,49 +343,70 @@ index 00000000..fc125287
 +GOLANGCI_LINT_CACHE=/tmp/golangci-cache "${GOLANGCI_LINT}" run -E gosec --timeout=6m .
 +exit
 diff --git a/hack/make-bundle-vars.mk b/hack/make-bundle-vars.mk
-index 91f36c55..f3eedebb 100644
+index 91f36c55..cfd51246 100644
 --- a/hack/make-bundle-vars.mk
 +++ b/hack/make-bundle-vars.mk
-@@ -70,13 +70,13 @@ CRD_OPTIONS ?= "crd"
+@@ -48,21 +48,22 @@ REPLACES ?=
+ SKIP_RANGE ?=
+
+ # Image URL to use all building/pushing image targets
+-IMAGE_REGISTRY ?= quay.io
+-REGISTRY_NAMESPACE ?= ocs-dev
++#IMAGE_REGISTRY ?= quay.io
++#REGISTRY_NAMESPACE ?= ocs-dev
++BASE_REGISTRY ?= quay.io/okderators
+ IMAGE_TAG ?= latest
+ IMAGE_NAME ?= odf-operator
+ BUNDLE_IMAGE_NAME ?= $(IMAGE_NAME)-bundle
+ CATALOG_IMAGE_NAME ?= $(IMAGE_NAME)-catalog
+
+ # IMG defines the image used for the operator.
+-IMG ?= $(IMAGE_REGISTRY)/$(REGISTRY_NAMESPACE)/$(IMAGE_NAME):$(IMAGE_TAG)
++IMG ?= $(BASE_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+
+ # BUNDLE_IMG defines the image used for the bundle.
+-BUNDLE_IMG ?= $(IMAGE_REGISTRY)/$(REGISTRY_NAMESPACE)/$(BUNDLE_IMAGE_NAME):$(IMAGE_TAG)
++BUNDLE_IMG ?= $(BASE_REGISTRY)/$(BUNDLE_IMAGE_NAME):$(IMAGE_TAG)
+
+ # CATALOG_IMG defines the image used for the catalog.
+-CATALOG_IMG ?= $(IMAGE_REGISTRY)/$(REGISTRY_NAMESPACE)/$(CATALOG_IMAGE_NAME):$(IMAGE_TAG)
++CATALOG_IMG ?= $(BASE_REGISTRY)/$(CATALOG_IMAGE_NAME):$(IMAGE_TAG)
+
+ # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
+ CRD_OPTIONS ?= "crd"
+@@ -70,19 +71,19 @@ CRD_OPTIONS ?= "crd"
  OCS_BUNDLE_NAME ?= ocs-operator
  OCS_BUNDLE_IMG_NAME ?= $(OCS_BUNDLE_NAME)-bundle
  OCS_BUNDLE_IMG_TAG ?= v4.15.0
 -OCS_BUNDLE_IMG_LOCATION ?= quay.io/ocs-dev
-+OCS_BUNDLE_IMG_LOCATION ?= quay.io/okderators
++OCS_BUNDLE_IMG_LOCATION ?= $(BASE_REGISTRY)
  OCS_BUNDLE_IMG ?= $(OCS_BUNDLE_IMG_LOCATION)/$(OCS_BUNDLE_IMG_NAME):$(OCS_BUNDLE_IMG_TAG)
 
  NOOBAA_BUNDLE_NAME ?= noobaa-operator
  NOOBAA_BUNDLE_IMG_NAME ?= $(NOOBAA_BUNDLE_NAME)-bundle
  NOOBAA_BUNDLE_IMG_TAG ?= v5.14.0
 -NOOBAA_BUNDLE_IMG_LOCATION ?= quay.io/noobaa
-+NOOBAA_BUNDLE_IMG_LOCATION ?= quay.io/okderators
++NOOBAA_BUNDLE_IMG_LOCATION ?= $(BASE_REGISTRY)
  NOOBAA_BUNDLE_IMG ?= $(NOOBAA_BUNDLE_IMG_LOCATION)/$(NOOBAA_BUNDLE_IMG_NAME):$(NOOBAA_BUNDLE_IMG_TAG)
 
  CSIADDONS_BUNDLE_NAME ?= csi-addons
-@@ -93,7 +93,7 @@ IBM_BUNDLE_IMG ?= $(IBM_BUNDLE_IMG_LOCATION)/$(IBM_BUNDLE_IMG_NAME):$(IBM_BUNDLE
+-CSIADDONS_BUNDLE_IMG_NAME ?= k8s-bundle
++CSIADDONS_BUNDLE_IMG_NAME ?= csi-k8s-bundle
+ CSIADDONS_BUNDLE_IMG_TAG ?= v0.7.0
+-CSIADDONS_BUNDLE_IMG_LOCATION ?= quay.io/csiaddons
++CSIADDONS_BUNDLE_IMG_LOCATION ?= $(BASE_REGISTRY)
+ CSIADDONS_BUNDLE_IMG ?= $(CSIADDONS_BUNDLE_IMG_LOCATION)/$(CSIADDONS_BUNDLE_IMG_NAME):$(CSIADDONS_BUNDLE_IMG_TAG)
+
+ IBM_BUNDLE_NAME ?= ibm-storage-odf-operator
+@@ -93,7 +94,7 @@ IBM_BUNDLE_IMG ?= $(IBM_BUNDLE_IMG_LOCATION)/$(IBM_BUNDLE_IMG_NAME):$(IBM_BUNDLE
 
  ODF_CONSOLE_IMG_NAME ?= odf-console
  ODF_CONSOLE_IMG_TAG ?= latest
 -ODF_CONSOLE_IMG_LOCATION ?= quay.io/ocs-dev
-+ODF_CONSOLE_IMG_LOCATION ?= quay.io/okderators
++ODF_CONSOLE_IMG_LOCATION ?= $(BASE_REGISTRY)
  ODF_CONSOLE_IMG ?= $(ODF_CONSOLE_IMG_LOCATION)/$(ODF_CONSOLE_IMG_NAME):$(ODF_CONSOLE_IMG_TAG)
 
  # A space-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0 example.com/operator-bundle:v0.2.0).
-diff --git a/hack/mirror-noobaa-images.sh b/hack/mirror-noobaa-images.sh
-index bfe1841d..8d97e42d 100755
---- a/hack/mirror-noobaa-images.sh
-+++ b/hack/mirror-noobaa-images.sh
-@@ -30,8 +30,8 @@ for image in noobaa-core noobaa-operator; do
-
-     docker pull "${latest_image}"
-
--    quay_latest="quay.io/ocs-dev/${image}:${latest}"
--    quay_master="quay.io/ocs-dev/${image}:master"
-+    quay_latest="quay.io/okderators/${image}:${latest}"
-+    quay_master="quay.io/okderators/${image}:master"
-     docker tag "${latest_image}" "${quay_latest}"
-     docker tag "${latest_image}" "${quay_master}"
-
 --
-2.43.2
+2.44.0
 

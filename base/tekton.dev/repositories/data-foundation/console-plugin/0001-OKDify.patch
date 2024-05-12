@@ -1,27 +1,27 @@
-From 6fdeae451ba6c59d281c5c29d0ff8522a1feb1c1 Mon Sep 17 00:00:00 2001
+From 0aeebc14cf03a8b827037967f8205a9965498d34 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Sun, 10 Mar 2024 19:36:57 +0000
 Subject: [PATCH] OKDify
 
 ---
- Dockerfile.prod                               | 12 ++++---
- Makefile                                      | 31 +++++++++++++++++++
+ Dockerfile.prod                               | 12 ++++++----
+ Makefile                                      | 23 +++++++++++++++++++
  cypress/consts.ts                             |  2 +-
  cypress/support.ts                            |  2 +-
- locales/en/plugin__odf-console.json           |  4 +--
- locales/ja/plugin__odf-console.json           |  4 +--
+ locales/en/plugin__odf-console.json           |  4 ++--
+ locales/ja/plugin__odf-console.json           |  4 ++--
  locales/ko/plugin__odf-console.json           |  2 +-
- locales/zh/plugin__odf-console.json           |  6 ++--
+ locales/zh/plugin__odf-console.json           |  6 ++---
  openshift-ci/odf-catalog-source.yaml          |  2 +-
  package.json                                  |  2 +-
- .../status-card/status-card.spec.tsx          | 12 +++----
- .../details-card/details-card.tsx             |  4 +--
- .../persistent-external/details-card.tsx      |  4 +--
+ .../status-card/status-card.spec.tsx          | 12 +++++-----
+ .../details-card/details-card.tsx             |  4 +---
+ .../persistent-external/details-card.tsx      |  4 +---
  .../system-connection-details.tsx             |  2 +-
  .../storage-consumers/onboarding-modal.tsx    |  2 +-
  packages/odf/constants/common.ts              |  2 +-
- scripts/set-branch.sh                         |  7 +++++
- 17 files changed, 69 insertions(+), 31 deletions(-)
+ scripts/set-branch.sh                         |  7 ++++++
+ 17 files changed, 61 insertions(+), 31 deletions(-)
  create mode 100644 Makefile
  create mode 100755 scripts/set-branch.sh
 
@@ -62,22 +62,14 @@ index 93ed8a23..14b6fc97 100644
  LABEL io.openshift.tags="odf"
 diff --git a/Makefile b/Makefile
 new file mode 100644
-index 00000000..f3c5b9f9
+index 00000000..d7f598d5
 --- /dev/null
 +++ b/Makefile
-@@ -0,0 +1,31 @@
-+OKD_CONTAINER_CMD ?= podman
-+ifndef OKD_IMAGE_REGISTRY
-+   $(error OKD_IMAGE_REGISTRY is not set)
-+endif
-+ifndef OKD_IMAGE_NAME
-+   $(error OKD_IMAGE_NAME is not set)
-+endif
-+ifndef OKD_VERSION
-+   $(error OKD_VERSION is not set)
-+endif
-+VERSION := v$(OKD_VERSION)
-+OPERATOR_FULL_IMAGE_NAME := $(OKD_IMAGE_REGISTRY)/$(OKD_IMAGE_NAME):$(VERSION)
+@@ -0,0 +1,23 @@
++BUILD_CMD ?= podman
++VERSION ?= dev
++BASE_REGISTRY ?= quay.io/okderators
++IMG ?= $(BASE_REGISTRY)/odf-console:$(VERSION)
 +BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 +
 +.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
@@ -95,8 +87,8 @@ index 00000000..f3c5b9f9
 +	@yarn test
 +
 +okd-deploy:
-+	@$(OKD_CONTAINER_CMD) build -t $(OPERATOR_FULL_IMAGE_NAME) --build-arg TARGET_BRANCH=$(BRANCH) -f Dockerfile.prod .
-+	@$(OKD_CONTAINER_CMD) push $(OPERATOR_FULL_IMAGE_NAME)
++	@$(BUILD_CMD) build -t $(IMG) --build-arg TARGET_BRANCH=$(BRANCH) -f Dockerfile.prod .
++	@$(BUILD_CMD) push $(IMG)
 \ No newline at end of file
 diff --git a/cypress/consts.ts b/cypress/consts.ts
 index 617af409..e696308f 100644
@@ -380,5 +372,5 @@ index 00000000..9ba97c7e
 +sed -r 's/(TARGET_BRANCH=).*/\1'"$BRANCH"'/' -i Dockerfile
 \ No newline at end of file
 --
-2.43.2
+2.44.0
 
