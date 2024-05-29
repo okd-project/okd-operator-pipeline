@@ -229,8 +229,9 @@ spec:
         test -z "${PARAM_NO_PROXY}" || export NO_PROXY="${PARAM_NO_PROXY}"
 
         git config --global --add safe.directory "${WORKSPACE_OUTPUT_PATH}"
-        git clone "${PARAM_URL}" "${CHECKOUT_DIR}" --depth "${PARAM_DEPTH}" --no-single-branch --branch "${PARAM_REVISION}" --config advice.detachedHead=false
+        git clone "${PARAM_URL}" "${CHECKOUT_DIR}" --depth "${PARAM_DEPTH}" --no-single-branch --config advice.detachedHead=false
         cd "${CHECKOUT_DIR}"
+        git fetch origin ${PARAM_REVISION}
         git checkout -f "${PARAM_REVISION}"
         RESULT_SHA="$(git rev-parse HEAD)"
         EXIT_CODE="$?"

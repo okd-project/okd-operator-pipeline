@@ -1,4 +1,4 @@
-From 566bd99d8dc138c64f9868eee32aad91d6dcd020 Mon Sep 17 00:00:00 2001
+From 344e2eb4c4d79137eeb5ef48d9241bdec347a246 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Sun, 14 Apr 2024 16:07:32 +0100
 Subject: [PATCH] OKDify
@@ -17,7 +17,7 @@ Subject: [PATCH] OKDify
  mode change 100644 => 100755 build/tools/releaser-post.sh
 
 diff --git a/Makefile b/Makefile
-index 9057efe..8782284 100644
+index 0575f77..912edd9 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -12,11 +12,11 @@ TIME ?= time -p
@@ -75,8 +75,8 @@ index 9057efe..8782284 100644
  
  gen-odf-package: cli
  	rm -rf $(MANIFESTS)
--	MANIFESTS="$(MANIFESTS)" CSV_NAME="$(csv-name)" SKIP_RANGE="$(skip-range)" REPLACES="$(replaces)" CORE_IMAGE="$(core-image)" DB_IMAGE="$(db-image)" OPERATOR_IMAGE="$(operator-image)" COSI_SIDECAR_IMAGE="$(cosi-sidecar-image)" OBC_CRD="$(obc-crd)" build/gen-odf-package.sh
-+	MANIFESTS="$(MANIFESTS)" CSV_NAME="$(CSV_NAME)" SKIP_RANGE="$(SKIP_RANGE)" REPLACES="$(REPLACES)" CORE_IMAGE="$(CORE_IMAGE)" DB_IMAGE="$(DB_IMAGE)" OPERATOR_IMAGE="$(IMG)" COSI_SIDECAR_IMAGE="$(cosi-sidecar-image)" OBC_CRD="$(obc-crd)" build/gen-odf-package.sh
+-	MANIFESTS="$(MANIFESTS)" CSV_NAME="$(csv-name)" SKIP_RANGE="$(skip-range)" REPLACES="$(replaces)" CORE_IMAGE="$(core-image)" DB_IMAGE="$(db-image)" OPERATOR_IMAGE="$(operator-image)" COSI_SIDECAR_IMAGE="$(cosi-sidecar-image)" OBC_CRD="$(obc-crd)" PSQL_12_IMAGE="$(psql-12-image)" build/gen-odf-package.sh
++	MANIFESTS="$(MANIFESTS)" CSV_NAME="$(CSV_NAME)" SKIP_RANGE="$(SKIP_RANGE)" REPLACES="$(REPLACES)" CORE_IMAGE="$(CORE_IMAGE)" DB_IMAGE="$(DB_IMAGE)" OPERATOR_IMAGE="$(IMG)" COSI_SIDECAR_IMAGE="$(cosi-sidecar-image)" OBC_CRD="$(obc-crd)" PSQL_12_IMAGE="$(PSQL_12_IMAGE)" build/gen-odf-package.sh
  	@echo "✅ gen-odf-package"
  .PHONY: gen-odf-package
  
@@ -146,11 +146,11 @@ index 50ea317..092af0d 100644
  ENV OPERATOR=/usr/local/bin/noobaa-operator \
      USER_UID=1001 \
 diff --git a/build/gen-odf-package.sh b/build/gen-odf-package.sh
-index 0705d01..f0f75e4 100755
+index d2ff44e..6727ec3 100755
 --- a/build/gen-odf-package.sh
 +++ b/build/gen-odf-package.sh
-@@ -18,7 +18,8 @@ echo "--obc-crd=${OBC_CRD}"
- --db-image ${DB_IMAGE} \
+@@ -19,7 +19,8 @@ echo "--obc-crd=${OBC_CRD}"
+ --psql-12-image ${PSQL_12_IMAGE} \
  --operator-image ${OPERATOR_IMAGE} \
  --cosi-sidecar-image ${COSI_SIDECAR_IMAGE} \
 ---obc-crd=${OBC_CRD} 
@@ -296,7 +296,7 @@ index 53d8a58..71849ff 100644
 -  publisher: "NooBaa"
 +  publisher: "OKD Community"
 diff --git a/pkg/olm/olm.go b/pkg/olm/olm.go
-index 7a7be69..ddf684f 100644
+index e98d960..fd88006 100644
 --- a/pkg/olm/olm.go
 +++ b/pkg/olm/olm.go
 @@ -46,6 +46,7 @@ type generateCSVParams struct {
@@ -376,5 +376,5 @@ index 7a7be69..ddf684f 100644
  	csv.Spec.Icon[0].Data = bundle.File_deploy_olm_noobaa_icon_base64
  	csv.Spec.InstallStrategy.StrategySpec.ClusterPermissions = []operv1.StrategyDeploymentPermissions{}
 -- 
-2.44.0
+2.45.0
 

@@ -9,6 +9,8 @@ DEFAULT_CHANNEL=${DEFAULT_CHANNEL:-alpha}
 CHANNELS=${CHANNELS:-alpha}
 BUILD_IMAGE=${BUILD_IMAGE:-quay.io/okderators/bundle-tools:vdev}
 ENABLE_TIMESTAMP=${ENABLE_TIMESTAMP:-true}
+CATALOG_SOURCE=${CATALOG_SOURCE:-okderators}
+CATALOG_NAMESPACE=${CATALOG_NAMESPACE:-openshift-marketplace}
 
 # Account for edge cases
 case $1 in
@@ -51,7 +53,11 @@ function build_operand() {
 
 function build_operator() {
   NAME=$3
-  ENV_MAP="$ENV $4"
+  if [ -z "$ENV" ]; then
+    ENV_MAP="$4"
+  else
+    ENV_MAP="$ENV $4"
+  fi
   tkn pipeline start operator \
     --param repo-url=$1 \
     --param repo-ref=$2 \
@@ -67,7 +73,6 @@ function build_operator() {
     --pod-template pod-template.yaml \
     -n $NAMESPACE \
     --showlog
-  echo "$ENV_MAP"
 }
 
 function build_image() {
@@ -116,12 +121,13 @@ case $1 in
     ;;
   "noobaa-operator")
     NOOBAA_DB_IMAGE=${NOOBAA_DB_IMAGE:-quay.io/sclorg/postgresql-16-c9s:latest}
+    NOOBAA_PSQL_12_IMAGE=${NOOBAA_PSQL_12_IMAGE:-quay.io/sclorg/postgresql-12-c8s:latest}
     NOOBAA_CORE_IMAGE=${NOOBAA_CORE_IMAGE:-quay.io/okderators/noobaa-core:dev}
-    SKIP_RANGE=${SKIP_RANGE:-"<=4.15.0"}
-    REPLACES=${REPLACES:-"4.15.0"}
+    SKIP_RANGE=${SKIP_RANGE:-">=4.2.0<$VERSION"}
+    REPLACES=${REPLACES:-"null"}
     CSV_NAME=${CSV_NAME:-noobaa-operator.v${VERSION}}
     build_operator https://github.com/red-hat-storage/noobaa-operator "${BRANCH:-release-4.15}" noobaa-operator \
-      "CORE_IMAGE=$NOOBAA_CORE_IMAGE DB_IMAGE=$NOOBAA_DB_IMAGE SKIP_RANGE=$SKIP_RANGE REPLACES=$REPLACES CSV_NAME=$CSV_NAME"
+      "CORE_IMAGE=$NOOBAA_CORE_IMAGE DB_IMAGE=$NOOBAA_DB_IMAGE SKIP_RANGE=$SKIP_RANGE REPLACES=$REPLACES CSV_NAME=$CSV_NAME PSQL_12_IMAGE=$NOOBAA_PSQL_12_IMAGE obc-crd=owned"
     ;;
   "loki")
     build_operator https://github.com/openshift/loki "${BRANCH:-release-5.9}" loki
@@ -162,11 +168,18 @@ case $1 in
     build_operand https://github.com/red-hat-storage/odf-console "${BRANCH:-release-4.15}" odf-console
     ;;
   "odf-operator")
-    OCS_BUNDLE_IMG=${OCS_BUNDLE_IMG:-quay.io/okderators/ocs-operator-bundle:dev}
-    NOOBAA_BUNDLE_IMG=${NOOBAA_BUNDLE_IMG:-quay.io/okderators/noobaa-operator-bundle:dev}
-    ODF_CONSOLE_IMAGE=${ODF_CONSOLE_IMAGE:-quay.io/okderators/odf-console:dev}
+    OCS_VERSION=${OCS_VERSION:dev}
+    NOOBAA_VERSION=${NOOBAA_VERSION:dev}
+    ODF_CONSOLE_VERSION=${ODF_CONSOLE_VERSION:dev}
+    CSIADDONS_VERSION=${CSIADDONS_VERSION:dev}
+    KUBE_RBAC_PROXY_IMAGE=${KUBE_RBAC_PROXY_IMAGE:-quay.io/okderators/kube-rbac-proxy:4.15}
+
     build_operator https://github.com/red-hat-storage/odf-operator "${BRANCH:-release-4.15}" odf-operator \
-      "IMAGE_REGISTRY=$IMAGE_REGISTRY REGISTRY_NAMESPACE=$REGISTRY_NAMESPACE OCS_BUNDLE_IMG=$OCS_BUNDLE_IMG NOOBAA_BUNDLE_IMG=$NOOBAA_BUNDLE_IMG ODF_CONSOLE_IMAGE=$ODF_CONSOLE_IMAGE"
+    "IMAGE_REGISTRY=$IMAGE_REGISTRY REGISTRY_NAMESPACE=$REGISTRY_NAMESPACE OCS_BUNDLE_IMG_TAG=$OCS_VERSION\
+ NOOBAA_BUNDLE_IMG_TAG=$NOOBAA_VERSION CSIADDONS_BUNDLE_IMG_NAME=csi-addons-bundle\
+ CSIADDONS_BUNDLE_IMG_TAG=$CSIADDONS_VERSION ODF_CONSOLE_IMG_TAG=$ODF_CONSOLE_VERSION\
+ OPERATOR_CATALOGSOURCE=$CATALOG_SOURCE OPERATOR_CATALOG_NAMESPACE=$CATALOG_NAMESPACE\
+ OSE_KUBE_RBAC_PROXY_IMG=$KUBE_RBAC_PROXY_IMAGE"
     ;;
   "rook-ceph")
     build_operand https://github.com/red-hat-storage/rook "${BRANCH:-release-4.15}" rook-ceph
