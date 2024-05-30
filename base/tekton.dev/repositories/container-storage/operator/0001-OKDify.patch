@@ -1,28 +1,28 @@
-From ea7c7459a5c4001a91be0bfbab4a369b62b827fc Mon Sep 17 00:00:00 2001
+From 113585f7513ffdbedc969eb5c326cf5e81227411 Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
-Date: Mon, 22 Apr 2024 10:39:24 +0100
+Date: Thu, 30 May 2024 11:05:23 +0100
 Subject: [PATCH] OKDify
 
 ---
  Dockerfile                                    |  2 +-
- Makefile                                      | 85 +++++++++++++++++++
- .../ocs-operator.clusterserviceversion.yaml   | 26 +++---
+ Makefile                                      | 76 +++++++++++++++++++
+ .../ocs-operator.clusterserviceversion.yaml   | 26 +++----
  .../ocs.openshift.io_ocsinitializations.yaml  |  2 +-
  .../ocs/ocs.openshift.io_storageclusters.yaml |  2 +-
- deploy/csv-templates/ocs-operator.csv.yaml.in | 26 +++---
+ deploy/csv-templates/ocs-operator.csv.yaml.in | 26 +++----
  deploy/deploy-with-olm.yaml                   |  2 +-
- .../ocs-operator.clusterserviceversion.yaml   | 26 +++---
+ .../ocs-operator.clusterserviceversion.yaml   | 26 +++----
  hack/build-metrics-exporter.sh                |  4 +-
  hack/build-operator.sh                        |  4 +-
  hack/common.sh                                |  3 +-
  hack/compile-operator.sh                      | 10 +++
- hack/source-manifests.sh                      | 29 +++----
+ hack/source-manifests.sh                      | 29 ++++---
  metrics/Dockerfile                            |  2 +-
  .../deploy/prometheus-ocs-rules-external.yaml | 16 ++--
  metrics/deploy/prometheus-ocs-rules.yaml      | 16 ++--
  pkg/deploy-manager/subscription.go            |  4 +-
  tools/csv-merger/csv-merger.go                |  2 +-
- 18 files changed, 178 insertions(+), 83 deletions(-)
+ 18 files changed, 169 insertions(+), 83 deletions(-)
  create mode 100755 hack/compile-operator.sh
 
 diff --git a/Dockerfile b/Dockerfile
@@ -38,10 +38,10 @@ index 6a0e697d..c689d57e 100644
  WORKDIR /workspace
 
 diff --git a/Makefile b/Makefile
-index cc9402fd..91b76c1d 100644
+index cc9402fd..5a97233c 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -189,3 +189,88 @@ install-noobaa: operator-sdk
+@@ -189,3 +189,79 @@ install-noobaa: operator-sdk
  install-ocs: operator-sdk
  	@echo "Installing ocs operator"
  	hack/install-ocs.sh
@@ -61,16 +61,10 @@ index cc9402fd..91b76c1d 100644
 +NOOBAA_CORE_IMG ?= quay.io/okderators/noobaa-core:latest
 +NOOBAA_DB_IMG ?= quay.io/sclorg/postgresql-16-c9s:latest
 +ROOK_IMG ?= quay.io/okderators/rook-ceph:latest
-+CEPH_IMG ?= quay.io/ceph/ceph:v18.2.0
++CEPH_IMG ?= quay.io/ceph/ceph:v18.2.2
 +MUST_GATHER_IMG ?= ""
 +SKIP_RANGE ?= ""
 +REPLACES_CSV_VERSION ?= ""
-+ROOK_CSI_CEPH_IMAGE ?= ""
-+ROOK_CSI_REGISTRAR_IMAGE ?= ""
-+ROOK_CSI_RESIZER_IMAGE ?= ""
-+ROOK_CSI_PROVISIONER_IMAGE ?= ""
-+ROOK_CSI_SNAPSHOTTER_IMAGE ?= ""
-+ROOK_CSI_ATTACHER_IMAGE ?= ""
 +
 +# Export
 +BUNDLE_FULL_IMAGE_NAME := $(BUNDLE_IMG)
@@ -98,12 +92,9 @@ index cc9402fd..91b76c1d 100644
 +export CEPH_IMAGE
 +export SKIP_RANGE
 +export REPLACES_CSV_VERSION
-+export ROOK_CSI_CEPH_IMAGE
-+export ROOK_CSI_REGISTRAR_IMAGE
-+export ROOK_CSI_RESIZER_IMAGE
-+export ROOK_CSI_PROVISIONER_IMAGE
-+export ROOK_CSI_SNAPSHOTTER_IMAGE
-+export ROOK_CSI_ATTACHER_IMAGE
++ifdef ROOK_CSIADDONS_IMAGE
++	export ROOK_CSIADDONS_IMAGE
++endif
 +export OCS_MUST_GATHER_IMAGE
 +export METRICS_EXPORTER_FULL_IMAGE_NAME
 +export NOOBAA_CORE_IMAGE
@@ -648,5 +639,5 @@ index fb37342a..f757f3b1 100644
  	ocsCSV.Annotations["categories"] = "Storage"
  	ocsCSV.Annotations["operators.operatorframework.io/operator-type"] = "non-standalone"
 --
-2.44.0
+2.45.0
 

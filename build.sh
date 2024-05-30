@@ -37,6 +37,7 @@ function build_operand() {
   NAME=$3
   ENV_MAP="$ENV $4"
   tkn pipeline start operand \
+    --prefix-name $NAME \
     --param repo-url=$1 \
     --param repo-ref=$2 \
     --param base-image-registry=$BASE_IMAGE_REGISTRY \
@@ -59,6 +60,7 @@ function build_operator() {
     ENV_MAP="$ENV $4"
   fi
   tkn pipeline start operator \
+    --prefix-name $NAME \
     --param repo-url=$1 \
     --param repo-ref=$2 \
     --param base-image-registry=$BASE_IMAGE_REGISTRY \
@@ -155,11 +157,13 @@ case $1 in
   "ocs-operator")
     NOOBAA_DB_IMG=${NOOBAA_DB_IMG:-quay.io/sclorg/postgresql-16-c9s:latest}
     NOOBAA_CORE_IMG=${NOOBAA_CORE_IMG:-quay.io/okderators/noobaa-core:dev}
-    ROOK_IMG=${ROOK_IMG:-quay.io/okderators/rook-ceph:dev}
-    CEPH_IMG=${CEPH_IMG:-quay.io/ceph/ceph:v18.2.1}
+    ROOK_VERSION=${ROOK_VERSION:-dev}
+    ROOK_IMG=${ROOK_IMG:-quay.io/okderators/rook-ceph:${ROOK_VERSION}}
+    ROOK_CSIADDONS_IMG=${ROOK_CSIADDONS_IMG:-quay.io/okderators/csi-k8s-sidecar:dev}
+    CEPH_IMG=${CEPH_IMG:-quay.io/ceph/ceph:v18.2.2}
     OAUTH_PROXY_IMG=${OAUTH_PROXY_IMG:-quay.io/openshift/origin-oauth-proxy:4.15}
     build_operator https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-operator \
-      "NOOBAA_CORE_IMG=$NOOBAA_CORE_IMG NOOBAA_DB_IMG=$NOOBAA_DB_IMG ROOK_IMG=$ROOK_IMG CEPH_IMG=$CEPH_IMG OAUTH_PROXY_IMG=$OAUTH_PROXY_IMG"
+      "NOOBAA_CORE_IMG=$NOOBAA_CORE_IMG NOOBAA_DB_IMG=$NOOBAA_DB_IMG ROOK_IMG=$ROOK_IMG CEPH_IMG=$CEPH_IMG OAUTH_PROXY_IMG=$OAUTH_PROXY_IMG ROOK_CSIADDONS_IMAGE=$ROOK_CSIADDONS_IMG"
     ;;
   "ocs-metrics-exporter")
     build_operand https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-metrics-exporter
