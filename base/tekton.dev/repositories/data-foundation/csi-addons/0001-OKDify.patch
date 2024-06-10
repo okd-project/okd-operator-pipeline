@@ -1,0 +1,114 @@
+From 8d2cb06821201f866e30ba393534e10c9682416b Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Mon, 22 Apr 2024 14:39:14 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile                  |  2 +-
+ Makefile                    | 49 +++++++++++++++++++++++++++----------
+ build/Containerfile.sidecar |  2 +-
+ 3 files changed, 38 insertions(+), 15 deletions(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index 15f39396..2297cca6 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,5 +1,5 @@
+ # Build the manager binary
+-FROM golang:1.20 as builder
++FROM quay.io/projectquay/golang:1.20 as builder
+
+ # Copy the contents of the repository
+ COPY . /workspace/go/src/github.com/csi-addons/kubernetes-csi-addons
+diff --git a/Makefile b/Makefile
+index 4c99d4cb..2ea9978a 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,12 +1,13 @@
+-
++BASE_REGISTRY ?= quay.io/okderators
+ # Image URL to use all building/pushing image targets
+-CONTROLLER_IMG ?= quay.io/csiaddons/k8s-controller
+-SIDECAR_IMG ?= quay.io/csiaddons/k8s-sidecar
+-BUNDLE_IMG ?= quay.io/csiaddons/k8s-bundle
+-TOOLS_IMG ?= quay.io/csiaddons/tools
++CONTROLLER_IMG ?= $(BASE_REGISTRY)/csi-k8s-controller
++SIDECAR_IMG ?= $(BASE_REGISTRY)/csi-k8s-sidecar
++BUNDLE_IMG ?= $(BASE_REGISTRY)/csi-k8s-bundle
++TOOLS_IMG ?= $(BASE_REGISTRY)/csi-tools
+
+ # set TAG to a release for consumption in the bundle
+-TAG ?= latest
++VERSION ?= dev
++TAG ?= $(VERSION)
+
+ # In case the *_IMG variables can contain a full qualified container-image
+ # resource (includes a ":"), the container-images should not use the TAG
+@@ -20,9 +21,9 @@ ifneq (findstring $(SIDECAR_IMG),:)
+ SIDECAR_IMG := $(SIDECAR_IMG):$(TAG)
+ endif
+
+-ifneq (findstring $(BUNDLE_IMG),:)
+-BUNDLE_IMG := $(BUNDLE_IMG):$(TAG)
+-endif
++#ifneq (findstring $(BUNDLE_IMG),:)
++#BUNDLE_IMG := $(BUNDLE_IMG):$(TAG)
++#endif
+
+ ifneq (findstring $(TOOLS_IMG),:)
+ TOOLS_IMG := $(TOOLS_IMG):$(TAG)
+@@ -85,10 +86,12 @@ SHELL = /usr/bin/env bash -o pipefail
+ .SHELLFLAGS = -ec
+
+ # detect container tools, prefer Podman over Docker
+-CONTAINER_CMD ?= $(shell podman version >/dev/null 2>&1 && echo podman)
+-ifeq ($(CONTAINER_CMD),)
+-CONTAINER_CMD = $(shell docker version >/dev/null 2>&1 && echo docker)
+-endif
++#CONTAINER_CMD ?= $(shell podman version >/dev/null 2>&1 && echo podman)
++#ifeq ($(CONTAINER_CMD),)
++#CONTAINER_CMD = $(shell docker version >/dev/null 2>&1 && echo docker)
++#endif
++BUILD_CMD ?= podman
++CONTAINER_CMD ?= $(BUILD_CMD)
+
+ # validation that CONTAINER_CMD is set, return an error if podman/docker is missing
+ .PHONY: container-cmd
+@@ -276,3 +279,23 @@ GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
+ rm -rf $$TMP_DIR ;\
+ }
+ endef
++
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-clean okd-deploy okd-bundle
++
++okd-install: generate
++	@go mod download
++
++okd-lint: fmt vet
++
++okd-build: build
++
++okd-test: test
++
++okd-clean:
++	git reset HEAD --hard
++	git clean -f
++
++okd-deploy: okd-clean docker-build docker-build-sidecar docker-push docker-push-sidecar
++
++okd-bundle: docker-build-bundle docker-push-bundle
+diff --git a/build/Containerfile.sidecar b/build/Containerfile.sidecar
+index 3c130d3e..ddfc4176 100644
+--- a/build/Containerfile.sidecar
++++ b/build/Containerfile.sidecar
+@@ -1,5 +1,5 @@
+ # Build the sidecar binary
+-FROM golang:1.20 as builder
++FROM quay.io/projectquay/golang:1.20 as builder
+
+ # Copy the contents of the repository
+ COPY . /workspace/go/src/github.com/csi-addons/kubernetes-csi-addons
+--
+2.44.0
+

@@ -1,0 +1,70 @@
+From ba08e61bf0668059adb7a03e9680b8c00d1cafd2 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sat, 4 May 2024 15:14:47 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile |  6 +++---
+ Makefile   | 20 ++++++++++++++++++++
+ 2 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index 12a6c14..283d56e 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,4 +1,4 @@
+-FROM registry.redhat.io/ubi9/nodejs-18:latest AS web-builder
++FROM registry.access.redhat.com/ubi9/nodejs-18:latest AS web-builder
+
+ WORKDIR /opt/app-root
+
+@@ -11,7 +11,7 @@ RUN make install-frontend-ci-clean
+ COPY web/ web/
+ RUN make build-frontend
+
+-FROM registry.redhat.io/ubi9/go-toolset:1.19 as go-builder
++FROM registry.access.redhat.com/ubi9/go-toolset:1.19 as go-builder
+
+ WORKDIR /opt/app-root
+
+@@ -27,7 +27,7 @@ COPY pkg/ pkg/
+
+ RUN make build-backend
+
+-FROM registry.redhat.io/ubi9/ubi-minimal
++FROM quay.io/centos/centos:stream9-minimal
+
+ COPY --from=web-builder /opt/app-root/web/dist /opt/app-root/web/dist
+ COPY --from=go-builder /opt/app-root/plugin-backend /opt/app-root
+diff --git a/Makefile b/Makefile
+index edc93c9..b75efd5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -62,3 +62,23 @@ start-backend: build-backend
+ .PHONY: build-image
+ build-image: install-backend build-backend install-frontend build-frontend
+ 	./scripts/image.sh -t latest
++
++# OKD Build
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++BUILD_CMD ?= podman
++BASE_REGISTRY ?= quay.io/okderators
++IMAGE ?= $(BASE_REGISTRY)/logging-view-plugin
++VERSION ?= $(shell git branch --show-current | cut -d '-' -f 2)
++IMG ?= $(IMAGE):$(VERSION)
++
++okd-install: install-backend install-frontend
++
++okd-lint: lint-frontend
++
++okd-build: build-backend build-frontend
++
++okd-test: #test-unit-backend test-frontend
++
++okd-deploy:
++	$(BUILD_CMD) build -t $(IMG) .
++	$(BUILD_CMD) push $(IMG)
+\ No newline at end of file
+--
+2.44.0
+

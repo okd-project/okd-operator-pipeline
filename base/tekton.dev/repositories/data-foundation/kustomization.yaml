@@ -1,0 +1,4 @@
+resources:
+  - operator/
+  - console-plugin/
+  - csi-addons/

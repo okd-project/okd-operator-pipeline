@@ -2,3 +2,7 @@ resources:
 #  - operator/
   - logging-view-plugin/
   - log-file-metric-exporter/
+  - vector/
+  - fluentd/
+  - operator/
+  - loki/

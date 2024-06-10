@@ -17,13 +17,17 @@ spec:
     - name: image-name
       description: The image name
       type: string
-    - name: image-version
-      description: The image version
+    - name: version
+      description: The version
       type: string
-    - name: build-image
+    - name: make-image
       description: The build image
       type: string
       default: quay.io/okderators/bundle-tools:vdev
+    - name: env-map
+      description: The env map
+      type: array
+      default: []
   
   workspaces:
     - name: workspace
@@ -43,113 +47,30 @@ spec:
         - name: verbose
           value: 'true'
         - name: subdirectory
-          value: repository
+          value: $(params.image-name)
       workspaces:
         - name: output
           workspace: workspace
         - name: patches
           workspace: patches
 
-    - name: install
+    - name: build
       runAfter: [ clone-and-patch ]
       taskRef:
-        name: make
+        name: make-operand
       params:
         - name: image
-          value: $(params.build-image)
+          value: $(params.make-image)
         - name: subdirectory
-          value: repository
-        - name: args
-          value: ["okd-install"]
-      workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
-          workspace: workspace
-
-    - name: build
-      runAfter: [ install ]
-      taskRef:
-        name: make
-      params:
-        - name: image
-          value: $(params.build-image)
-        - name: subdirectory
-          value: repository
-        - name: args
-          value: [ "okd-build" ]
-      workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
-          workspace: workspace
-
-    - name: lint
-      runAfter: [ build ]
-      taskRef:
-        name: make
-      params:
-        - name: image
-          value: $(params.build-image)
-        - name: subdirectory
-          value: repository
-        - name: args
-          value: [ "okd-lint" ]
-      workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
-          workspace: workspace
-
-    - name: test
-      runAfter: [ lint ]
-      taskRef:
-        name: make
-      params:
-        - name: image
-          value: $(params.build-image)
-        - name: subdirectory
-          value: repository
-        - name: args
-          value: [ "okd-test" ]
-      workspaces:
-        - name: source
-          workspace: workspace
-        - name: build-cache-root
-          workspace: workspace
-        - name: build-pkg
-          workspace: workspace
-
-    - name: image-build
-      runAfter: [ test ]
-      taskRef:
-        name: buildah-build
-      params:
-        - name: image
           value: $(params.image-name)
-        - name: subdirectory
-          value: repository
-      workspaces:
-        - name: source
-          workspace: workspace
-        - name: containers
-          workspace: workspace
-
-    - name: image-push
-      runAfter: [ image-build ]
-      taskRef:
-        name: buildah-push
-      params:
-        - name: image
+        - name: image-name
           value: $(params.image-name)
-        - name: remote
-          value: $(params.base-image-registry)/$(params.image-name):v$(params.image-version)
+        - name: image-registry
+          value: $(params.base-image-registry)
+        - name: version
+          value: $(params.version)
+        - name: env-map
+          value: $(params.env-map[*])
       workspaces:
-        - name: containers
+        - name: work
           workspace: workspace

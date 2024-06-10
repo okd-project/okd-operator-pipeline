@@ -1,0 +1,56 @@
+From 40d33785cabe4d0769e62149b579cacbdc03fddf Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sun, 14 Apr 2024 20:16:23 +0100
+Subject: [PATCH] OKDify
+
+---
+ Makefile        | 21 +++++++++++++++++++++
+ images/Makefile |  2 +-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 140093b5f..211519ee0 100644
+--- a/Makefile
++++ b/Makefile
+@@ -264,3 +264,24 @@ help: ## Show this help menu.
+ 	@grep --no-filename -E '^[a-zA-Z_%-. ]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+ 	@echo ""
+ 	@echo "$$HELPTEXT"
++
++.PHONY: okd-install okd-lint okd-build okd-deploy okd-bundle
++
++BUILD_CMD ?= podman
++DOCKERCMD := $(BUILD_CMD)
++IMAGE ?= quay.io/okderators/rook-ceph
++IMG ?= $(IMAGE):$(VERSION)
++
++okd-install: install
++
++okd-lint:
++	@echo "Lint disabled"
++
++okd-build: csv-clean build.common ## Only build for linux platform
++	@$(MAKE) go.build PLATFORM=linux_$(GOHOSTARCH)
++
++okd-test: test
++
++okd-deploy:
++	@$(MAKE) -C images PLATFORM=linux_$(GOHOSTARCH) CEPH_IMAGE="$(IMG)" DOCKERCMD=$(BUILD_CMD)
++	@$(BUILD_CMD) push "$(IMG)"
+\ No newline at end of file
+diff --git a/images/Makefile b/images/Makefile
+index c4ce52ea9..0486b8805 100644
+--- a/images/Makefile
++++ b/images/Makefile
+@@ -23,7 +23,7 @@ export TINI_VERSION = v0.19.0
+ # Image Targets
+
+ ceph.%:
+-	@$(MAKE) -C ceph PLATFORM=$*
++	@$(MAKE) -C ceph PLATFORM=$* CEPH_IMAGE=$(CEPH_IMAGE) DOCKERCMD=$(DOCKERCMD)
+
+ do.build: ceph.$(PLATFORM) ;
+ build.all: ## Build images for all platforms.
+--
+2.44.0
+

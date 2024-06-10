@@ -1,0 +1,94 @@
+From 1ffcab9c03d3927c872937b54db4e1627cb9f1c0 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sun, 14 Apr 2024 00:57:42 +0100
+Subject: [PATCH] OKDify
+
+---
+ Makefile | 36 +++++++++++++++++++++++++++---------
+ 1 file changed, 27 insertions(+), 9 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 73594ac1..58dca62f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -8,12 +8,13 @@ GITHUB_URL=github.com/brancz/kube-rbac-proxy
+ GOOS?=$(shell uname -s | tr A-Z a-z)
+ GOARCH?=$(shell go env GOARCH)
+ OUT_DIR=_output
+-VERSION?=$(shell cat VERSION)-$(shell git rev-parse --short HEAD)
+-VERSION_SEMVER?=$(shell echo $(VERSION) | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
++override VERSION=$(shell cat VERSION)-$(shell git rev-parse --short HEAD)
++VERSION_SEMVER=$(shell echo $(VERSION) | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
+ PKGS=$(shell go list ./... | grep -v /test/e2e)
+-DOCKER_REPO?=quay.io/brancz/kube-rbac-proxy
++IMAGE?=quay.io/okderators/kube-rbac-proxy
++DOCKER_REPO?=$(IMAGE)
+ KUBECONFIG?=$(HOME)/.kube/config
+-CONTAINER_NAME?=$(DOCKER_REPO):$(VERSION)
++CONTAINER_NAME?=$(DOCKER_REPO):$(TAG)
+
+ ALL_ARCH=amd64 arm arm64 ppc64le s390x
+ ALL_PLATFORMS=$(addprefix linux/,$(ALL_ARCH))
+@@ -56,9 +57,9 @@ update-go-deps:
+ 	go mod tidy
+
+ container: $(OUT_DIR)/$(PROGRAM_NAME)-$(GOOS)-$(GOARCH) Dockerfile
+-	docker build --build-arg BINARY=$(PROGRAM_NAME)-$(GOOS)-$(GOARCH) --build-arg GOARCH=$(GOARCH) -t $(CONTAINER_NAME)-$(GOARCH) .
++	$(BUILD_CMD) build --build-arg BINARY=$(PROGRAM_NAME)-$(GOOS)-$(GOARCH) --build-arg GOARCH=$(GOARCH) -t $(CONTAINER_NAME)-$(GOARCH) .
+ ifeq ($(GOARCH), amd64)
+-	docker tag $(DOCKER_REPO):$(VERSION)-$(GOARCH) $(CONTAINER_NAME)
++	$(BUILD_CMD) tag $(CONTAINER_NAME)-$(GOARCH) $(CONTAINER_NAME)
+ endif
+
+ manifest-tool:
+@@ -67,7 +68,7 @@ manifest-tool:
+
+ push-%:
+ 	$(MAKE) GOARCH=$* container
+-	docker push $(DOCKER_REPO):$(VERSION)-$*
++	$(BUILD_CMD) push $(DOCKER_REPO):$(VERSION)-$*
+
+ comma:= ,
+ empty:=
+@@ -78,14 +79,14 @@ manifest-push: manifest-tool
+ push: crossbuild manifest-tool $(addprefix push-,$(ALL_ARCH)) manifest-push
+
+ curl-container:
+-	docker build -f ./examples/example-client/Dockerfile -t quay.io/brancz/krp-curl:v0.0.2 .
++	$(BUILD_CMD) build -f ./examples/example-client/Dockerfile -t quay.io/brancz/krp-curl:v0.0.2 .
+
+ run-curl-container:
+ 	@echo 'Example: curl -v -s -k -H "Authorization: Bearer `cat /var/run/secrets/kubernetes.io/serviceaccount/token`" https://kube-rbac-proxy.default.svc:8443/metrics'
+ 	kubectl run -i -t krp-curl --image=quay.io/brancz/krp-curl:v0.0.2 --restart=Never --command -- /bin/sh
+
+ grpcc-container:
+-	docker build -f ./examples/grpcc/Dockerfile -t mumoshu/grpcc:v0.0.1 .
++	$(BUILD_CMD) build -f ./examples/grpcc/Dockerfile -t mumoshu/grpcc:v0.0.1 .
+
+ test: test-unit test-e2e
+
+@@ -122,3 +123,20 @@ $(TOOLING): $(TOOLS_BIN_DIR)
+ 	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly -modfile=scripts/go.mod %
+
+ .PHONY: all check-license crossbuild build container push push-% manifest-push curl-container test test-unit test-e2e generate update-go-deps clean kind-delete-cluster kind-create-cluster
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++BUILD_CMD ?= podman
++
++okd-install:
++	@go mod download
++
++okd-lint:
++	@echo "No linting available"
++
++okd-build: build
++
++okd-test: #test
++	@echo "Tests require a Kubernetes cluster"
++
++okd-deploy: container
++	$(BUILD_CMD) push $(CONTAINER_NAME)
+\ No newline at end of file
+--
+2.44.0
+

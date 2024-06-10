@@ -1,0 +1,103 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: make-operand
+  namespace: okd-team
+spec:
+  params:
+    - name: image
+      description: The image to use for the build
+      type: string
+    - name: subdirectory
+      description: The subdirectory to run the build in
+      type: string
+    - name: image-registry
+      description: The image registry to use for the build
+      type: string
+    - name: image-name
+      description: The image name to use for the build
+      type: string
+    - name: version
+      description: The version to use for the build
+      type: string
+    - name: env-map
+      description: The env map
+      type: array
+      default: []
+    - name: build-cmd
+      description: The container build command
+      type: string
+      default: buildah
+
+  workspaces:
+    - name: work
+
+  volumes:
+    - name: docker-config
+      configMap:
+        name: docker-config
+
+  stepTemplate:
+    name: run
+    imagePullPolicy: Always
+    workingDir: $(workspaces.work.path)/$(params.subdirectory)
+    image: $(params.image)
+    args: [ "$(params.env-map)" ]
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+    env:
+      - name: "VERSION"
+        value: "$(params.version)"
+      - name: "TAG"
+        value: "$(params.version)"
+      - name: "BASE_REGISTRY"
+        value: "$(params.image-registry)"
+      - name: "IMAGE_NAME"
+        value: "$(params.image-name)"
+      - name: "IMAGE"
+        value: "$(params.image-registry)/$(params.image-name)"
+      - name: "IMG"
+        value: "$(params.image-registry)/$(params.image-name):$(params.version)"
+      - name: "BUILD_CMD"
+        value: "$(params.build-cmd)"
+      - name: DOCKER_CONFIG
+        value: /home/build/.docker/
+    volumeMounts:
+      - name: docker-config
+        mountPath: /home/build/.docker/
+      - name: $(workspaces.work.volume)
+        mountPath: /var/lib/containers
+        subPath: containers
+      - name: $(workspaces.work.volume)
+        mountPath: /home/build/.local/share/containers
+        subPath: local-containers
+      - name: $(workspaces.work.volume)
+        mountPath: /run/containers
+        subPath: run-containers
+      - name: $(workspaces.work.volume)
+        mountPath: /home/build/go/.cache
+        subPath: go-cache-root
+      - name: $(workspaces.work.volume)
+        mountPath: /home/build/go/pkg
+        subPath: go-pkg
+
+  steps:
+    - name: install
+      script: |
+        $@ make okd-install
+    - name: lint
+      script: |
+        $@ make okd-lint
+    - name: build
+      script: |
+        $@ make okd-build
+    - name: test
+      script: |
+        $@ make okd-test
+    - name: deploy
+      script: |
+        $@ make okd-deploy
+        
+    
+        

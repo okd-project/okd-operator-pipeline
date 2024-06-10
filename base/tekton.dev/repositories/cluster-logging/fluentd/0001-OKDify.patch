@@ -1,0 +1,77 @@
+From e3aade45aa7eb6ee31f7c2f53a3be5cf313c0925 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sat, 4 May 2024 14:47:18 +0100
+Subject: [PATCH] OKDify
+
+---
+ Makefile           | 30 ++++++++++++++++++++++++------
+ fluentd/Dockerfile |  6 +++---
+ 2 files changed, 27 insertions(+), 9 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 988263fbf..098248472 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,12 +1,15 @@
+-REGISTRY?=127.0.0.1:5000/openshift-logging
+-FLUENTD_VERSION=$(shell grep BUILD_VERSION fluentd/Dockerfile| cut -d "=" -f2)
+-FLUENTD_IMAGE?=$(REGISTRY)/logging-fluentd:$(FLUENTD_VERSION)
+-CONTAINER_ENGINE?=podman
+-CONTAINER_BUILDER?=podman
++BASE_REGISTRY?=127.0.0.1:5000/openshift-logging
++VERSION=$(shell grep BUILD_VERSION fluentd/Dockerfile| cut -d "=" -f2)
++FLUENTD_VERSION=$(VERSION)
++IMAGE?=$(BASE_REGISTRY)/fluentd
++IMG?=$(IMAGE):$(VERSION)
++BUILD_CMD?=podman
++CONTAINER_ENGINE?=$(BUILD_CMD)
++CONTAINER_BUILDER?=$(BUILD_CMD)
+ BUILD_ARGS?=build
+
+ image:
+-	$(CONTAINER_BUILDER) $(BUILD_ARGS) --build-arg FLUENTD_VERSION_VALUE=$(FLUENTD_VERSION) -f fluentd/Dockerfile -t $(FLUENTD_IMAGE) fluentd
++	$(CONTAINER_BUILDER) $(BUILD_ARGS) --build-arg FLUENTD_VERSION_VALUE=$(FLUENTD_VERSION) -f fluentd/Dockerfile -t $(IMG) fluentd
+ .PHONY: image
+
+ lint:
+@@ -36,3 +39,18 @@ update-libs-for-fluentd:
+ 		popd ; \
+ 	done
+ .PHONY: update-libs-for-fluentd
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++
++okd-install:
++	@echo "Nothing to do"
++
++okd-lint:
++	@echo "Nothing to do"
++
++okd-build: image
++
++okd-test: test-unit
++
++okd-deploy: image
++	$(CONTAINER_ENGINE) push $(IMG)
+\ No newline at end of file
+diff --git a/fluentd/Dockerfile b/fluentd/Dockerfile
+index bcb56e674..3bd0cb2ae 100644
+--- a/fluentd/Dockerfile
++++ b/fluentd/Dockerfile
+@@ -88,10 +88,10 @@ LABEL \
+         io.k8s.display-name="Fluentd" \
+         io.openshift.tags="logging,collection,fluentd" \
+         License="Apache-2.0" \
+-        vendor="Red Hat" \
+-        name="openshift-logging/fluentd" \
++        vendor="OKD Community" \
++        name="okderators/fluentd" \
+         com.redhat.component="logging-fluentd-container" \
+-        io.openshift.maintainer.product="OpenShift Container Platform" \
++        io.openshift.maintainer.product="OKD" \
+         io.openshift.logging.fluentd.version=v1.16.2 \
+         version=v1.16.2
+
+--
+2.44.0
+

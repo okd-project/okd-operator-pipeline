@@ -1,0 +1,307 @@
+From 4ba0bd0b792ca8038d308a85361a0dd35a8eed51 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Tue, 16 Apr 2024 00:42:23 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile.diskmaker.rhel7                    |  8 +--
+ Dockerfile.mustgather                         |  8 ++-
+ Dockerfile.rhel7                              |  8 +--
+ Makefile                                      | 61 +++++++++++++------
+ .../localmetrics/prometheus-rule.yaml         |  2 +-
+ ...torage-operator.clusterserviceversion.yaml | 16 ++---
+ hack/create-bundle.sh                         | 30 +++++----
+ 7 files changed, 81 insertions(+), 52 deletions(-)
+
+diff --git a/Dockerfile.diskmaker.rhel7 b/Dockerfile.diskmaker.rhel7
+index 846d5a27..809a9aa1 100644
+--- a/Dockerfile.diskmaker.rhel7
++++ b/Dockerfile.diskmaker.rhel7
+@@ -1,9 +1,9 @@
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.20-openshift-4.15 AS builder
++FROM quay.io/projectquay/golang:1.20 AS builder
+ WORKDIR /go/src/github.com/openshift/local-storage-operator
+ COPY . .
+ RUN make build-diskmaker
+
+-FROM registry.ci.openshift.org/ocp/4.15:base-rhel9
++FROM quay.io/centos/centos:stream9
+
+ COPY --from=builder /go/src/github.com/openshift/local-storage-operator/_output/bin/diskmaker /usr/bin/
+ COPY --from=builder /go/src/github.com/openshift/local-storage-operator/hack/scripts /scripts
+@@ -12,6 +12,6 @@ COPY config/manifests /manifests
+ RUN yum install -y e2fsprogs xfsprogs && yum clean all && rm -rf /var/cache/yum
+
+ ENTRYPOINT ["/usr/bin/diskmaker"]
+-LABEL io.k8s.display-name="OpenShift local storage diskmaker" \
+-      io.k8s.description="This is a component of OpenShift and manages local disks." \
++LABEL io.k8s.display-name="OKD local storage diskmaker" \
++      io.k8s.description="This is a component of OKD and manages local disks." \
+         maintainer="Hemant Kumar <hekumar@redhat.com>"
+diff --git a/Dockerfile.mustgather b/Dockerfile.mustgather
+index c342be0a..71292398 100644
+--- a/Dockerfile.mustgather
++++ b/Dockerfile.mustgather
+@@ -1,6 +1,8 @@
+-FROM registry.ci.openshift.org/ocp/4.15:base-rhel9
+-RUN dnf install -y --nodocs --setopt=install_weak_deps=False openshift-clients \
+-  && dnf clean all && rm -rf /var/cache/*
++FROM quay.io/centos/centos:stream9
++
++ARG OKD
++
++RUN curl -fL "https://github.com/okd-project/okd/releases/download/$OKD/openshift-client-linux-$OKD.tar.gz" | tar -U -C /usr/bin -xzf -
+ COPY must-gather/gather /usr/bin/
+ RUN chmod +x /usr/bin/gather
+
+diff --git a/Dockerfile.rhel7 b/Dockerfile.rhel7
+index da4254a0..3a196187 100644
+--- a/Dockerfile.rhel7
++++ b/Dockerfile.rhel7
+@@ -1,13 +1,13 @@
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.20-openshift-4.15 AS builder
++FROM quay.io/projectquay/golang:1.20 AS builder
+ WORKDIR /go/src/github.com/openshift/local-storage-operator
+ COPY . .
+ RUN make build-operator
+
+-FROM registry.ci.openshift.org/ocp/4.15:base-rhel9
++FROM quay.io/centos/centos:stream9-minimal
+ COPY --from=builder /go/src/github.com/openshift/local-storage-operator/_output/bin/local-storage-operator /usr/bin/
+ COPY config/manifests /manifests
+ ENTRYPOINT ["/usr/bin/local-storage-operator"]
+ LABEL com.redhat.delivery.appregistry=true
+-LABEL io.k8s.display-name="OpenShift local-storage-operator" \
+-      io.k8s.description="This is a component of OpenShift and manages local volumes." \
++LABEL io.k8s.display-name="OKD local-storage-operator" \
++      io.k8s.description="This is a component of OKD and manages local volumes." \
+         maintainer="Hemant Kumar <hekumar@redhat.com>"
+diff --git a/Makefile b/Makefile
+index 4699a233..2b3f2f98 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,31 +1,31 @@
+ # To generate a bundle for a specific REGISTRY, REPO, and VERSION, you can:
+ # make bundle REGISTRY=quay.io/username REPO=lso VERSION=latest
+-ifeq ($(REGISTRY),)
+-	REGISTRY = quay.io/openshift
+-endif
+-ifeq ($(REPO),)
+-	REPO = local-storage-operator
+-endif
+-ifeq ($(VERSION),)
+-	VERSION = latest
+-endif
++BASE_REGISTRY ?= quay.io/okderators
++REGISTRY ?= $(BASE_REGISTRY)
++IMAGE_NAME ?= local-storage-operator
++REPO ?= $(IMAGE_NAME)
++VERSION ?= latest
++export VERSION
+
+ # Use podman or docker to build containers. Can bet set explicitly.
+ # make bundle REGISTRY=quay.io/username TOOL_BIN=`which docker`
+-ifeq ($(TOOL_BIN),)
+-	TOOL_BIN=$(shell which podman 2>/dev/null || which docker 2>/dev/null)
+-endif
++#ifeq ($(TOOL_BIN),)
++#	TOOL_BIN=$(shell which podman 2>/dev/null || which docker 2>/dev/null)
++#endif
++BUILD_CMD ?= podman
++TOOL_BIN ?= $(BUILD_CMD)
++export TOOL_BIN
+
+ TARGET_GOOS=$(shell go env GOOS)
+ TARGET_GOARCH=$(shell go env GOARCH)
+
+ CURPATH=$(PWD)
+ TARGET_DIR=$(CURPATH)/_output/bin
+-OPERATOR_IMAGE= $(REGISTRY)/$(REPO):operator-$(VERSION)
+-DISKMAKER_IMAGE = $(REGISTRY)/$(REPO):diskmaker-$(VERSION)
+-MUSTGATHER_IMAGE = $(REGISTRY)/$(REPO):mustgather-$(VERSION)
+-BUNDLE_IMAGE = $(REGISTRY)/$(REPO):bundle-$(VERSION)
+-INDEX_IMAGE = $(REGISTRY)/$(REPO):index-$(VERSION)
++OPERATOR_IMAGE= $(REGISTRY)/$(REPO):$(VERSION)
++DISKMAKER_IMAGE = $(REGISTRY)/local-storage-diskmaker:$(VERSION)
++MUSTGATHER_IMAGE = $(REGISTRY)/local-storage-mustgather:$(VERSION)
++BUNDLE_IMAGE = $(REGISTRY)/local-storage-operator-bundle:$(VERSION)
++INDEX_IMAGE = $(REGISTRY)/local-storage-index:$(VERSION)
+ REV=$(shell git describe --long --tags --match='v*' --dirty 2>/dev/null || git rev-list -n1 HEAD)
+
+ # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+@@ -113,7 +113,7 @@ push: images
+ .PHONY: push
+
+ must-gather:
+-	$(TOOL_BIN) build -t $(MUSTGATHER_IMAGE) -f $(CURPATH)/Dockerfile.mustgather .
++	$(TOOL_BIN) build -t $(MUSTGATHER_IMAGE) -f $(CURPATH)/Dockerfile.mustgather --build-arg="OKD=$(OKD)" .
+ .PHONY: must-gather
+
+ # this is ugly, but allows us to build dev containers without tripping over yum install
+@@ -129,7 +129,7 @@ operator-container:
+ 	$(TOOL_BIN) build -t $(OPERATOR_IMAGE) -f $(CURPATH)/Dockerfile.rhel7 .
+ .PHONY: operator-container
+
+-bundle: push
++bundle: #push
+ 	./hack/create-bundle.sh $(OPERATOR_IMAGE) $(DISKMAKER_IMAGE) $(BUNDLE_IMAGE) $(INDEX_IMAGE)
+ .PHONY: bundle
+
+@@ -140,3 +140,26 @@ clean:
+ test_e2e:
+ 	./hack/test-e2e.sh
+ .PHONY: test_e2e
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy okd-bundle
++
++OKD ?= $(shell curl -s https://api.github.com/repos/okd-project/okd/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
++CHANNEL ?= alpha
++DEFAULT_CHANNEL ?= alpha
++export CHANNEL
++export DEFAULT_CHANNEL
++
++okd-install: controller-gen
++	go mod download
++
++okd-lint: verify
++
++okd-build: build
++
++okd-test: #test
++	@echo "Disabled tests for now"
++
++okd-deploy: push must-gather
++	@$(BUILD_CMD) push $(MUSTGATHER_IMAGE)
++
++okd-bundle: bundle
+diff --git a/assets/templates/localmetrics/prometheus-rule.yaml b/assets/templates/localmetrics/prometheus-rule.yaml
+index 13ba1719..bce28758 100644
+--- a/assets/templates/localmetrics/prometheus-rule.yaml
++++ b/assets/templates/localmetrics/prometheus-rule.yaml
+@@ -24,6 +24,6 @@ spec:
+             Please check all LocalVolume and LocalVolumeSet objects and make sure that they have
+             correct "nodeSelector" and "tolerations" fields, and there are nodes that match the
+             nodeSelector and all taints of the matching nodes are tolerated.
+-            A frequent issue is that nodes that run OpenShift Data Foundation (ODF) are tainted,
++            A frequent issue is that nodes that run OKD Data Foundation (ODF) are tainted,
+             so only ODF runs on these nodes. In that case, LocalVolume / LocalVolumeSet objects
+             must tolerate such a taint to provide disks for ODF on the nodes.
+diff --git a/config/manifests/stable/local-storage-operator.clusterserviceversion.yaml b/config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+index 55a5e314..27cd6804 100644
+--- a/config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
++++ b/config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+@@ -111,7 +111,7 @@ metadata:
+     operatorframework.io/cluster-monitoring: "true"
+     capabilities: Full Lifecycle
+     containerImage: quay.io/openshift/origin-local-storage-operator:latest
+-    support: Red Hat
++    support: OKD Community
+     repository: https://github.com/openshift/local-storage-operator
+     createdAt: "2019-08-14T00:00:00Z"
+     description: Configure and use local storage volumes.
+@@ -139,11 +139,11 @@ metadata:
+ spec:
+   displayName: Local Storage
+   description: >
+-    Operator that configures local storage volumes for use in Kubernetes and OpenShift.
+-    OpenShift 4.2 and above are the only supported OpenShift versions.
++    Operator that configures local storage volumes for use in Kubernetes and OKD.
++    OKD 4.2 and above are the only supported OKD versions.
+   icon:
+-    - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTQ1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2UwMDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlJlZEhhdC1Mb2dvLUhhdC1Db2xvcjwvdGl0bGU+PHBhdGggZD0iTTE1Ny43Nyw2Mi42MWExNCwxNCwwLDAsMSwuMzEsMy40MmMwLDE0Ljg4LTE4LjEsMTcuNDYtMzAuNjEsMTcuNDZDNzguODMsODMuNDksNDIuNTMsNTMuMjYsNDIuNTMsNDRhNi40Myw2LjQzLDAsMCwxLC4yMi0xLjk0bC0zLjY2LDkuMDZhMTguNDUsMTguNDUsMCwwLDAtMS41MSw3LjMzYzAsMTguMTEsNDEsNDUuNDgsODcuNzQsNDUuNDgsMjAuNjksMCwzNi40My03Ljc2LDM2LjQzLTIxLjc3LDAtMS4wOCwwLTEuOTQtMS43My0xMC4xM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMjcuNDcsODMuNDljMTIuNTEsMCwzMC42MS0yLjU4LDMwLjYxLTE3LjQ2YTE0LDE0LDAsMCwwLS4zMS0zLjQybC03LjQ1LTMyLjM2Yy0xLjcyLTcuMTItMy4yMy0xMC4zNS0xNS43My0xNi42QzEyNC44OSw4LjY5LDEwMy43Ni41LDk3LjUxLjUsOTEuNjkuNSw5MCw4LDgzLjA2LDhjLTYuNjgsMC0xMS42NC01LjYtMTcuODktNS42LTYsMC05LjkxLDQuMDktMTIuOTMsMTIuNSwwLDAtOC40MSwyMy43Mi05LjQ5LDI3LjE2QTYuNDMsNi40MywwLDAsMCw0Mi41Myw0NGMwLDkuMjIsMzYuMywzOS40NSw4NC45NCwzOS40NU0xNjAsNzIuMDdjMS43Myw4LjE5LDEuNzMsOS4wNSwxLjczLDEwLjEzLDAsMTQtMTUuNzQsMjEuNzctMzYuNDMsMjEuNzdDNzguNTQsMTA0LDM3LjU4LDc2LjYsMzcuNTgsNTguNDlhMTguNDUsMTguNDUsMCwwLDEsMS41MS03LjMzQzIyLjI3LDUyLC41LDU1LC41LDc0LjIyYzAsMzEuNDgsNzQuNTksNzAuMjgsMTMzLjY1LDcwLjI4LDQ1LjI4LDAsNTYuNy0yMC40OCw1Ni43LTM2LjY1LDAtMTIuNzItMTEtMjcuMTYtMzAuODMtMzUuNzgiLz48L3N2Zz4=
+-      mediatype: image/svg+xml
++    - base64data: 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
++      mediatype: image/png
+   keywords:
+     - storage
+     - local storage
+@@ -156,10 +156,10 @@ spec:
+   maturity: stable
+   maintainers:
+     - email: aos-storage-staff@redhat.com
+-      name: Red Hat
++      name: OKD Community
+   minKubeVersion: 1.14.0
+   provider:
+-    name: Red Hat
++    name: OKD Community
+   labels:
+     alm-owner-metering: local-storage-operator
+     alm-status-descriptors: local-storage-operator.v4.15.0
+@@ -407,7 +407,7 @@ spec:
+         group: local.storage.openshift.io
+         kind: LocalVolume
+         name: localvolumes.local.storage.openshift.io
+-        description: Manage local storage volumes for OpenShift
++        description: Manage local storage volumes for OKD
+         version: v1
+         specDescriptors:
+           - description: User requested management state of this object
+diff --git a/hack/create-bundle.sh b/hack/create-bundle.sh
+index b68b84ec..3343c70c 100755
+--- a/hack/create-bundle.sh
++++ b/hack/create-bundle.sh
+@@ -12,10 +12,10 @@ if [ "$#" -ne "4" ]; then
+ fi
+
+ DEFAULT_TOOL_BIN=$(which podman 2>/dev/null || which docker 2>/dev/null)
+-if [ "$?" -ne "0" ]; then
+-	echo "Error: No suitable container manipulation tool (podman, docker) found in \$PATH" 1>&2
+-	exit 1
+-fi
++#if [ "$?" -ne "0" ]; then
++#	echo "Error: No suitable container manipulation tool (podman, docker) found in \$PATH" 1>&2
++#	exit 1
++#fi
+ TOOL_BIN=${TOOL_BIN:-$DEFAULT_TOOL_BIN}
+
+ OPM_BIN=$(which opm 2>/dev/null)
+@@ -32,12 +32,12 @@ DISKMAKER_IMAGE=$2
+ BUNDLE_IMAGE=$3
+ INDEX_IMAGE=$4
+
+-# Prepare output dir
+-mkdir -p opm-bundle
+-pushd opm-bundle
+-cp -r -v ../config/* .
++## Prepare output dir
++#mkdir -p opm-bundle
++#pushd opm-bundle
++#cp -r -v ../config/* .
+
+-MANIFEST=manifests/stable/local-storage-operator.clusterserviceversion.yaml
++MANIFEST=config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+
+ # Replace images in the manifest - error prone, needs to be in sync with image-references.
+ sed -i.bak -e "s~quay.io/openshift/origin-local-storage-operator:latest~$OPERATOR_IMAGE~" \
+@@ -45,13 +45,19 @@ sed -i.bak -e "s~quay.io/openshift/origin-local-storage-operator:latest~$OPERATO
+ 	$MANIFEST
+ rm $MANIFEST.bak
+
++# Generate OKD bundle
++rm -rf bundle/
++operator-sdk generate bundle --overwrite -q --input-dir config/manifests/stable --version=${VERSION} --channels=${CHANNEL} --default-channel=${DEFAULT_CHANNEL}
++# Apply install spec
++yq '.spec.install += load("config/manifests/stable/local-storage-operator.clusterserviceversion.yaml").spec.install' bundle/manifests/local-storage-operator.clusterserviceversion.yaml > bundle/manifests/local-storage-operator.clusterserviceversion.yaml.tmp
++mv bundle/manifests/local-storage-operator.clusterserviceversion.yaml.tmp bundle/manifests/local-storage-operator.clusterserviceversion.yaml
+ # Build the bundle and push it
+ $TOOL_BIN build -t $BUNDLE_IMAGE -f bundle.Dockerfile .
+ $TOOL_BIN push $BUNDLE_IMAGE
+
+ # Build the index image and push it
+-$OPM_BIN index add --bundles $BUNDLE_IMAGE --tag $INDEX_IMAGE --container-tool $TOOL_NAME
+-$TOOL_BIN push $INDEX_IMAGE
++#$OPM_BIN index add --bundles $BUNDLE_IMAGE --tag $INDEX_IMAGE --container-tool $TOOL_NAME
++#$TOOL_BIN push $INDEX_IMAGE
+
+
+ echo
+@@ -75,5 +81,3 @@ EOF
+ REAL_EOF
+
+ echo
+-
+-popd
+--
+2.44.0
+

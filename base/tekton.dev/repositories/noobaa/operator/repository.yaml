@@ -9,10 +9,27 @@ spec:
   frequency: 5m
   type: github
   pipelineRef:
-    name: operator-golang
+    name: operator
     namespace: okd-team
     params:
       - name: repo-ref
         expression: commit.sha
       - name: repo-url
         expression: repoURL
+      - name: base-image-registry
+        expression: "'quay.io/okderators'"
+      - name: image-name
+        expression: "'noobaa-operator'"
+      - name: image-version
+        expression: "'dev'"
+      - name: channel
+        expression: "'dev'"
+      - name: default-channel
+        expression: "'stable'"
+    workspaces:
+      - name: output
+        persistentVolumeClaim:
+          claimName: noobaa-operator-volume
+      - name: patches
+        persistentVolumeClaim:
+          claimName: noobaa-operator-patch

@@ -5,7 +5,7 @@ configMapGenerator:
   - name: gitops-backend-patch
     namespace: okd-team
     files:
-      - repo.patch
+      - 0001-OKDify.patch
 
 resources:
   - repository.yaml

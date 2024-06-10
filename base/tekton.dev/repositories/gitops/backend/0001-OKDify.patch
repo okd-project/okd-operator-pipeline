@@ -1,0 +1,54 @@
+From 3f6a627a0e2a71f9749edbb4947cf071c53eedaf Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sun, 7 Apr 2024 19:39:16 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile |  2 +-
+ Makefile   | 23 +++++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index 4c90aba..23154c3 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,4 +1,4 @@
+-FROM openshift/origin-release:golang-1.20 AS build
++FROM registry.ci.openshift.org/openshift/release:golang-1.20 AS build
+ WORKDIR /go/src
+ COPY . /go/src
+ RUN GIT_COMMIT=$(git rev-parse HEAD) && \
+diff --git a/Makefile b/Makefile
+index ee5a7dd..d98baa5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -11,3 +11,26 @@ gomod_tidy:
+ .PHONY: gofmt
+ gofmt:
+ 	go fmt -x ./...
++
++####### OKD #######
++VERSION ?= 0.0.1
++IMAGE ?= quay.io/okderators/gitops-backend
++IMG ?= $(IMAGE):v$(VERSION)
++OKD_CONTAINER_CMD ?= podman
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++
++okd-install:
++	go mod download
++
++okd-lint:
++	@echo "No linting available"
++
++okd-build:
++	go build ./cmd/backend-http
++
++okd-test: test
++
++okd-deploy:
++	$(OKD_CONTAINER_CMD) build -t $(IMG) .
++	$(OKD_CONTAINER_CMD) push $(IMG)
+-- 
+2.44.0
+

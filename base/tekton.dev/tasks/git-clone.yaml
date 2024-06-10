@@ -108,12 +108,12 @@ spec:
     - name: gitInitImage
       description: The image providing the git-init binary that this Task runs.
       type: string
-      default: "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.40.2"
+      default: "quay.io/okderators/git:vdev"
     - name: userHome
       description: |
         Absolute path to the user's home directory.
       type: string
-      default: "/home/git"
+      default: "/home/build"
   results:
     - name: commit
       description: The precise commit SHA that was fetched by this Task.
@@ -229,16 +229,10 @@ spec:
         test -z "${PARAM_NO_PROXY}" || export NO_PROXY="${PARAM_NO_PROXY}"
 
         git config --global --add safe.directory "${WORKSPACE_OUTPUT_PATH}"
-        /ko-app/git-init \
-          -url="${PARAM_URL}" \
-          -revision="${PARAM_REVISION}" \
-          -refspec="${PARAM_REFSPEC}" \
-          -path="${CHECKOUT_DIR}" \
-          -sslVerify="${PARAM_SSL_VERIFY}" \
-          -submodules="${PARAM_SUBMODULES}" \
-          -depth="${PARAM_DEPTH}" \
-          -sparseCheckoutDirectories="${PARAM_SPARSE_CHECKOUT_DIRECTORIES}"
+        git clone "${PARAM_URL}" "${CHECKOUT_DIR}" --depth "${PARAM_DEPTH}" --no-single-branch --config advice.detachedHead=false
         cd "${CHECKOUT_DIR}"
+        git fetch origin ${PARAM_REVISION}
+        git checkout -f "${PARAM_REVISION}"
         RESULT_SHA="$(git rev-parse HEAD)"
         EXIT_CODE="$?"
         if [ "${EXIT_CODE}" != 0 ] ; then
@@ -248,10 +242,12 @@ spec:
         printf "%s" "${RESULT_COMMITTER_DATE}" > "$(results.committer-date.path)"
         printf "%s" "${RESULT_SHA}" > "$(results.commit.path)"
         printf "%s" "${PARAM_URL}" > "$(results.url.path)"
+        
+        git config --global user.email "okd@example.com"
+        git config --global user.name "OKD Build bot"
+  
         # Apply patches
-        if [ -d "${WORKSPACE_PATCHES_PATH}" ] ; then
+        if ls $WORKSPACE_PATCHES_PATH/*.patch 1> /dev/null 2>&1; then
           cd "${CHECKOUT_DIR}"
-          for patch in $(ls "${WORKSPACE_PATCHES_PATH}"); do
-            git apply "${WORKSPACE_PATCHES_PATH}/${patch}"
-          done
+          git am -3 ${WORKSPACE_PATCHES_PATH}/*.patch
         fi

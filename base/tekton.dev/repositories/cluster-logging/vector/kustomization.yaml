@@ -1,0 +1,11 @@
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: vector-patch
+    namespace: okd-team
+    files:
+      - 0001-OKDify.patch
+
+resources:
+  - pvc.yaml

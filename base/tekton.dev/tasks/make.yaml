@@ -14,33 +14,70 @@ spec:
     - name: args
       description: The arguments to pass to the make command
       type: array
+    - name: image-registry
+      description: The image registry to use for the build
+      type: string
+    - name: image-name
+      description: The image name to use for the build
+      type: string
     - name: version
       description: The version to use for the build
       type: string
-      default: ""
-    - name: normalized-version
-      description: The normalized version to use for the build
+    - name: env-map
+      description: The env map
       type: string
-      default: $(params.version)
+      default: ""
+    - name: container-cmd
+      description: The container command
+      type: string
+      default: buildah
 
   workspaces:
-    - name: source
-    - name: build-cache-root
-      mountPath: /go/.cache
-    - name: build-pkg
-      mountPath: /go/pkg
+    - name: work
+
+  volumes:
+    - name: docker-config
+      configMap:
+        name: docker-config
 
   steps:
     - name: run
-      workingDir: $(workspaces.source.path)/$(params.subdirectory)
+      imagePullPolicy: Always
+      workingDir: $(workspaces.work.path)/$(params.subdirectory)
       image: $(params.image)
-      command: ["make"]
-      args: ["$(params.args[*])"]
+      args: ["$(params.args)"]
+      script: |
+        echo "$(params.env-map) make $@"
+        $(params.env-map) make $@
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1001
+        runAsUser: 65532
       env:
-        - name: "VERSION"
+        - name: "OKD_VERSION"
           value: "$(params.version)"
-        - name: "NORM_VERSION"
-          value: "$(params.normalized-version)"
+        - name: "OKD_IMAGE_REGISTRY"
+          value: "$(params.image-registry)"
+        - name: "OKD_IMAGE_NAME"
+          value: "$(params.image-name)"
+        - name: "OKD_CONTAINER_CMD"
+          value: "$(params.container-cmd)"
+        - name: DOCKER_CONFIG
+          value: /home/build/.docker/
+      volumeMounts:
+        - name: docker-config
+          mountPath: /home/build/.docker/
+        - name: $(workspaces.work.volume)
+          mountPath: /var/lib/containers
+          subPath: containers
+        - name: $(workspaces.work.volume)
+          mountPath: /home/build/.local/share/containers
+          subPath: local-containers
+        - name: $(workspaces.work.volume)
+          mountPath: /run/containers
+          subPath: run-containers
+        - name: $(workspaces.work.volume)
+          mountPath: /home/build/go/.cache
+          subPath: go-cache-root
+        - name: $(workspaces.work.volume)
+          mountPath: /home/build/go/pkg
+          subPath: go-pkg

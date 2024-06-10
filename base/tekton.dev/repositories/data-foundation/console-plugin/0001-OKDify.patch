@@ -1,0 +1,376 @@
+From 0aeebc14cf03a8b827037967f8205a9965498d34 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sun, 10 Mar 2024 19:36:57 +0000
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile.prod                               | 12 ++++++----
+ Makefile                                      | 23 +++++++++++++++++++
+ cypress/consts.ts                             |  2 +-
+ cypress/support.ts                            |  2 +-
+ locales/en/plugin__odf-console.json           |  4 ++--
+ locales/ja/plugin__odf-console.json           |  4 ++--
+ locales/ko/plugin__odf-console.json           |  2 +-
+ locales/zh/plugin__odf-console.json           |  6 ++---
+ openshift-ci/odf-catalog-source.yaml          |  2 +-
+ package.json                                  |  2 +-
+ .../status-card/status-card.spec.tsx          | 12 +++++-----
+ .../details-card/details-card.tsx             |  4 +---
+ .../persistent-external/details-card.tsx      |  4 +---
+ .../system-connection-details.tsx             |  2 +-
+ .../storage-consumers/onboarding-modal.tsx    |  2 +-
+ packages/odf/constants/common.ts              |  2 +-
+ scripts/set-branch.sh                         |  7 ++++++
+ 17 files changed, 61 insertions(+), 31 deletions(-)
+ create mode 100644 Makefile
+ create mode 100755 scripts/set-branch.sh
+
+diff --git a/Dockerfile.prod b/Dockerfile.prod
+index 93ed8a23..14b6fc97 100644
+--- a/Dockerfile.prod
++++ b/Dockerfile.prod
+@@ -1,6 +1,10 @@
+-FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder:v2.5.0_18-11 AS builder
++FROM quay.io/sclorg/nodejs-20-c9s AS builder
+ ARG TARGET_BRANCH=master
+
++USER root
++WORKDIR /
++
++RUN npm install -g yarn
+ RUN dnf install -y git
+ RUN git clone https://github.com/red-hat-storage/odf-console.git
+ WORKDIR /odf-console
+@@ -15,7 +19,7 @@ RUN yarn install --prod --frozen-lockfile
+ RUN yarn build
+ RUN mv ./plugins/odf/dist ../compatibility
+
+-FROM registry.redhat.io/ubi9/nginx-120
++FROM registry.access.redhat.com/ubi9/nginx-120
+ COPY --from=builder /app .
+ COPY --from=builder /compatibility ./compatibility
+ CMD /usr/libexec/s2i/run
+@@ -23,7 +27,7 @@ CMD /usr/libexec/s2i/run
+ LABEL maintainer="Bipul Adhikari <badhikar@redhat.com>"
+ LABEL name="odf-console"
+ LABEL version="4.13"
+-LABEL description="OpenShift Data Foundation Console container"
+-LABEL summary="Provides the latest console for OpenShift Data Foundation."
++LABEL description="OKD Data Foundation Console container"
++LABEL summary="Provides the latest console for OKD Data Foundation."
+ LABEL io.k8s.display-name="ODF Console"
+ LABEL io.openshift.tags="odf"
+diff --git a/Makefile b/Makefile
+new file mode 100644
+index 00000000..d7f598d5
+--- /dev/null
++++ b/Makefile
+@@ -0,0 +1,23 @@
++BUILD_CMD ?= podman
++VERSION ?= dev
++BASE_REGISTRY ?= quay.io/okderators
++IMG ?= $(BASE_REGISTRY)/odf-console:$(VERSION)
++BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++
++okd-install:
++	@yarn install --frozen-lockfile
++
++okd-lint:
++	@yarn lint
++
++okd-build:
++	@yarn build
++
++okd-test:
++	@yarn test
++
++okd-deploy:
++	@$(BUILD_CMD) build -t $(IMG) --build-arg TARGET_BRANCH=$(BRANCH) -f Dockerfile.prod .
++	@$(BUILD_CMD) push $(IMG)
+\ No newline at end of file
+diff --git a/cypress/consts.ts b/cypress/consts.ts
+index 617af409..e696308f 100644
+--- a/cypress/consts.ts
++++ b/cypress/consts.ts
+@@ -1,7 +1,7 @@
+ export const KUBEADMIN_USERNAME = 'kubeadmin';
+ export const KUBEADMIN_IDP = 'kube:admin';
+
+-export const ODF_OPERATOR_NAME = 'OpenShift Data Foundation';
++export const ODF_OPERATOR_NAME = 'OKD Data Foundation';
+ export const CLUSTER_NAMESPACE = 'openshift-storage';
+ export const STORAGE_SYSTEM_NAME = 'ocs-storagecluster-storagesystem';
+ export const STORAGE_CLUSTER_NAME = 'ocs-storagecluster';
+diff --git a/cypress/support.ts b/cypress/support.ts
+index 6c8ad3de..a34ee534 100644
+--- a/cypress/support.ts
++++ b/cypress/support.ts
+@@ -37,7 +37,7 @@ Cypress.Commands.add('install', () => {
+     if (code !== 0) {
+       cy.clickNavLink(['Operators', 'Installed Operators']);
+       cy.byLegacyTestID('item-filter').type(ODF_OPERATOR_NAME);
+-      // data-test-operator-row="OpenShift Data Foundation"
++      // data-test-operator-row="OKD Data Foundation"
+       cy.byTestOperatorRow(ODF_OPERATOR_NAME).click();
+       cy.byLegacyTestID('horizontal-link-Storage System').click();
+       cy.byTestID('item-create').click();
+diff --git a/locales/en/plugin__odf-console.json b/locales/en/plugin__odf-console.json
+index d19d21c5..d60c467e 100644
+--- a/locales/en/plugin__odf-console.json
++++ b/locales/en/plugin__odf-console.json
+@@ -421,7 +421,7 @@
+   "Data Consumption Graph": "Data Consumption Graph",
+   "GET {{GETLatestValue}}": "GET {{GETLatestValue}}",
+   "PUT {{PUTLatestValue}}": "PUT {{PUTLatestValue}}",
+-  "OpenShift Container Storage": "OpenShift Container Storage",
++  "OKD Container Storage": "OKD Container Storage",
+   "System name": "System name",
+   "Multicloud Object Gateway": "Multicloud Object Gateway",
+   "RADOS Object Gateway": "RADOS Object Gateway",
+@@ -965,7 +965,7 @@
+   "Copy to clipboard": "Copy to clipboard",
+   "How to use this token?": "How to use this token?",
+   "To onboard the client cluster, the provider cluster requires the onboarding token.": "To onboard the client cluster, the provider cluster requires the onboarding token.",
+-  "An onboarding token is needed to connect an additional OpenShift cluster to a Data Foundation deployment.": "An onboarding token is needed to connect an additional OpenShift cluster to a Data Foundation deployment.",
++  "An onboarding token is needed to connect an additional OKD cluster to a Data Foundation deployment.": "An onboarding token is needed to connect an additional OKD cluster to a Data Foundation deployment.",
+   "Raw Capacity": "Raw Capacity",
+   "Add Capacity": "Add Capacity",
+   "Cluster details": "Cluster details",
+diff --git a/locales/ja/plugin__odf-console.json b/locales/ja/plugin__odf-console.json
+index 85a9bb35..10c2c165 100644
+--- a/locales/ja/plugin__odf-console.json
++++ b/locales/ja/plugin__odf-console.json
+@@ -421,7 +421,7 @@
+   "Data Consumption Graph": "データ使用率のグラフ",
+   "GET {{GETLatestValue}}": "GET {{GETLatestValue}}",
+   "PUT {{PUTLatestValue}}": "PUT {{PUTLatestValue}}",
+-  "OpenShift Container Storage": "OpenShift Container Storage",
++  "OKD Container Storage": "OKD Container Storage",
+   "System name": "システム名",
+   "Multicloud Object Gateway": "Multicloud Object Gateway",
+   "RADOS Object Gateway": "RADOS Object Gateway",
+@@ -955,7 +955,7 @@
+   "Target Blob Container": "ターゲット Blob コンテナー",
+   "Num Volumes": "Num ボリューム",
+   "Cluster ID": "クラスター ID",
+-  "Openshift version": "OpenShift バージョン",
++  "OKD version": "OKD バージョン",
+   "Data Foundation version": "Data Foundation バージョン",
+   "Last heartbeat": "最後のハートビート",
+   "ago": "前",
+diff --git a/locales/ko/plugin__odf-console.json b/locales/ko/plugin__odf-console.json
+index 2e6b09bc..acf0a92c 100644
+--- a/locales/ko/plugin__odf-console.json
++++ b/locales/ko/plugin__odf-console.json
+@@ -421,7 +421,7 @@
+   "Data Consumption Graph": "데이터 소비 그래프",
+   "GET {{GETLatestValue}}": "GET {{GETLatestValue}}",
+   "PUT {{PUTLatestValue}}": "PUT {{PUTLatestValue}}",
+-  "OpenShift Container Storage": "Openshift Container Storage",
++  "OKD Container Storage": "OKD Container Storage",
+   "System name": "시스템 이름",
+   "Multicloud Object Gateway": "멀티 클라우드 개체 게이트웨이",
+   "RADOS Object Gateway": "RADOS 개체 게이트웨이",
+diff --git a/locales/zh/plugin__odf-console.json b/locales/zh/plugin__odf-console.json
+index 63de435a..9270a4cb 100644
+--- a/locales/zh/plugin__odf-console.json
++++ b/locales/zh/plugin__odf-console.json
+@@ -421,7 +421,7 @@
+   "Data Consumption Graph": "数据消耗图",
+   "GET {{GETLatestValue}}": "GET {{GETLatestValue}}",
+   "PUT {{PUTLatestValue}}": "PUT {{PUTLatestValue}}",
+-  "OpenShift Container Storage": "OpenShift Container Storage",
++  "OKD Container Storage": "OKD Container Storage",
+   "System name": "系统名称",
+   "Multicloud Object Gateway": "多云对象网关（MCG）",
+   "RADOS Object Gateway": "RADOS 对象网关",
+@@ -955,7 +955,7 @@
+   "Target Blob Container": "目标 Blob 容器",
+   "Num Volumes": "Num 卷",
+   "Cluster ID": "集群 ID",
+-  "Openshift version": "OpenShift 版本",
++  "OKD version": "OKD 版本",
+   "Data Foundation version": "Data Foundation 版本",
+   "Last heartbeat": "最后心跳",
+   "ago": "之前",
+@@ -991,7 +991,7 @@
+   "Select a StorageClass to continue": "选择一个存储类继续",
+   "This is a required field. The StorageClass will be used to request storage from the underlying infrastructure to create the backing PersistentVolumes that will be used to provide the Data Foundation service.": "这是必需的字段。存储类将用于从底层基础架构请求存储，以创建用于提供 Data Foundation 服务的后端持久性卷。",
+   "Create new StorageClass": "创建新存储类",
+-  "This is a required field. The StorageClass will be used to request storage from the underlying infrastructure to create the backing persistent volumes that will be used to provide the Data Foundation service.": "这是必需的字段。存储类将用于从底层基础架构请求存储，以创建用于提供 OpenShift Data Foundation 服务的后端持久性卷。",
++  "This is a required field. The StorageClass will be used to request storage from the underlying infrastructure to create the backing persistent volumes that will be used to provide the Data Foundation service.": "这是必需的字段。存储类将用于从底层基础架构请求存储，以创建用于提供 OKD Data Foundation 服务的后端持久性卷。",
+   "All required fields are not set": "所有必填字段没有设置",
+   "In order to create the StorageCluster you must set the StorageClass, select at least 3 nodes (preferably in 3 different zones) and meet the minimum or recommended requirement": "要创建存储集群，您必须设置存储类选择至少 3 个节点（最好是在 3 个不同的区），并满足最低或推荐要求",
+   "The StorageCluster requires a minimum of 3 nodes for the initial deployment. Please choose a different StorageClass or go to create a new LocalVolumeSet that matches the minimum node requirement.": "存储集群的初始部署最少需要 3 个节点。请选择不同的存储类，或创建一个符合最低节点要求的本地卷集。",
+diff --git a/openshift-ci/odf-catalog-source.yaml b/openshift-ci/odf-catalog-source.yaml
+index 3ef0e839..a7d1a90e 100644
+--- a/openshift-ci/odf-catalog-source.yaml
++++ b/openshift-ci/odf-catalog-source.yaml
+@@ -30,7 +30,7 @@ spec:
+     mediatype: ''
+   image: quay.io/rhceph-dev/ocs-registry:latest-4.15
+   priority: 100
+-  publisher: Red Hat
++  publisher: OKD Community
+   sourceType: grpc
+   updateStrategy:
+     registryPoll:
+diff --git a/package.json b/package.json
+index ca86bcca..8df4921b 100644
+--- a/package.json
++++ b/package.json
+@@ -14,7 +14,7 @@
+     "clean-odf": "cd plugins/odf && rm -rf ./dist",
+     "clean-client": "cd plugins/client && rm -rf ./dist",
+     "cypress-merge": "mochawesome-merge ./gui-test-screenshots/cypress_report*.json > ./gui-test-screenshots/cypress.json",
+-    "cypress-generate": "marge -o ./gui-test-screenshots/ -f cypress-report -t 'OpenShift Console Cypress Test Results' -p 'OpenShift Cypress Test Results' --showPassed false --assetsDir ./gui-test-screenshots/cypress/assets ./gui-test-screenshots/cypress.json",
++    "cypress-generate": "marge -o ./gui-test-screenshots/ -f cypress-report -t 'OKD Console Cypress Test Results' -p 'OKD Cypress Test Results' --showPassed false --assetsDir ./gui-test-screenshots/cypress/assets ./gui-test-screenshots/cypress.json",
+     "cypress-postreport": "yarn cypress-merge && yarn cypress-generate",
+     "test": "jest",
+     "test-silent": "JEST_SILENT_REPORTER_DOTS=true jest --reporters jest-silent-reporter",
+diff --git a/packages/mco/components/mco-dashboard/storage-system/status-card/status-card.spec.tsx b/packages/mco/components/mco-dashboard/storage-system/status-card/status-card.spec.tsx
+index 30a3f766..a9e16d72 100644
+--- a/packages/mco/components/mco-dashboard/storage-system/status-card/status-card.spec.tsx
++++ b/packages/mco/components/mco-dashboard/storage-system/status-card/status-card.spec.tsx
+@@ -25,7 +25,7 @@ const healthStatus = {
+           receive: 'true',
+           service: 'noobaa-mgmt',
+           system_type: 'OCS',
+-          system_vendor: 'Red Hat',
++          system_vendor: 'OKD Community',
+           tenant_id: '0a4c8828-9b16-42fc-9195-056d96cbe66f',
+         },
+         value: [1700478807.019, '0'],
+@@ -46,7 +46,7 @@ const healthStatus = {
+           receive: 'true',
+           service: 'rook-ceph-mgr',
+           system_type: 'OCS',
+-          system_vendor: 'Red Hat',
++          system_vendor: 'OKD Community',
+           tenant_id: '0a4c8828-9b16-42fc-9195-056d96cbe66f',
+         },
+         value: [1700478807.019, '0'],
+@@ -66,7 +66,7 @@ const healthStatus = {
+           receive: 'true',
+           service: 'noobaa-mgmt',
+           system_type: 'OCS',
+-          system_vendor: 'Red Hat',
++          system_vendor: 'OKD Community',
+           tenant_id: '0a4c8828-9b16-42fc-9195-056d96cbe66f',
+         },
+         value: [1700478807.019, '0'],
+@@ -87,7 +87,7 @@ const healthStatus = {
+           receive: 'true',
+           service: 'rook-ceph-mgr',
+           system_type: 'OCS',
+-          system_vendor: 'Red Hat',
++          system_vendor: 'OKD Community',
+           tenant_id: '0a4c8828-9b16-42fc-9195-056d96cbe66f',
+         },
+         value: [1700478807.019, '0'],
+@@ -116,7 +116,7 @@ const storageSystemStatus = {
+           receive: 'true',
+           service: 'rook-ceph-mgr',
+           system_type: 'OCS',
+-          system_vendor: 'Red Hat',
++          system_vendor: 'OKD Community',
+           tenant_id: '0a4c8828-9b16-42fc-9195-056d96cbe66f',
+           storage_system: 'storagesystem-1',
+           target_kind: 'storagecluster.ocs.openshift.io/v1',
+@@ -138,7 +138,7 @@ const storageSystemStatus = {
+           receive: 'true',
+           service: 'rook-ceph-mgr',
+           system_type: 'OCS',
+-          system_vendor: 'Red Hat',
++          system_vendor: 'OKD Community',
+           tenant_id: '0a4c8828-9b16-42fc-9195-056d96cbe66f',
+           storage_system: 'storagesystem-2',
+           target_kind: 'storagecluster.ocs.openshift.io/v1',
+diff --git a/packages/ocs/dashboards/object-service/details-card/details-card.tsx b/packages/ocs/dashboards/object-service/details-card/details-card.tsx
+index 5fba603f..37aa0a9d 100644
+--- a/packages/ocs/dashboards/object-service/details-card/details-card.tsx
++++ b/packages/ocs/dashboards/object-service/details-card/details-card.tsx
+@@ -67,9 +67,7 @@ export const ObjectServiceDetailsCard: React.FC<{}> = () => {
+
+   const serviceVersion = getOperatorVersion(csv);
+
+-  const serviceName = isODF
+-    ? t('Data Foundation')
+-    : t('OpenShift Container Storage');
++  const serviceName = isODF ? t('Data Foundation') : t('OKD Container Storage');
+
+   const { namespace: clusterNs } = useParams<ODFSystemParams>();
+   const { systemFlags } = useODFSystemFlagsSelector();
+diff --git a/packages/ocs/dashboards/persistent-external/details-card.tsx b/packages/ocs/dashboards/persistent-external/details-card.tsx
+index 58b1f365..02ed238a 100644
+--- a/packages/ocs/dashboards/persistent-external/details-card.tsx
++++ b/packages/ocs/dashboards/persistent-external/details-card.tsx
+@@ -81,9 +81,7 @@ export const DetailsCard: React.FC = () => {
+
+   const subscriptionVersion = getOperatorVersion(csv);
+
+-  const serviceName = isODF
+-    ? t('Data Foundation')
+-    : t('OpenShift Container Storage');
++  const serviceName = isODF ? t('Data Foundation') : t('OKD Container Storage');
+   const cephLink = getCephLink(resourcesObj['secret'].data as K8sResourceKind);
+
+   return (
+diff --git a/packages/odf/components/create-storage-system/external-ceph-storage/system-connection-details.tsx b/packages/odf/components/create-storage-system/external-ceph-storage/system-connection-details.tsx
+index 44bc3106..b6f141f9 100644
+--- a/packages/odf/components/create-storage-system/external-ceph-storage/system-connection-details.tsx
++++ b/packages/odf/components/create-storage-system/external-ceph-storage/system-connection-details.tsx
+@@ -225,7 +225,7 @@ export const rhcsCanGoToNextStep: CanGoToNextStep<RHCSState> = (state) =>
+
+ export const EXTERNAL_CEPH_STORAGE: ExternalStorage[] = [
+   {
+-    displayName: 'Red Hat Ceph Storage',
++    displayName: 'OKD Ceph Storage',
+     model: {
+       apiGroup: OCSStorageClusterModel.apiGroup,
+       apiVersion: OCSStorageClusterModel.apiVersion,
+diff --git a/packages/odf/components/storage-consumers/onboarding-modal.tsx b/packages/odf/components/storage-consumers/onboarding-modal.tsx
+index 32b310b2..fe2f8875 100644
+--- a/packages/odf/components/storage-consumers/onboarding-modal.tsx
++++ b/packages/odf/components/storage-consumers/onboarding-modal.tsx
+@@ -87,7 +87,7 @@ export const ClientOnBoardingModal: ClientOnBoardingModalProps = ({
+             </Text>
+             <Text>
+               {t(
+-                'An onboarding token is needed to connect an additional OpenShift cluster to a Data Foundation deployment.'
++                'An onboarding token is needed to connect an additional OKD cluster to a Data Foundation deployment.'
+               )}
+             </Text>
+           </FlexItem>
+diff --git a/packages/odf/constants/common.ts b/packages/odf/constants/common.ts
+index db30f36d..1e0ef22f 100644
+--- a/packages/odf/constants/common.ts
++++ b/packages/odf/constants/common.ts
+@@ -5,7 +5,7 @@ import {
+ import { Toleration, Taint } from '@odf/shared/types';
+ import { TFunction } from 'i18next';
+
+-export const CEPH_BRAND_NAME = 'Red Hat Ceph Storage';
++export const CEPH_BRAND_NAME = 'OKD Ceph Storage';
+ export const NO_PROVISIONER = 'kubernetes.io/no-provisioner';
+ export const STORAGE_CLUSTER_SYSTEM_KIND = 'storagecluster.ocs.openshift.io/v1';
+ export const HOSTNAME_LABEL_KEY = 'kubernetes.io/hostname';
+diff --git a/scripts/set-branch.sh b/scripts/set-branch.sh
+new file mode 100755
+index 00000000..9ba97c7e
+--- /dev/null
++++ b/scripts/set-branch.sh
+@@ -0,0 +1,7 @@
++#!/usr/bin/bash
++
++BRANCH=$(git rev-parse --abbrev-ref HEAD)
++
++echo "Setting branch to $BRANCH"
++
++sed -r 's/(TARGET_BRANCH=).*/\1'"$BRANCH"'/' -i Dockerfile
+\ No newline at end of file
+--
+2.44.0
+

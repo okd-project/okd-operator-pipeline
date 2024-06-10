@@ -1,0 +1,56 @@
+From 87165ab0fb9ea61ad7ba674b7aec89a2651d0f41 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Sun, 7 Apr 2024 20:26:19 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile |  2 +-
+ Makefile   | 23 +++++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 1 deletion(-)
+ create mode 100644 Makefile
+
+diff --git a/Dockerfile b/Dockerfile
+index 4785713..a03e382 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
+ RUN yarn config set network-timeout 600000 -g
+ RUN yarn install && yarn build
+
+-FROM --platform=linux/amd64 registry.redhat.io/rhel8/httpd-24
++FROM --platform=linux/amd64 quay.io/sclorg/httpd-24-micro-c9s
+
+ USER root
+ RUN chown -R 1001:0 /opt/app-root/src
+diff --git a/Makefile b/Makefile
+new file mode 100644
+index 0000000..0c989df
+--- /dev/null
++++ b/Makefile
+@@ -0,0 +1,23 @@
++VERSION ?= 0.0.1
++IMAGE ?= quay.io/okderators/gitops-console-plugin
++IMG ?= $(IMAGE):v$(VERSION)
++
++OKD_CONTAINER_CMD ?= podman
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++
++okd-install:
++	@yarn install --frozen-lockfile
++
++okd-lint:
++	@yarn lint
++
++okd-build:
++	@yarn build
++
++okd-test:
++	@echo "No tests available"
++
++okd-deploy:
++	@$(OKD_CONTAINER_CMD) build -t $(IMG) .
++	@$(OKD_CONTAINER_CMD) push $(IMG)
+--
+2.40.0.windows.1
+

@@ -1,0 +1,52 @@
+From 1b35b8ad6ecee4cee097f74746ba7748a7e59fae Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Fri, 5 Apr 2024 10:27:59 +0100
+Subject: [PATCH] OKDify
+
+---
+ Makefile | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index 4ba6e8019..c0c5f98c8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -14,6 +14,9 @@ endif
+ ifeq ($(CONTAINER_ENGINE),)
+ 	CONTAINER_ENGINE=$(shell lima nerdctl version >/dev/null 2>&1 && echo lima nerdctl)
+ endif
++ifdef BUILD_CMD
++	CONTAINER_ENGINE=$(BUILD_CMD)
++endif
+
+ # If CONTAINER_PLATFORM is not set, then set automatically based on the host.
+ ifeq ($(CONTAINER_PLATFORM),)
+@@ -452,3 +455,24 @@ define stop_blob_mock
+ 	fi
+ 	@echo "\033[1;32mBlob mock server stop done.\033[0m"
+ endef
++
++.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
++
++IMAGE ?= quay.io/okderators/noobaa-core
++VERSION ?= dev
++IMG ?= $(IMAGE):$(VERSION)
++
++okd-install:
++	@echo "Skipping dependencies"
++
++okd-lint:
++	@echo "Skipping lint"
++
++okd-build: noobaa
++
++okd-test:
++	@echo "Skipping tests"
++
++okd-deploy: noobaa
++	@$(CONTAINER_ENGINE) tag $(NOOBAA_TAG) $(IMG)
++	@$(CONTAINER_ENGINE) push $(IMG)
+\ No newline at end of file
+--
+2.44.0
+

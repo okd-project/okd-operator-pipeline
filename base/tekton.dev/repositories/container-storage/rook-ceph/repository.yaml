@@ -1,0 +1,35 @@
+apiVersion: polling.tekton.dev/v1alpha1
+kind: Repository
+metadata:
+  name: rook-ceph-repository
+  namespace: okd-team
+spec:
+  url: https://github.com/red-hat-storage/rook.git
+  ref: master
+  frequency: 5m
+  type: github
+  pipelineRef:
+    name: operator
+    namespace: okd-team
+    params:
+      - name: repo-ref
+        expression: commit.sha
+      - name: repo-url
+        expression: repoURL
+      - name: base-image-registry
+        expression: "'quay.io/okderators'"
+      - name: image-name
+        expression: "'rook-ceph'"
+      - name: image-version
+        expression: "'dev'"
+      - name: channel
+        expression: "'dev'"
+      - name: default-channel
+        expression: "'stable'"
+    workspaces:
+      - name: output
+        persistentVolumeClaim:
+          claimName: rook-ceph-volume
+      - name: patches
+        persistentVolumeClaim:
+          claimName: rook-ceph-patch
