@@ -35,7 +35,11 @@ echo "Using version: $VERSION"
 
 function build_operand() {
   NAME=$3
-  ENV_MAP="$ENV $4"
+  if [ -z "$ENV" ]; then
+      ENV_MAP="$4"
+    else
+      ENV_MAP="$ENV $4"
+    fi
   tkn pipeline start operand \
     --prefix-name $NAME \
     --param repo-url=$1 \
@@ -118,19 +122,6 @@ case $1 in
     build_operator https://github.com/redhat-developer/gitops-operator "${BRANCH:-v1.12}" gitops-operator \
       "CONSOLE_IMAGE=$CONSOLE_IMAGE CONSOLE_IMAGE_TAG=$CONSOLE_IMAGE_TAG BACKEND_IMG=$BACKEND_IMG"
     ;;
-  "noobaa-core")
-    build_operand https://github.com/red-hat-storage/noobaa-core "${BRANCH:-release-4.15}" noobaa-core
-    ;;
-  "noobaa-operator")
-    NOOBAA_DB_IMAGE=${NOOBAA_DB_IMAGE:-quay.io/sclorg/postgresql-16-c9s:latest}
-    NOOBAA_PSQL_12_IMAGE=${NOOBAA_PSQL_12_IMAGE:-quay.io/sclorg/postgresql-12-c8s:latest}
-    NOOBAA_CORE_IMAGE=${NOOBAA_CORE_IMAGE:-quay.io/okderators/noobaa-core:dev}
-    SKIP_RANGE=${SKIP_RANGE:-">=4.2.0<$VERSION"}
-    REPLACES=${REPLACES:-"null"}
-    CSV_NAME=${CSV_NAME:-noobaa-operator.v${VERSION}}
-    build_operator https://github.com/red-hat-storage/noobaa-operator "${BRANCH:-release-4.15}" noobaa-operator \
-      "CORE_IMAGE=$NOOBAA_CORE_IMAGE DB_IMAGE=$NOOBAA_DB_IMAGE SKIP_RANGE=$SKIP_RANGE REPLACES=$REPLACES CSV_NAME=$CSV_NAME PSQL_12_IMAGE=$NOOBAA_PSQL_12_IMAGE obc-crd=owned"
-    ;;
   "loki")
     build_operator https://github.com/openshift/loki "${BRANCH:-release-5.9}" loki
     ;;
@@ -154,47 +145,52 @@ case $1 in
     build_operator https://github.com/openshift/cluster-logging-operator "${BRANCH:-release-5.9}" cluster-logging-operator \
       "IMAGE_LOGGING_FLUENTD=$FLUENTD IMAGE_LOGGING_VECTOR=$VECTOR IMAGE_LOGFILEMETRICEXPORTER=$LOG_FILE_METRIC_EXPORTER IMAGE_LOGGING_CONSOLE_PLUGIN=$LOGGING_VIEW_PLUGIN"
     ;;
-  "ocs-operator")
-    NOOBAA_DB_IMG=${NOOBAA_DB_IMG:-quay.io/sclorg/postgresql-16-c9s:latest}
-    NOOBAA_CORE_IMG=${NOOBAA_CORE_IMG:-quay.io/okderators/noobaa-core:dev}
-    ROOK_VERSION=${ROOK_VERSION:-dev}
-    ROOK_IMG=${ROOK_IMG:-quay.io/okderators/rook-ceph:${ROOK_VERSION}}
-    ROOK_CSIADDONS_IMG=${ROOK_CSIADDONS_IMG:-quay.io/okderators/csi-k8s-sidecar:dev}
-    CEPH_IMG=${CEPH_IMG:-quay.io/ceph/ceph:v18.2.2}
-    OAUTH_PROXY_IMG=${OAUTH_PROXY_IMG:-quay.io/openshift/origin-oauth-proxy:4.15}
-    build_operator https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-operator \
-      "NOOBAA_CORE_IMG=$NOOBAA_CORE_IMG NOOBAA_DB_IMG=$NOOBAA_DB_IMG ROOK_IMG=$ROOK_IMG CEPH_IMG=$CEPH_IMG OAUTH_PROXY_IMG=$OAUTH_PROXY_IMG ROOK_CSIADDONS_IMAGE=$ROOK_CSIADDONS_IMG"
-    ;;
-  "ocs-metrics-exporter")
-    build_operand https://github.com/red-hat-storage/ocs-operator "${BRANCH:-release-4.15}" ocs-metrics-exporter
-    ;;
-  "odf-console")
-    build_operand https://github.com/red-hat-storage/odf-console "${BRANCH:-release-4.15}" odf-console
-    ;;
-  "odf-operator")
-    OCS_VERSION=${OCS_VERSION:dev}
-    NOOBAA_VERSION=${NOOBAA_VERSION:dev}
-    ODF_CONSOLE_VERSION=${ODF_CONSOLE_VERSION:dev}
-    CSIADDONS_VERSION=${CSIADDONS_VERSION:dev}
-    KUBE_RBAC_PROXY_IMAGE=${KUBE_RBAC_PROXY_IMAGE:-quay.io/okderators/kube-rbac-proxy:4.15}
-
-    build_operator https://github.com/red-hat-storage/odf-operator "${BRANCH:-release-4.15}" odf-operator \
-    "IMAGE_REGISTRY=$IMAGE_REGISTRY REGISTRY_NAMESPACE=$REGISTRY_NAMESPACE OCS_BUNDLE_IMG_TAG=$OCS_VERSION\
- NOOBAA_BUNDLE_IMG_TAG=$NOOBAA_VERSION CSIADDONS_BUNDLE_IMG_NAME=csi-addons-bundle\
- CSIADDONS_BUNDLE_IMG_TAG=$CSIADDONS_VERSION ODF_CONSOLE_IMG_TAG=$ODF_CONSOLE_VERSION\
- OPERATOR_CATALOGSOURCE=$CATALOG_SOURCE OPERATOR_CATALOG_NAMESPACE=$CATALOG_NAMESPACE\
- OSE_KUBE_RBAC_PROXY_IMG=$KUBE_RBAC_PROXY_IMAGE"
-    ;;
-  "rook-ceph")
-    build_operand https://github.com/red-hat-storage/rook "${BRANCH:-release-4.15}" rook-ceph
-    ;;
   "local-storage-operator")
     KUBE_RBAC_PROXY_IMAGE=${KUBE_RBAC_PROXY_IMAGE:-quay.io/okderators/kube-rbac-proxy:4.15}
     build_operator https://github.com/openshift/local-storage-operator "${BRANCH:-release-4.15}" local-storage-operator \
       "KUBE_RBAC_PROXY_IMAGE=$KUBE_RBAC_PROXY_IMAGE"
     ;;
-  "csi-addons")
-    build_operator https://github.com/red-hat-storage/kubernetes-csi-addons "${BRANCH:-release-4.15}" csi-addons
+  "odf")
+    build_operand https://github.com/red-hat-storage/rook "${ROOK_COMMIT:-release-4.15}" rook-ceph
+    build_operand https://github.com/red-hat-storage/kubernetes-csi-addons "${CSIADDONS_COMMIT:-release-4.15}" csi-addons
+    build_operand https://github.com/red-hat-storage/noobaa-core "${NOOBAA_CORE_COMMIT:-release-4.15}" noobaa-core
+    build_operand https://github.com/red-hat-storage/odf-console "${ODF_CONSOLE_COMMIT:-release-4.15}" odf-console
+
+    NOOBAA_CORE_IMG="$BASE_IMAGE_REGISTRY/noobaa-core:$VERSION"
+    ROOK_IMG="$BASE_IMAGE_REGISTRY/rook-ceph:$VERSION"
+    ROOK_CSIADDONS_IMAGE="$BASE_IMAGE_REGISTRY/csi-k8s-sidecar:$VERSION"
+    NOOBAA_DB_IMAGE=${NOOBAA_DB_IMAGE:-quay.io/sclorg/postgresql-15-c9s:latest}
+    NOOBAA_PSQL_12_IMAGE=${NOOBAA_PSQL_12_IMAGE:-quay.io/sclorg/postgresql-12-c8s:latest}
+    CEPH_IMG=${CEPH_IMG:-quay.io/ceph/ceph:v18.2.2}
+    OAUTH_PROXY_IMG=${OAUTH_PROXY_IMG:-quay.io/openshift/origin-oauth-proxy:4.15}
+    KUBE_RBAC_PROXY_IMAGE=${KUBE_RBAC_PROXY_IMAGE:-quay.io/okderators/kube-rbac-proxy:4.15}
+    ROOK_CSI_PROVISIONER_IMAGE="registry.k8s.io/sig-storage/csi-provisioner:v3.6.4"
+    ROOK_CSI_RESIZER_IMAGE="registry.k8s.io/sig-storage/csi-resizer:v1.9.4"
+    ROOK_CSI_SNAPSHOTTER_IMAGE="registry.k8s.io/sig-storage/csi-snapshotter:v6.3.4"
+    ROOK_CSI_ATTACHER_IMAGE="registry.k8s.io/sig-storage/csi-attacher:v4.4.4"
+    ROOK_CSI_REGISTRAR_IMAGE="registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.9.4"
+    ROOK_CSI_CEPH_IMAGE="quay.io/cephcsi/cephcsi:v3.10.2"
+
+    SKIP_RANGE=${SKIP_RANGE:-">=4.2.0<$VERSION"}
+    REPLACES=${REPLACES:-"null"}
+    CSV_NAME=${CSV_NAME:-noobaa-operator.v${VERSION}}
+    build_operator https://github.com/red-hat-storage/noobaa-operator "${NOOBAA_OPERATOR_COMMIT:-release-4.15}" noobaa-operator \
+      "CORE_IMAGE=$NOOBAA_CORE_IMG DB_IMAGE=$NOOBAA_DB_IMAGE SKIP_RANGE=$SKIP_RANGE REPLACES=$REPLACES\
+ CSV_NAME=$CSV_NAME PSQL_12_IMAGE=$NOOBAA_PSQL_12_IMAGE obc-crd=owned"
+
+    build_operator https://github.com/red-hat-storage/ocs-operator "${OCS_COMMIT:-release-4.15}" ocs-operator \
+      "NOOBAA_CORE_IMG=$NOOBAA_CORE_IMG NOOBAA_DB_IMG=$NOOBAA_DB_IMAGE ROOK_IMG=$ROOK_IMG CEPH_IMG=$CEPH_IMG\
+ OAUTH_PROXY_IMG=$OAUTH_PROXY_IMG ROOK_CSIADDONS_IMAGE=$ROOK_CSIADDONS_IMAGE\
+ ROOK_CSI_PROVISIONER_IMAGE=$ROOK_CSI_PROVISIONER_IMAGE ROOK_CSI_RESIZER_IMAGE=$ROOK_CSI_RESIZER_IMAGE\
+ ROOK_CSI_SNAPSHOTTER_IMAGE=$ROOK_CSI_SNAPSHOTTER_IMAGE ROOK_CSI_ATTACHER_IMAGE=$ROOK_CSI_ATTACHER_IMAGE\
+ ROOK_CSI_REGISTRAR_IMAGE=$ROOK_CSI_REGISTRAR_IMAGE ROOK_CSI_CEPH_IMAGE=$ROOK_CSI_CEPH_IMAGE"
+
+    build_operator https://github.com/red-hat-storage/odf-operator "${ODF_COMMIT:-release-4.15}" odf-operator \
+      "IMAGE_REGISTRY=$IMAGE_REGISTRY REGISTRY_NAMESPACE=$REGISTRY_NAMESPACE OCS_BUNDLE_IMG_TAG=$VERSION\
+ NOOBAA_BUNDLE_IMG_TAG=$VERSION CSIADDONS_BUNDLE_IMG_NAME=csi-addons-bundle\
+ CSIADDONS_BUNDLE_IMG_TAG=$VERSION ODF_CONSOLE_IMG_TAG=$VERSION\
+ OPERATOR_CATALOGSOURCE=$CATALOG_SOURCE OPERATOR_CATALOG_NAMESPACE=$CATALOG_NAMESPACE\
+ OSE_KUBE_RBAC_PROXY_IMG=$KUBE_RBAC_PROXY_IMAGE"
     ;;
   *)
     echo "Usage: $0 <operand/operator name>"
