@@ -1,12 +1,13 @@
-From 40d33785cabe4d0769e62149b579cacbdc03fddf Mon Sep 17 00:00:00 2001
+From e3f2de93f15dcf746450ab961b3aa398fd08cbda Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Sun, 14 Apr 2024 20:16:23 +0100
 Subject: [PATCH] OKDify
 
 ---
- Makefile        | 21 +++++++++++++++++++++
- images/Makefile |  2 +-
- 2 files changed, 22 insertions(+), 1 deletion(-)
+ Makefile               | 21 +++++++++++++++++++++
+ images/Makefile        |  2 +-
+ images/ceph/Dockerfile |  4 ++++
+ 3 files changed, 26 insertions(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
 index 140093b5f..211519ee0 100644
@@ -51,6 +52,21 @@ index c4ce52ea9..0486b8805 100644
 
  do.build: ceph.$(PLATFORM) ;
  build.all: ## Build images for all platforms.
+diff --git a/images/ceph/Dockerfile b/images/ceph/Dockerfile
+index 268926856..7bbcb8892 100644
+--- a/images/ceph/Dockerfile
++++ b/images/ceph/Dockerfile
+@@ -19,6 +19,10 @@ FROM BASEIMAGE
+ ARG S5CMD_VERSION
+ ARG S5CMD_ARCH
+
++RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
++    sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
++    sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
++
+ # install 'ip' tool for Multus
+ RUN dnf install -y --repo baseos --setopt=install_weak_deps=False iproute && dnf clean all
+
 --
-2.44.0
+2.45.0
 

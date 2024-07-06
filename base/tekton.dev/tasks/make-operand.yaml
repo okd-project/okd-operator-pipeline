@@ -85,19 +85,19 @@ spec:
   steps:
     - name: install
       script: |
-        $@ make okd-install
+        make okd-install $@
     - name: lint
       script: |
-        $@ make okd-lint
+        make okd-lint $@
     - name: build
       script: |
-        $@ make okd-build
+        make okd-build $@
     - name: test
       script: |
-        $@ make okd-test
+        make okd-test $@
     - name: deploy
       script: |
-        $@ make okd-deploy
+        make okd-deploy $@
         
     
         
