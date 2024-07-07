@@ -109,43 +109,27 @@ case $1 in
   "oauth-proxy")
     build_operand https://github.com/openshift/oauth-proxy "${BRANCH:-release-4.15}" oauth-proxy
     ;;
-  "gitops-console-plugin")
-    build_operand https://github.com/redhat-developer/gitops-console-plugin "${BRANCH:-main}" gitops-console-plugin
+  "gitops")
+    build_operand https://github.com/redhat-developer/gitops-console-plugin "${CONSOLE_REF:-main}" gitops-console-plugin
+    build_operand https://github.com/redhat-developer/gitops-backend "${BACKEND_REF:-master}" gitops-backend
+    CONSOLE_IMAGE="$BASE_IMAGE_REGISTRY/gitops-console-plugin"
+    BACKEND_IMG="$BASE_IMAGE_REGISTRY/gitops-backend:$VERSION"
+    build_operator https://github.com/redhat-developer/gitops-operator "${OPERATOR_REF:-v1.12}" gitops-operator \
+      "CONSOLE_IMAGE=$CONSOLE_IMAGE CONSOLE_IMAGE_TAG=$VERSION BACKEND_IMG=$BACKEND_IMG"
     ;;
-  "gitops-backend")
-    build_operand https://github.com/redhat-developer/gitops-backend "${BRANCH:-master}" gitops-backend
-    ;;
-  "gitops-operator")
-    CONSOLE_IMAGE=${CONSOLE_IMAGE:-quay.io/okderators/gitops-console-plugin}
-    CONSOLE_IMAGE_TAG=${CONSOLE_IMAGE_TAG:-v0.0.1}
-    BACKEND_IMG=${BACKEND_IMG:-quay.io/okderators/gitops-backend:v0.0.1}
-    build_operator https://github.com/redhat-developer/gitops-operator "${BRANCH:-v1.12}" gitops-operator \
-      "CONSOLE_IMAGE=$CONSOLE_IMAGE CONSOLE_IMAGE_TAG=$CONSOLE_IMAGE_TAG BACKEND_IMG=$BACKEND_IMG"
-    ;;
-  "loki")
+  "cluster-logging")
     build_operator https://github.com/openshift/loki "${BRANCH:-release-5.9}" loki
-    ;;
-  "vector")
     build_operand https://github.com/ViaQ/vector "${BRANCH:-release-5.9}" vector
-    ;;
-  "fluentd")
     build_operand https://github.com/ViaQ/logging-fluentd "${BRANCH:-v1.16.x}" fluentd
-    ;;
-  "logging-view-plugin")
     build_operand https://github.com/openshift/logging-view-plugin "${BRANCH:-release-5.9}" logging-view-plugin
-    ;;
-  "log-file-metric-exporter")
-    build_operand https://github.com/ViaQ/log-file-metric-exporter "${BRANCH:-release-5.9}" log-file-metric-exporter
-    ;;
-  "cluster-logging-operator")
-    FLUENTD=${FLUENTD:-quay.io/okderators/fluentd:latest}
-    VECTOR=${VECTOR:-quay.io/okderators/vector:latest}
-    LOG_FILE_METRIC_EXPORTER=${LOG_FILE_METRIC_EXPORTER:-quay.io/okderators/log-file-metric-exporter:latest}
-    LOGGING_VIEW_PLUGIN=${LOGGING_VIEW_PLUGIN:-quay.io/okderators/logging-view-plugin:latest}
+    FLUENTD="$BASE_IMAGE_REGISTRY/fluentd:$VERSION"
+    VECTOR="$BASE_IMAGE_REGISTRY/vector:$VERSION"
+    LOG_FILE_METRIC_EXPORTER="$BASE_IMAGE_REGISTRY/log-file-metric-exporter:$VERSION"
+    LOGGING_VIEW_PLUGIN="$BASE_IMAGE_REGISTRY/logging-view-plugin:$VERSION"
     build_operator https://github.com/openshift/cluster-logging-operator "${BRANCH:-release-5.9}" cluster-logging-operator \
       "IMAGE_LOGGING_FLUENTD=$FLUENTD IMAGE_LOGGING_VECTOR=$VECTOR IMAGE_LOGFILEMETRICEXPORTER=$LOG_FILE_METRIC_EXPORTER IMAGE_LOGGING_CONSOLE_PLUGIN=$LOGGING_VIEW_PLUGIN"
     ;;
-  "local-storage-operator")
+  "local-storage")
     KUBE_RBAC_PROXY_IMAGE=${KUBE_RBAC_PROXY_IMAGE:-quay.io/okderators/kube-rbac-proxy:4.15}
     build_operator https://github.com/openshift/local-storage-operator "${BRANCH:-release-4.15}" local-storage-operator \
       "KUBE_RBAC_PROXY_IMAGE=$KUBE_RBAC_PROXY_IMAGE"
@@ -193,7 +177,7 @@ case $1 in
  OSE_KUBE_RBAC_PROXY_IMG=$KUBE_RBAC_PROXY_IMAGE"
     ;;
   *)
-    echo "Usage: $0 <operand/operator name>"
+    echo "Usage: $0 <odf|cluster-logging|gitops|local-storage>"
     exit 1
     ;;
 esac
