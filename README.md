@@ -1,10 +1,31 @@
-# Tekton Operator Build Pipeline
+# OKD Operator Build Pipeline
+
+**NB** This is a WIP
 
 ## Intro
 
-All the necessary yaml files to deploy a generic tekton pipeline to build operators
+This repository contains the generic tekton pipelines to build operators, which can be used to build any of the 
+pre-patched operators defined in the `build.sh` script.
 
-**NB** This is a WIP 
+## Don't want to build them yourself?
+
+If you want to get the operators running without the hassle of building them, you can use the pre-built operators 
+available in the [OKDerators catalog](https://github.com/okd-project/okderators-catalog-index). 
+We try to maintain a similar release cadence to that of OpenShift, however only the latest release of OKD is targeted currently.
+
+## Supported Operators
+
+- Local Storage
+- OKD Data Foundation
+- GitOps
+- Cluster Logging
+
+If an operator is not listed here, please open an issue or check out the [CONTRIBUTING.md](CONTRIBUTING.md) document
+to see how you can add it yourself.
+
+## Building
+
+Check out the [BUILDING.md](BUILDING.md) document for instructions on how to build an operator.
 
 ## Description
 
@@ -18,34 +39,34 @@ As an example makefile recipes such as :-
 - make okd-lint
 - make okd-build
 - make okd-test
-- make okd-bundle
+- make okd-deploy
+- make okd-bundle (operator pipeline only)
 
 The pipeline uses 2 tasks (with steps)
 
 - operator
-  - clone-and-patch
-  - get-id (appends timestamp to version)
-  - install (make okd-install)
-  - lint (make okd-lint)
-  - build (make okd-build)
-  - test (make okd-test)
-  - build-operator (buildah-build)
-  - push-operator (buildah-push)
-  - make-bundle (make okd-bundle)
-  - build-bundle (buildah-build)
-  - push-bundle (buildah-push)
+- clone-and-patch
+- install (make okd-install)
+- lint (make okd-lint)
+- build (make okd-build)
+- test (make okd-test)
+- deploy (make okd-deploy)
+- bundle (make okd-bundle)
 
 - operand
-  - clone-and-patch
-  - install
-  - lint
+- clone-and-patch
+- install (make okd-install)
+- lint (make okd-lint)
+- build (make okd-build)
+- test (make okd-test)
+- deploy (make okd-deploy)
 
-The reason for the separation into 2 tasks is that the make/buildah tasks can be re-used
+The reason for the separation into 2 tasks is that the make tasks can be re-used
 to build operands (i.e in the node-observability-operator we have an operand (agent) that is required)
 
 A custom golang image is used with the relevant dependencies to execute the various make recipes
 
-The persistent volume and peristent volume claim mounts the golang pkg directory and .cache directories
+The persistent volume and persistent volume claim mounts the golang pkg directory and .cache directories
 to speed up builds. 
 
 The pipeline admin will be required to copy the $HOME/.cache/go-build, $HOME/.cache/golangci-lint and $GOPATH/pkg directories to the build-cache pv 
@@ -55,129 +76,6 @@ We found that mounting both .cache and pkg directories improved performance dram
 The verification was done on an on-prem kubernetes 5 node cluster (intel i5's with 16G of ram) and Kind (Kubernetes in Docker). 
 
 We are currently verifying 'microshift' and Code Ready Containers for local development
-
-## Installation
-
-During the installation, some of the steps are specific to a regular Kubernetes cluster, while others are specific to Kind clusters. 
-
-### Install Tekton Operator
-
-Install the tekton cli and tekton resources before continuing (see https://tekton.dev/docs/pipelines/install)
-
-### Install Tekton Polling Operator
-
-The Tekton polling operator is used to trigger the pipeline when a new commit is pushed to the origin repository. 
-
-see (https://github.com/bigkevmcd/tekton-polling-operator/blob/main/README.md#installation)
-
-### Clone the repository
-
-```bash
-git clone git@github.com:okd-project/okd-operator-pipeline.git
-
-```
-
-### Install the storage provisioner (All clusters)
-
-This example uses an NFS provisioner for an on-prem kubernetes cluster 
-
-Skip this step (go to [Install the operator tekton pipeline with kustomize](###install-the-operator-tekton-pipeline-with-kustomize)) if you already have storage (storageClass and provisioner) setup, as it is the case on Kind clusters for example, with the `standard` storageClass.
-
-**NB** Before executing the provisioner, change the fields that relate to your specific
-NFS setup i.e server name (ip) and path in the file environments/overlays/nfs-provisioner/patch_nfs_details.yaml
-
-```bash
-# execute for kustomize
-cd okd-operator-pipeline
-kubectl apply -k environments/overlays/nfs-provisioner
-```
-
-### Install the operator tekton pipeline with kustomize
-
-
-Execute the following commands
-
-```bash
-cd okd-operator-pipeline
-# create the okd-team namespace (if not already created)
-kubectl create ns okd-team
-
-# assume you are logged into your kubernetes cluster
-# use `environments/overlays/kind` for a kind cluster
-# use  `environments/overlays/operate-first` on OperateFirst cluster
-kubectl apply -k environments/overlays/cicd
-
-# check that all resources have deployed
-kubectl get all -n okd-team
-kubectl get pvc -n okd-team
-
-# once all pods are in the RUNNING status create a configmap as follows
-# this assumes you have the correct credentials and have logged into the registry to push images to
-kubectl create configmap docker-config --from-file=/$HOME/.docker/config.json -n okd-team
-```
-
-## Usage
-
-### Option 1 - On clusters with existing PVCs
-
-Execute the following to start a pipeline run, this will re-use the claim "pipeline-pvc-dev" for
-future builds, it will re-use the .cache and pkg dirs to speed up builds
-
-```bash
-# example (using the node-observability-operator)
-tkn pipeline start pipeline-dev-all \
---param repo-url=https://github.com/openshift/node-observability-operator \
---param repo-name=node-observability-operator \
---param base-image-registry=quay.io/<your-repo-id> \
---param bundle-version=0.0.1 \
---param channel=preview \
---param default-channel=preview \
---param catalog-image=quay.io/okd/okd-dev-community-operator=0.0.1 \
---workspace name=shared-workspace,claimName=pipeline-pvc-dev \
--n okd-team
-```
-
-### Option 2 - No existing PVCs
-
-```bash
-# example (using the node-observability-operator)
-tkn pipeline start pipeline-dev-all \
---param repo-url=https://github.com/openshift/node-observability-operator \
---param repo-name=node-observability-operator \
---param base-image-registry=quay.io/<your-repo-id> \
---param bundle-version=0.0.1 \
---param channel=preview \
---param default-channel=preview \
---param catalog-image=quay.io/okd/okd-dev-community-operator=0.0.1 \
---workspace name=shared-workspace,volumeClaimTemplateFile=manifests/tekton/pipelineruns/workspace-template.yaml \
--n okd-team
-```
-
-
-## Dockerfile
-
-**NB - you can skip this step**
-
-There is an image that has been pushed to the quay.io registry with the latest version of all dependencies
-
-```
-quay.io/okd/go-bundle-tools:v1.1.0
-```
-
-This image is referrenced in all the tasks. **NB** change these references when you create your own image.
-
-The dockerfile includes the base ubi image with all the relevant tools to compile and build the bundles. 
-The versions of most components have been updated to use the latest (please update and re-create as needed)
-
-To build the image simply execute
-
-```bash
-# change the tag i.e (v1.1.0) for different versioning
-podman build -t quay.io/<id>/go-bundle-tools:v1.1.0 .
-podman push push quay.io/<id>/go-bundle-tools:v1.1.0
-
-# remember to update the tasks in manifests/tekton/tasks/base to reflect the changed image
-```
 
 ## Next Steps
 
