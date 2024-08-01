@@ -9,6 +9,7 @@ new operator, you need to follow the steps described in the [CONTRIBUTING.md](CO
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) or [oc](https://github.com/okd-project/okd/releases) installed - for interacting with the Kubernetes cluster
 - [Tekton Pipelines](https://tekton.dev/docs/pipelines/install/) installed - for building the operator
 - [Tekton CLI](https://tekton.dev/docs/cli/) installed - for running the operator pipelines
+- [Tekton Polling Operator](https://github.com/bigkevmcd/tekton-polling-operator) installed - a simple Git repository poller that detects changes in a Git repository, and triggers the execution of a Tekton PipelineRun. The polling.tekton.dev/v1alpha1 Repository CRD is specifically needed.
 - PVC provisioner installed - for creating the PVCs used by the operator
 - Access to a Docker registry - for pushing the operator and operand images
 
