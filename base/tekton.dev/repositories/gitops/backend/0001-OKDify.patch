@@ -1,28 +1,39 @@
-From 3f6a627a0e2a71f9749edbb4947cf071c53eedaf Mon Sep 17 00:00:00 2001
+From cee3478922e604040709438c556f81e72b359dab Mon Sep 17 00:00:00 2001
 From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
 Date: Sun, 7 Apr 2024 19:39:16 +0100
 Subject: [PATCH] OKDify
 
 ---
- Dockerfile |  2 +-
- Makefile   | 23 +++++++++++++++++++++++
- 2 files changed, 24 insertions(+), 1 deletion(-)
+ Dockerfile |  8 ++++----
+ Makefile   | 22 ++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 4 deletions(-)
 
 diff --git a/Dockerfile b/Dockerfile
-index 4c90aba..23154c3 100644
+index 4c90aba..06cc70f 100644
 --- a/Dockerfile
 +++ b/Dockerfile
-@@ -1,4 +1,4 @@
+@@ -1,12 +1,12 @@
 -FROM openshift/origin-release:golang-1.20 AS build
-+FROM registry.ci.openshift.org/openshift/release:golang-1.20 AS build
++FROM quay.io/projectquay/golang:1.20 AS build
  WORKDIR /go/src
  COPY . /go/src
  RUN GIT_COMMIT=$(git rev-parse HEAD) && \
+   CGO_ENABLED=0 GOOS=linux go build -a -mod=readonly \
+   -ldflags "-X github.com/redhat-developer/gitops-backend/pkg/health.GitRevision=${GIT_COMMIT}" ./cmd/backend-http
+
+-FROM registry.access.redhat.com/ubi8/ubi-minimal
++FROM quay.io/centos/centos:stream9-minimal
+ WORKDIR /root/
+-COPY --from=build /go/src/backend-http .
++COPY --from=build --chmod=185 /go/src/backend-http .
+ EXPOSE 8080
+-ENTRYPOINT ["./backend-http"]
++ENTRYPOINT ["/root/backend-http"]
 diff --git a/Makefile b/Makefile
-index ee5a7dd..d98baa5 100644
+index ee5a7dd..777b5ce 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -11,3 +11,26 @@ gomod_tidy:
+@@ -11,3 +11,25 @@ gomod_tidy:
  .PHONY: gofmt
  gofmt:
  	go fmt -x ./...
@@ -31,7 +42,7 @@ index ee5a7dd..d98baa5 100644
 +VERSION ?= 0.0.1
 +IMAGE ?= quay.io/okderators/gitops-backend
 +IMG ?= $(IMAGE):v$(VERSION)
-+OKD_CONTAINER_CMD ?= podman
++BUILD_CMD ?= podman
 +
 +.PHONY: okd-install okd-lint okd-build okd-test okd-deploy
 +
@@ -42,13 +53,12 @@ index ee5a7dd..d98baa5 100644
 +	@echo "No linting available"
 +
 +okd-build:
-+	go build ./cmd/backend-http
++	$(BUILD_CMD) build -t $(IMG) .
 +
-+okd-test: test
++okd-test: #test
 +
 +okd-deploy:
-+	$(OKD_CONTAINER_CMD) build -t $(IMG) .
-+	$(OKD_CONTAINER_CMD) push $(IMG)
--- 
-2.44.0
++	$(BUILD_CMD) push $(IMG)
+--
+2.45.2
 

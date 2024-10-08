@@ -176,6 +176,9 @@ case $1 in
  OPERATOR_CATALOGSOURCE=$CATALOG_SOURCE OPERATOR_CATALOG_NAMESPACE=$CATALOG_NAMESPACE\
  OSE_KUBE_RBAC_PROXY_IMG=$KUBE_RBAC_PROXY_IMAGE"
     ;;
+  "cert-manager")
+    build_operator https://github.com/openshift/cert-manager-operator "${REF:-cert-manager-1.14}" cert-manager-operator
+    ;;
   *)
     echo "Usage: $0 <odf|cluster-logging|gitops|local-storage>"
     exit 1
