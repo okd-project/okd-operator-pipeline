@@ -118,16 +118,17 @@ case $1 in
       "CONSOLE_IMAGE=$CONSOLE_IMAGE CONSOLE_IMAGE_TAG=$VERSION BACKEND_IMG=$BACKEND_IMG"
     ;;
   "cluster-logging")
-    build_operator https://github.com/openshift/loki "${BRANCH:-release-5.9}" loki
-    build_operand https://github.com/ViaQ/vector "${BRANCH:-release-5.9}" vector
-    build_operand https://github.com/ViaQ/logging-fluentd "${BRANCH:-v1.16.x}" fluentd
-    build_operand https://github.com/openshift/logging-view-plugin "${BRANCH:-release-5.9}" logging-view-plugin
+    build_operator https://github.com/openshift/loki "${LOKI_COMMIT:-release-6.0}" loki
+    build_operand https://github.com/ViaQ/vector "${VECTOR_COMMIT:-release-6.0}" vector
+    build_operand https://github.com/openshift/logging-view-plugin "${BRANCH:-release-6.0}" logging-view-plugin
+    build_operand https://github.com/openshift/eventrouter "${EVENTROUTER_COMMIT:-release-6.0}" eventrouter
     FLUENTD="$BASE_IMAGE_REGISTRY/fluentd:$VERSION"
     VECTOR="$BASE_IMAGE_REGISTRY/vector:$VERSION"
+    EVENTROUTER="$BASE_IMAGE_REGISTRY/eventrouter:$VERSION"
     LOG_FILE_METRIC_EXPORTER="$BASE_IMAGE_REGISTRY/log-file-metric-exporter:$VERSION"
     LOGGING_VIEW_PLUGIN="$BASE_IMAGE_REGISTRY/logging-view-plugin:$VERSION"
-    build_operator https://github.com/openshift/cluster-logging-operator "${BRANCH:-release-5.9}" cluster-logging-operator \
-      "IMAGE_LOGGING_FLUENTD=$FLUENTD IMAGE_LOGGING_VECTOR=$VECTOR IMAGE_LOGFILEMETRICEXPORTER=$LOG_FILE_METRIC_EXPORTER IMAGE_LOGGING_CONSOLE_PLUGIN=$LOGGING_VIEW_PLUGIN"
+    build_operator https://github.com/openshift/cluster-logging-operator "${OPERATOR_COMMIT:-release-6.0}" cluster-logging-operator \
+      "IMAGE_LOGGING_EVENTROUTER=$EVENTROUTER IMAGE_LOGGING_VECTOR=$VECTOR IMAGE_LOGFILEMETRICEXPORTER=$LOG_FILE_METRIC_EXPORTER IMAGE_LOGGING_CONSOLE_PLUGIN=$LOGGING_VIEW_PLUGIN"
     ;;
   "local-storage")
     KUBE_RBAC_PROXY_IMAGE=${KUBE_RBAC_PROXY_IMAGE:-quay.io/okderators/kube-rbac-proxy:4.15}
@@ -135,25 +136,25 @@ case $1 in
       "KUBE_RBAC_PROXY_IMAGE=$KUBE_RBAC_PROXY_IMAGE"
     ;;
   "odf")
-    build_operand https://github.com/red-hat-storage/rook "${ROOK_COMMIT:-release-4.15}" rook-ceph
-    build_operand https://github.com/red-hat-storage/kubernetes-csi-addons "${CSIADDONS_COMMIT:-release-4.15}" csi-addons
-    build_operand https://github.com/red-hat-storage/noobaa-core "${NOOBAA_CORE_COMMIT:-release-4.15}" noobaa-core
-    build_operand https://github.com/red-hat-storage/odf-console "${ODF_CONSOLE_COMMIT:-release-4.15}" odf-console
+    coproc rook { build_operand https://github.com/red-hat-storage/rook "${ROOK_COMMIT:-release-4.15}" rook-ceph; }
+    coproc csi { build_operator https://github.com/red-hat-storage/kubernetes-csi-addons "${CSIADDONS_COMMIT:-release-4.15}" csi-addons; }
+    coproc noobaa { build_operand https://github.com/red-hat-storage/noobaa-core "${NOOBAA_CORE_COMMIT:-release-4.15}" noobaa-core; }
+    coproc odf { build_operand https://github.com/red-hat-storage/odf-console "${ODF_CONSOLE_COMMIT:-release-4.15}" odf-console "BRANCH=release-4.15"; }
 
     NOOBAA_CORE_IMG="$BASE_IMAGE_REGISTRY/noobaa-core:$VERSION"
     ROOK_IMG="$BASE_IMAGE_REGISTRY/rook-ceph:$VERSION"
     ROOK_CSIADDONS_IMAGE="$BASE_IMAGE_REGISTRY/csi-k8s-sidecar:$VERSION"
     NOOBAA_DB_IMAGE=${NOOBAA_DB_IMAGE:-quay.io/sclorg/postgresql-15-c9s:latest}
     NOOBAA_PSQL_12_IMAGE=${NOOBAA_PSQL_12_IMAGE:-quay.io/sclorg/postgresql-12-c8s:latest}
-    CEPH_IMG=${CEPH_IMG:-quay.io/ceph/ceph:v18.2.2}
-    OAUTH_PROXY_IMG=${OAUTH_PROXY_IMG:-quay.io/openshift/origin-oauth-proxy:4.15}
+    CEPH_IMG=${CEPH_IMG:-quay.io/ceph/ceph:v18.2.4}
+    OAUTH_PROXY_IMG=${OAUTH_PROXY_IMG:-quay.io/okderators/oauth-proxy:4.15}
     KUBE_RBAC_PROXY_IMAGE=${KUBE_RBAC_PROXY_IMAGE:-quay.io/okderators/kube-rbac-proxy:4.15}
     ROOK_CSI_PROVISIONER_IMAGE="registry.k8s.io/sig-storage/csi-provisioner:v3.6.4"
     ROOK_CSI_RESIZER_IMAGE="registry.k8s.io/sig-storage/csi-resizer:v1.9.4"
-    ROOK_CSI_SNAPSHOTTER_IMAGE="registry.k8s.io/sig-storage/csi-snapshotter:v6.3.4"
+    ROOK_CSI_SNAPSHOTTER_IMAGE="registry.k8s.io/sig-storage/csi-snapshotter:v8.1.0"
     ROOK_CSI_ATTACHER_IMAGE="registry.k8s.io/sig-storage/csi-attacher:v4.4.4"
-    ROOK_CSI_REGISTRAR_IMAGE="registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.9.4"
-    ROOK_CSI_CEPH_IMAGE="quay.io/cephcsi/cephcsi:v3.10.2"
+    ROOK_CSI_REGISTRAR_IMAGE="registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.10.0"
+    ROOK_CSI_CEPH_IMAGE="quay.io/cephcsi/cephcsi:v3.12.2"
 
     SKIP_RANGE=${SKIP_RANGE:-">=4.2.0<$VERSION"}
     REPLACES=${REPLACES:-"null"}
@@ -175,6 +176,16 @@ case $1 in
  CSIADDONS_BUNDLE_IMG_TAG=$VERSION ODF_CONSOLE_IMG_TAG=$VERSION\
  OPERATOR_CATALOGSOURCE=$CATALOG_SOURCE OPERATOR_CATALOG_NAMESPACE=$CATALOG_NAMESPACE\
  OSE_KUBE_RBAC_PROXY_IMG=$KUBE_RBAC_PROXY_IMAGE"
+    ;;
+  "metallb")
+    build_operand https://github.com/openshift/metallb "${METALLB_REF:-release-4.15}" metallb
+    build_operand https://github.com/openshift/frr "${FRR_REF:-release-4.15}" metallb-frr
+    build_operator https://github.com/openshift/metallb-operator "${OPERATOR_REF:-release-4.15}" metallb-operator
+    ;;
+  "lvm")
+    build_operand https://github.com/openshift/topolvm "${TOPOLVM_REF:-release-4.15}" topolvm
+    build_operator https://github.com/openshift/lvm-operator "${LVM_OPERATOR_REF:-release-4.15}" lvm-operator \
+      "TOPOLVM_CSI_IMAGE=$BASE_IMAGE_REGISTRY/topolvm:$VERSION"
     ;;
   *)
     echo "Usage: $0 <odf|cluster-logging|gitops|local-storage>"
