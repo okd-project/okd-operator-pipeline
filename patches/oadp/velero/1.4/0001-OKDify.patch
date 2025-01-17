@@ -1,0 +1,111 @@
+From 47f997b53b3b01836516d4f952f7d3e56f87d4d4 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Fri, 17 Jan 2025 16:01:38 +0000
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile-velero-restore-helper.okd | 15 ++++++++++++++
+ Dockerfile.okd                       | 29 ++++++++++++++++++++++++++++
+ Makefile                             | 28 ++++++++++++++++++++++++++-
+ 3 files changed, 71 insertions(+), 1 deletion(-)
+ create mode 100644 Dockerfile-velero-restore-helper.okd
+ create mode 100644 Dockerfile.okd
+
+diff --git a/Dockerfile-velero-restore-helper.okd b/Dockerfile-velero-restore-helper.okd
+new file mode 100644
+index 000000000..3bf5ab577
+--- /dev/null
++++ b/Dockerfile-velero-restore-helper.okd
+@@ -0,0 +1,15 @@
++FROM quay.io/projectquay/golang:1.22 AS builder
++
++COPY . /work
++WORKDIR /work
++RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=readonly -o ./bin/velero-restore-helper ./cmd/velero-restore-helper
++
++FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
++
++RUN microdnf -y update && microdnf -y install openssl nmap-ncat && microdnf -y reinstall tzdata && microdnf clean all
++
++COPY --from=builder /work/bin/velero-restore-helper /velero-restore-helper
++
++USER 65534:65534
++
++ENTRYPOINT [ "/velero-restore-helper" ]
+\ No newline at end of file
+diff --git a/Dockerfile.okd b/Dockerfile.okd
+new file mode 100644
+index 000000000..eb7361385
+--- /dev/null
++++ b/Dockerfile.okd
+@@ -0,0 +1,29 @@
++FROM quay.io/projectquay/golang:1.22 AS builder
++
++ARG VERSION
++ARG RESTIC_BRANCH
++
++COPY . /work/velero
++WORKDIR /work/velero
++
++RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=readonly -ldflags '-X github.com/vmware-tanzu/velero/pkg/buildinfo.Version=${VERSION}' -o ./bin/velero ./cmd/velero
++RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=readonly -o ./bin/velero-helper ./cmd/velero-helper
++
++RUN git clone https://github.com/openshift/restic -b $RESTIC_BRANCH /work/restic
++WORKDIR /work/restic
++RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=readonly -o ./bin/restic ./cmd/restic
++
++FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
++RUN microdnf -y update && microdnf -y install less nmap-ncat openssl && microdnf -y reinstall tzdata && microdnf clean all
++
++COPY --from=builder /work/velero/bin/velero velero
++COPY --from=builder /work/velero/bin/velero-helper velero-helper
++COPY --from=builder /work/restic/bin/restic /usr/bin/restic
++
++RUN mkdir -p /home/velero
++RUN chmod -R 777 /home/velero
++
++USER 65534:65534
++ENV HOME=/home/velero
++
++ENTRYPOINT ["/velero"]
+\ No newline at end of file
+diff --git a/Makefile b/Makefile
+index 8950bbc1b..b2543d376 100644
+--- a/Makefile
++++ b/Makefile
+@@ -377,4 +377,30 @@ test-perf: local
+ 	$(MAKE) -e VERSION=$(VERSION) -C test/ run-perf
+ 
+ go-generate:
+-	go generate ./pkg/...
+\ No newline at end of file
++	go generate ./pkg/...
++
++BUILD_CMD ?= podman
++VERSION ?= dev
++BASE_REGISTRY ?= quay.io/okderators
++VELERO_IMAGE ?= $(BASE_REGISTRY)/oadp-velero
++HELPER_IMAGE ?= $(BASE_REGISTRY)/oadp-velero-restore-helper
++IMG ?= $(VELERO_IMAGE):$(VERSION)
++HELPER_IMG ?= $(HELPER_IMAGE):$(VERSION)
++RESTIC_BRANCH=oadp-$(shell cut -d '.' -f 1 <<< "$(VERSION)").$(shell cut -d '.' -f 2 <<< "$(VERSION)")
++
++.PHONY: okd-install okd-lint okd-test okd-build okd-deploy
++
++okd-install:
++	go mod download
++
++okd-lint: lint
++
++okd-test: test
++
++okd-build:
++	$(BUILD_CMD) build -t $(IMG) -f Dockerfile.okd --build-arg RESTIC_BRANCH=$(RESTIC_BRANCH) --build-arg VERSION=$(VERSION) .
++	$(BUILD_CMD) build -t $(HELPER_IMG) -f Dockerfile-velero-restore-helper.okd .
++
++okd-deploy:
++	$(BUILD_CMD) push $(IMG)
++	$(BUILD_CMD) push $(HELPER_IMG)
+-- 
+2.48.1
+

@@ -1,0 +1,77 @@
+From 68ec84b14ad7f5ed616dc66d28b6ff977c286978 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Fri, 17 Jan 2025 14:43:19 +0000
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile.okd | 13 +++++++++++++
+ Makefile       | 27 ++++++++++++++++++++++++---
+ 2 files changed, 37 insertions(+), 3 deletions(-)
+ create mode 100644 Dockerfile.okd
+
+diff --git a/Dockerfile.okd b/Dockerfile.okd
+new file mode 100644
+index 00000000..ab711b7b
+--- /dev/null
++++ b/Dockerfile.okd
+@@ -0,0 +1,13 @@
++FROM quay.io/projectquay/golang:1.22 AS builder
++
++COPY . /work
++WORKDIR /work
++RUN CGO_ENABLED=1 GOOS=linux go build -v -mod=readonly -o /work/bin/kubevirt-velero-plugin .
++
++FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
++
++RUN microdnf -y update && microdnf -y install openssl && microdnf -y reinstall tzdata && microdnf clean all
++RUN mkdir /plugins
++COPY --from=builder /work/bin/kubevirt-velero-plugin /plugins/
++USER nobody:nogroup
++ENTRYPOINT ["/bin/bash", "-c", "cp /plugins/* /target/."]
+\ No newline at end of file
+diff --git a/Makefile b/Makefile
+index 819ecd0f..a99fee2e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -49,9 +49,13 @@ TESTS_BINARY=_output/tests/tests.test
+ TESTS_SRC_FILES=\
+ 	$(shell find tests -name "*.go")
+ 
+-DOCKER_PREFIX?=kubevirt
+-DOCKER_TAG?=latest
+-IMAGE_NAME?=kubevirt-velero-plugin
++BASE_REGISTRY ?= quay.io/okderators
++VERSION ?= dev
++DOCKER_PREFIX?=$(BASE_REGISTRY)
++DOCKER_TAG?=$(VERSION)
++IMAGE_NAME?=oadp-kubevirt-velero-plugin
++
++IMG?=$(DOCKER_PREFIX)/$(IMAGE_NAME):$(DOCKER_TAG)
+ 
+ # Which architecture to build - see $(ALL_ARCH) for options.
+ # if the 'local' rule is being run, detect the ARCH from 'go env'
+@@ -255,3 +259,20 @@ cluster-down:
+ 
+ cluster-sync: local-undeploy-velero local-deploy-velero remove-plugin cluster-push-image add-plugin
+ 	@echo -e "${GREEN}Plugin redeployed${WHITE}"
++
++BUILD_CMD ?= podman
++
++.PHONY: okd-install okd-lint okd-test okd-build okd-deploy
++
++okd-install:
++	go mod download
++
++okd-lint:
++
++okd-test: test
++
++okd-build:
++	$(BUILD_CMD) build -f Dockerfile.okd -t $(IMG) . $(DOCKER_BUILD_ARGS)
++
++okd-deploy:
++	$(BUILD_CMD) push $(IMG)
+\ No newline at end of file
+-- 
+2.48.1
+

@@ -1,0 +1,91 @@
+name: "OADP Operator"
+versions:
+  - "1.4"
+dateBasedVersioning: true
+components:
+  - name: "operator"
+    imageName: "oadp-operator"
+    branchFormat: "oadp-%s"
+    type: "operator"
+    gitUrl: "https://github.com/openshift/oadp-operator.git"
+    dependencies:
+      - "velero"
+      - "kubevirt-plugin"
+      - "openshift-plugin"
+      - "aws-plugin"
+      - "gcp-plugin"
+      - "azure-plugin"
+    persistentVolumeClaim:
+      accessModes:
+          - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 20Gi
+  - name: "kubevirt-plugin"
+    imageName: "oadp-kubevirt-plugin"
+    branchFormat: "release-v%s"
+    versionMapping:
+      "1.4": "0.7"
+    type: "operand"
+    gitUrl: "https://github.com/kubevirt/kubevirt-velero-plugin.git"
+    persistentVolumeClaim:
+      accessModes:
+          - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 20Gi
+  - name: "openshift-plugin"
+    imageName: "oadp-openshift-plugin"
+    branchFormat: "oadp-%s"
+    type: "operand"
+    gitUrl: "https://github.com/openshift/openshift-velero-plugin.git"
+    persistentVolumeClaim:
+      accessModes:
+          - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 20Gi
+  - name: "aws-plugin"
+    imageName: "oadp-aws-plugin"
+    branchFormat: "oadp-%s"
+    type: "operand"
+    gitUrl: "https://github.com/openshift/velero-plugin-for-aws.git"
+    persistentVolumeClaim:
+      accessModes:
+          - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 20Gi
+  - name: "gcp-plugin"
+    imageName: "oadp-gcp-plugin"
+    branchFormat: "oadp-%s"
+    type: "operand"
+    gitUrl: "https://github.com/openshift/velero-plugin-for-gcp.git"
+    persistentVolumeClaim:
+      accessModes:
+          - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 20Gi
+  - name: "azure-plugin"
+    imageName: "oadp-azure-plugin"
+    branchFormat: "oadp-%s"
+    type: "operand"
+    gitUrl: "https://github.com/openshift/velero-plugin-for-microsoft-azure.git"
+    persistentVolumeClaim:
+      accessModes:
+          - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 20Gi
+  - name: "velero"
+    imageName: "oadp-velero"
+    branchFormat: "oadp-%s"
+    type: "operand"
+    gitUrl: "https://github.com/openshift/velero.git"
+    persistentVolumeClaim:
+      accessModes:
+          - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 20Gi

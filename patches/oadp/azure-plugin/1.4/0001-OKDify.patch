@@ -1,0 +1,83 @@
+From 19a95c3b1dbb9d443d3016086dbea4b6706193cd Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Fri, 17 Jan 2025 15:11:01 +0000
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile.okd | 14 ++++++++++++++
+ Makefile       | 25 +++++++++++++++++++++----
+ 2 files changed, 35 insertions(+), 4 deletions(-)
+ create mode 100644 Dockerfile.okd
+
+diff --git a/Dockerfile.okd b/Dockerfile.okd
+new file mode 100644
+index 0000000..5f32742
+--- /dev/null
++++ b/Dockerfile.okd
+@@ -0,0 +1,14 @@
++FROM quay.io/projectquay/golang:1.22 AS builder
++
++COPY . /work
++WORKDIR /work
++RUN CGO_ENABLED=0 GOOS=linux go build -v -o /work/bin/velero-plugin-for-microsoft-azure -mod=mod ./velero-plugin-for-microsoft-azure
++
++FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
++
++RUN microdnf -y update && microdnf -y install openssl && microdnf -y reinstall tzdata && microdnf clean all
++RUN mkdir /plugins
++
++COPY --from=builder /work/bin/velero-plugin-for-microsoft-azure /plugins/
++USER nobody:nogroup
++ENTRYPOINT ["/bin/bash", "-c", "cp /plugins/* /target/."]
+\ No newline at end of file
+diff --git a/Makefile b/Makefile
+index 52bffba..0392215 100644
+--- a/Makefile
++++ b/Makefile
+@@ -13,17 +13,17 @@
+ # limitations under the License.
+ 
+ # The binary to build (just the basename).
+-BIN ?= velero-plugin-for-microsoft-azure
++BIN ?= odap-velero-plugin-for-microsoft-azure
+ 
+ # This repo's root import path (under GOPATH).
+-PKG := github.com/vmware-tanzu/velero-plugin-for-microsoft-azure
++PKG := github.com/openshift/velero-plugin-for-microsoft-azure
+ 
+ # Where to push the docker image.
+-REGISTRY ?= velero
++BASE_REGISTRY ?= quay.io/okderators
+ GCR_REGISTRY ?= gcr.io/velero-gcp
+ 
+ # Image name
+-IMAGE ?= $(REGISTRY)/$(BIN)
++IMAGE ?= $(BASE_REGISTRY)/$(BIN)
+ GCR_IMAGE ?= $(GCR_REGISTRY)/$(BIN)
+ 
+ # We allow the Dockerfile to be configurable to enable the use of custom Dockerfiles
+@@ -144,3 +144,20 @@ changelog:
+ clean:
+ 	@echo "cleaning"
+ 	rm -rf _output
++
++BUILD_CMD ?= podman
++
++PHONY: okd-install okd-lint okd-test okd-build okd-deploy
++
++okd-install:
++	go mod download
++
++okd-lint:
++
++okd-test: test
++
++okd-build:
++	$(BUILD_CMD) build -f Dockerfile.okd -t $(IMAGE_TAGS) .
++
++okd-deploy:
++	$(BUILD_CMD) push $(IMAGE_TAGS)
+\ No newline at end of file
+-- 
+2.48.1
+

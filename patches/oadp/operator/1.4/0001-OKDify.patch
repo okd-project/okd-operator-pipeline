@@ -1,0 +1,143 @@
+From c2cde34bed033bf5c322d49a4459d7467cab20f2 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Fri, 17 Jan 2025 16:00:57 +0000
+Subject: [PATCH] OKDify
+
+---
+ Makefile                                      | 42 ++++++++++++++++---
+ .../oadp-operator.clusterserviceversion.yaml  | 14 +++----
+ 2 files changed, 42 insertions(+), 14 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 14ac9ad..6187bf2 100644
+--- a/Makefile
++++ b/Makefile
+@@ -97,21 +97,26 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
+ endif
+ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
+ 
++BUILD_CMD ?= podman
++
++BASE_REGISTRY ?= quay.io/okderators
+ # IMAGE_TAG_BASE defines the docker.io namespace and part of the image name for remote images.
+ # This variable is used to construct full image tags for bundle and catalog images.
+ #
+ # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
+ # openshift.io/oadp-operator-bundle:$VERSION and openshift.io/oadp-operator-catalog:$VERSION.
+-IMAGE_TAG_BASE ?= openshift.io/oadp-operator
++IMAGE_TAG_BASE ?= $(BASE_REGISTRY)/oadp-operator
+ 
+ # BUNDLE_IMG defines the image:tag used for the bundle.
+ # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
+-BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
++BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:$(VERSION)
+ 
+ # Image URL to use all building/pushing image targets
+-IMG ?= quay.io/konveyor/oadp-operator:oadp-1.4
++IMG ?= $(IMAGE_TAG_BASE):$(VERSION)
+ CRD_OPTIONS ?= "crd"
+ 
++DOCKERFILE ?= Dockerfile
++
+ # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ ifeq (,$(shell go env GOBIN))
+ GOBIN=$(shell go env GOPATH)/bin
+@@ -221,10 +226,10 @@ run: manifests generate fmt vet ## Run a controller from your host.
+ # related enhancements that may remove the need to manually install qemu-user-static https://bugzilla.redhat.com/show_bug.cgi?id=2061584
+ DOCKER_BUILD_ARGS ?= --platform=linux/amd64
+ docker-build: ## Build docker image with the manager.
+-	docker build -t $(IMG) . $(DOCKER_BUILD_ARGS)
++	$(BUILD_CMD) build -f $(DOCKERFILE) -t $(IMG) . $(DOCKER_BUILD_ARGS)
+ 
+ docker-push: ## Push docker image with the manager.
+-	docker push ${IMG}
++	$(BUILD_CMD) push ${IMG}
+ 
+ ##@ Deployment
+ 
+@@ -322,7 +327,15 @@ operator-sdk:
+ bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metadata, then validate generated files.
+ 	GOFLAGS="-mod=mod" $(OPERATOR_SDK) generate kustomize manifests -q
+ 	cd config/manager && GOFLAGS="-mod=mod" $(KUSTOMIZE) edit set image controller=$(IMG)
+-	GOFLAGS="-mod=mod" $(KUSTOMIZE) build config/manifests | GOFLAGS="-mod=mod" $(OPERATOR_SDK) generate bundle -q --extra-service-accounts "velero" --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
++	GOFLAGS="-mod=mod" $(KUSTOMIZE) build config/manifests | \
++ 		sed -e "s|quay.io/konveyor/velero:.*|$(VELERO_IMG)|g" \
++ 		    -e "s|quay.io/konveyor/velero-restore-helper:.*|$(RESTORE_IMG)|g" \
++ 		    -e "s|quay.io/konveyor/openshift-velero-plugin:.*|$(OPENSHIFT_PLUGIN_IMG)|g" \
++ 		    -e "s|quay.io/konveyor/velero-plugin-for-aws:.*|$(AWS_PLUGIN_IMG)|g" \
++ 		    -e "s|quay.io/konveyor/velero-plugin-for-microsoft-azure:.*|$(AZURE_PLUGIN_IMG)|g" \
++ 		    -e "s|quay.io/konveyor/kubevirt-velero-plugin:.*|$(KUBEVIRT_PLUGIN_IMG)|g" \
++ 		    -e "s|quay.io/konveyor/velero-plugin-for-gcp:.*|$(GCP_PLUGIN_IMG)|g" | \
++		GOFLAGS="-mod=mod" $(OPERATOR_SDK) generate bundle -q --extra-service-accounts "velero" --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+ 	@make nullables
+ 	# Copy updated bundle.Dockerfile to CI's Dockerfile.bundle
+ 	# TODO: update CI to use generated one
+@@ -545,3 +558,20 @@ test-e2e-cleanup: login-required
+ 	$(OC_CLI) delete restore -n $(OADP_TEST_NAMESPACE) --all --wait=false
+ 	for restore_name in $(shell $(OC_CLI) get restore -n $(OADP_TEST_NAMESPACE) -o name);do $(OC_CLI) patch "$$restore_name" -n $(OADP_TEST_NAMESPACE) -p '{"metadata":{"finalizers":null}}' --type=merge;done
+ 	rm -rf $(SETTINGS_TMP)
++
++.PHONY: okd-install okd-lint okd-test okd-build okd-deploy okd-bundle
++
++okd-install: controller-gen
++	go mod download
++
++okd-lint:
++
++okd-test: test
++
++okd-build: docker-build
++
++okd-deploy: docker-push
++
++okd-bundle: bundle
++	$(MAKE) docker-build IMG=$(BUNDLE_IMG) DOCKERFILE=bundle.Dockerfile
++	$(MAKE) docker-push IMG=$(BUNDLE_IMG)
+diff --git a/config/manifests/bases/oadp-operator.clusterserviceversion.yaml b/config/manifests/bases/oadp-operator.clusterserviceversion.yaml
+index acab821..115c615 100644
+--- a/config/manifests/bases/oadp-operator.clusterserviceversion.yaml
++++ b/config/manifests/bases/oadp-operator.clusterserviceversion.yaml
+@@ -8,8 +8,8 @@ metadata:
+     certified: "false"
+     containerImage: quay.io/konveyor/oadp-operator:oadp-1.4
+     createdAt: "2020-09-08T12:21:00Z"
+-    description: OADP (OpenShift API for Data Protection) operator sets up and installs
+-      Data Protection Applications on the OpenShift platform.
++    description: OADP (OKD API for Data Protection) operator sets up and installs
++      Data Protection Applications on OKD.
+     features.operators.openshift.io/cnf: "false"
+     features.operators.openshift.io/cni: "false"
+     features.operators.openshift.io/csi: "false"
+@@ -23,10 +23,8 @@ metadata:
+     olm.skipRange: '>=0.0.0 <1.4.0'
+     operatorframework.io/suggested-namespace: openshift-adp
+     operators.openshift.io/infrastructure-features: '["Disconnected"]'
+-    operators.openshift.io/valid-subscription: '["OpenShift Container Platform", "OpenShift
+-      Platform Plus"]'
+     repository: https://github.com/openshift/oadp-operator
+-    support: Red Hat
++    support: OKD Community
+   labels:
+     operatorframework.io/arch.amd64: supported
+     operatorframework.io/arch.arm64: supported
+@@ -402,8 +400,8 @@ spec:
+         path: name
+       version: v1alpha1
+   description: |
+-    **OpenShift API for Data Protection (OADP)** operator sets up and installs
+-    Velero on the OpenShift platform, allowing users to backup and restore
++    **OKD API for Data Protection (OADP)** operator sets up and installs
++    Velero on OKD, allowing users to backup and restore
+     applications.
+ 
+     Backup and restore Kubernetes resources and internal images, at the
+@@ -483,5 +481,5 @@ spec:
+     name: OADP Operator maintainers
+   maturity: stable
+   provider:
+-    name: Red Hat
++    name: OKD Community
+   version: 1.4.0
+-- 
+2.48.1
+

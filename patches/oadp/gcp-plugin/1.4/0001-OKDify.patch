@@ -1,0 +1,82 @@
+From f7d988e6650025fe8859a89a1f0be28d048da797 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Fri, 17 Jan 2025 15:04:53 +0000
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile.okd | 12 ++++++++++++
+ Makefile       | 26 ++++++++++++++++++++++----
+ 2 files changed, 34 insertions(+), 4 deletions(-)
+ create mode 100644 Dockerfile.okd
+
+diff --git a/Dockerfile.okd b/Dockerfile.okd
+new file mode 100644
+index 0000000..7573cd2
+--- /dev/null
++++ b/Dockerfile.okd
+@@ -0,0 +1,12 @@
++FROM quay.io/projectquay/golang:1.21 AS builder
++
++COPY . /work
++WORKDIR /work
++RUN CGO_ENABLED=0 GOOS=linux go build -v -o /work/bin/velero-plugin-for-gcp -mod=mod ./velero-plugin-for-gcp
++
++FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
++
++RUN mkdir /plugins
++COPY --from=builder /work/bin/velero-plugin-for-gcp /plugins/
++USER 65534:65534
++ENTRYPOINT ["/bin/bash", "-c", "cp /plugins/* /target/."]
+\ No newline at end of file
+diff --git a/Makefile b/Makefile
+index 9770499..ca75661 100644
+--- a/Makefile
++++ b/Makefile
+@@ -13,17 +13,17 @@
+ # limitations under the License.
+ 
+ # The binary to build (just the basename).
+-BIN ?= velero-plugin-for-gcp
++BIN ?= oadp-velero-plugin-for-gcp
+ 
+ # This repo's root import path (under GOPATH).
+-PKG := github.com/vmware-tanzu/velero-plugin-for-gcp
++PKG := github.com/openshift/velero-plugin-for-gcp
+ 
+ # Where to push the docker image.
+-REGISTRY ?= velero
++BASE_REGISTRY ?= quay.io/okderators
+ GCR_REGISTRY ?= gcr.io/velero-gcp
+ 
+ # Image name
+-IMAGE ?= $(REGISTRY)/$(BIN)
++IMAGE ?= $(BASE_REGISTRY)/$(BIN)
+ GCR_IMAGE ?= $(GCR_REGISTRY)/$(BIN)
+ 
+ # We allow the Dockerfile to be configurable to enable the use of custom Dockerfiles
+@@ -144,3 +144,21 @@ changelog:
+ clean:
+ 	@echo "cleaning"
+ 	rm -rf _output
++
++
++BUILD_CMD ?= podman
++
++PHONY: okd-install okd-lint okd-test okd-build okd-deploy
++
++okd-install:
++	go mod download
++
++okd-lint:
++
++okd-test: test
++
++okd-build:
++	$(BUILD_CMD) build -f Dockerfile.okd -t $(IMAGE_TAGS) .
++
++okd-deploy:
++	$(BUILD_CMD) push $(IMAGE_TAGS)
+\ No newline at end of file
+-- 
+2.48.1
+

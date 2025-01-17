@@ -1,0 +1,76 @@
+From 196373270a989e54e3fc9ed759f0416764947771 Mon Sep 17 00:00:00 2001
+From: SupremeMortal <6178101+SupremeMortal@users.noreply.github.com>
+Date: Fri, 17 Jan 2025 15:16:23 +0000
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile.okd | 16 ++++++++++++++++
+ Makefile       | 23 ++++++++++++++++++++++-
+ 2 files changed, 38 insertions(+), 1 deletion(-)
+ create mode 100644 Dockerfile.okd
+
+diff --git a/Dockerfile.okd b/Dockerfile.okd
+new file mode 100644
+index 0000000..6f03bf6
+--- /dev/null
++++ b/Dockerfile.okd
+@@ -0,0 +1,16 @@
++FROM quay.io/projectquay/golang:1.22 AS builder
++
++COPY . /work
++WORKDIR /work
++ENV BUILDTAGS containers_image_ostree_stub exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp exclude_graphdriver_overlay include_gcs include_oss
++ENV BIN velero-plugins
++RUN go build -installsuffix "static" -tags "$BUILDTAGS" -mod=mod -o _output/$BIN ./$BIN
++
++FROM registry.access.redhat.com/ubi9/ubi-minimal
++
++RUN microdnf -y update && microdnf -y install openssl && microdnf -y reinstall tzdata && microdnf clean all
++RUN mkdir /plugins
++COPY --from=builder /work/_output/$BIN /plugins/
++
++USER nobody:nogroup
++ENTRYPOINT ["/bin/bash", "-c", "cp /plugins/* /target/."]
+\ No newline at end of file
+diff --git a/Makefile b/Makefile
+index cbd62a9..ccab3ca 100644
+--- a/Makefile
++++ b/Makefile
+@@ -18,7 +18,11 @@ REPO ?= github.com/konveyor/openshift-velero-plugin
+ 
+ BUILD_IMAGE ?= openshift/origin-release:golang-1.14
+ 
+-IMAGE ?= docker.io/konveyor/openshift-velero-plugin
++BASE_REGISTRY ?= quay.io/okderators
++VERSION ?= dev
++
++IMAGE ?= $(BASE_REGISTRY)/openshift-velero-plugin
++IMG ?= $(IMAGE):$(VERSION)
+ 
+ ARCH ?= amd64
+ BUILDTAGS ?= "containers_image_ostree_stub exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp exclude_graphdriver_overlay include_gcs include_oss"
+@@ -77,3 +81,20 @@ $(GOBIN)/setup-envtest:
+ 	@echo Installing envtest tools
+ 	GOFLAGS= go install sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20240320141353-395cfc7486e6
+ 	@echo Installed envtest tools
++
++BUILD_CMD ?= podman
++
++.PHONY: okd-install okd-lint okd-test okd-build okd-deploy
++
++okd-install:
++	go mod download
++
++okd-lint:
++
++okd-test: test
++
++okd-build:
++	$(BUILD_CMD) build -f Dockerfile.okd -t $(IMG) . $(DOCKER_BUILD_ARGS)
++
++okd-deploy:
++	$(BUILD_CMD) push $(IMG)
+\ No newline at end of file
+-- 
+2.48.1
+
