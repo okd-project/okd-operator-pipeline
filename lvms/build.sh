@@ -10,12 +10,7 @@ REGISTRY_NAMESPACE="lvms"
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_MUST_GATHER="${REGISTRY}/must-gather:${OCP_DATE}"
 
-pushd operator
-# Reset any previous patches
-git reset --hard origin/release-${OCP_SHORT}
-# Apply patch to git repo
-git am -3 ../patches/operator.patch
-popd
+apply_patch operator release-${OCP_SHORT}
 
 # Build the lvms-operator image
 podman build -t "${IMG_OPERATOR}" -f operator.Containerfile .

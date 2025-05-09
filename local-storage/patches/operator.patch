@@ -1,0 +1,25 @@
+From ee2b0435d554bd8c15cdaace6d5bb26962a56498 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Fri, 9 May 2025 12:31:03 +0100
+Subject: [PATCH] OKDify
+
+---
+ hack/create-bundle.sh | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/hack/create-bundle.sh b/hack/create-bundle.sh
+index b68b84ec..4b7833a8 100755
+--- a/hack/create-bundle.sh
++++ b/hack/create-bundle.sh
+@@ -49,6 +49,8 @@ rm $MANIFEST.bak
+ $TOOL_BIN build -t $BUNDLE_IMAGE -f bundle.Dockerfile .
+ $TOOL_BIN push $BUNDLE_IMAGE
+ 
++exit 0 # OKD. We don't want to build a catalog index.
++
+ # Build the index image and push it
+ $OPM_BIN index add --bundles $BUNDLE_IMAGE --tag $INDEX_IMAGE --container-tool $TOOL_NAME
+ $TOOL_BIN push $INDEX_IMAGE
+-- 
+2.49.0
+

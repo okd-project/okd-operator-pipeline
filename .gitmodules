@@ -2,3 +2,7 @@
 	path = lvms/operator
 	url = https://github.com/openshift/lvm-operator.git
 	branch = release-4.18
+[submodule "local-storage/operator"]
+	path = local-storage/operator
+	url = https://github.com/openshift/local-storage-operator.git
+	branch = release-4.18
