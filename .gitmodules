@@ -1,0 +1,4 @@
+[submodule "lvms/operator"]
+	path = lvms/operator
+	url = https://github.com/openshift/lvm-operator.git
+	branch = release-4.18

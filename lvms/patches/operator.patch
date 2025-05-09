@@ -1,0 +1,45 @@
+From b97a55f2b34748843f4e692a58e12983fe7825e6 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Fri, 9 May 2025 02:36:25 +0100
+Subject: [PATCH] OKDify
+
+---
+ config/manifests/bases/clusterserviceversion.yaml.in | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/config/manifests/bases/clusterserviceversion.yaml.in b/config/manifests/bases/clusterserviceversion.yaml.in
+index e0d16544..6133d5a5 100644
+--- a/config/manifests/bases/clusterserviceversion.yaml.in
++++ b/config/manifests/bases/clusterserviceversion.yaml.in
+@@ -53,7 +53,6 @@ metadata:
+     features.operators.openshift.io/token-auth-aws: "false"
+     features.operators.openshift.io/token-auth-azure: "false"
+     features.operators.openshift.io/token-auth-gcp: "false"
+-    operators.openshift.io/valid-subscription: '["OpenShift Kubernetes Engine", "OpenShift Container Platform", "OpenShift Platform Plus"]'
+     operators.operatorframework.io/internal-objects: '["logicalvolumes.topolvm.io", "lvmvolumegroups.lvm.topolvm.io", "lvmvolumegroupnodestatuses.lvm.topolvm.io"]'
+   labels:
+     operatorframework.io/arch.amd64: supported
+@@ -72,10 +71,10 @@ spec:
+       name: lvmclusters.lvm.topolvm.io
+       version: v1alpha1
+   description: Logical volume manager storage provides dynamically provisioned local storage.
+-  displayName: LVM Storage
++  displayName: LVM Storage (TopoLVM)
+   icon:
+-  - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTQ1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2UwMDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlJlZEhhdC1Mb2dvLUhhdC1Db2xvcjwvdGl0bGU+PHBhdGggZD0iTTE1Ny43Nyw2Mi42MWExNCwxNCwwLDAsMSwuMzEsMy40MmMwLDE0Ljg4LTE4LjEsMTcuNDYtMzAuNjEsMTcuNDZDNzguODMsODMuNDksNDIuNTMsNTMuMjYsNDIuNTMsNDRhNi40Myw2LjQzLDAsMCwxLC4yMi0xLjk0bC0zLjY2LDkuMDZhMTguNDUsMTguNDUsMCwwLDAtMS41MSw3LjMzYzAsMTguMTEsNDEsNDUuNDgsODcuNzQsNDUuNDgsMjAuNjksMCwzNi40My03Ljc2LDM2LjQzLTIxLjc3LDAtMS4wOCwwLTEuOTQtMS43My0xMC4xM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMjcuNDcsODMuNDljMTIuNTEsMCwzMC42MS0yLjU4LDMwLjYxLTE3LjQ2YTE0LDE0LDAsMCwwLS4zMS0zLjQybC03LjQ1LTMyLjM2Yy0xLjcyLTcuMTItMy4yMy0xMC4zNS0xNS43My0xNi42QzEyNC44OSw4LjY5LDEwMy43Ni41LDk3LjUxLjUsOTEuNjkuNSw5MCw4LDgzLjA2LDhjLTYuNjgsMC0xMS42NC01LjYtMTcuODktNS42LTYsMC05LjkxLDQuMDktMTIuOTMsMTIuNSwwLDAtOC40MSwyMy43Mi05LjQ5LDI3LjE2QTYuNDMsNi40MywwLDAsMCw0Mi41Myw0NGMwLDkuMjIsMzYuMywzOS40NSw4NC45NCwzOS40NU0xNjAsNzIuMDdjMS43Myw4LjE5LDEuNzMsOS4wNSwxLjczLDEwLjEzLDAsMTQtMTUuNzQsMjEuNzctMzYuNDMsMjEuNzdDNzguNTQsMTA0LDM3LjU4LDc2LjYsMzcuNTgsNTguNDlhMTguNDUsMTguNDUsMCwwLDEsMS41MS03LjMzQzIyLjI3LDUyLC41LDU1LC41LDc0LjIyYzAsMzEuNDgsNzQuNTksNzAuMjgsMTMzLjY1LDcwLjI4LDQ1LjI4LDAsNTYuNy0yMC40OCw1Ni43LTM2LjY1LDAtMTIuNzItMTEtMjcuMTYtMzAuODMtMzUuNzgiLz48L3N2Zz4=
+-    mediatype: image/svg+xml
++  - base64data: iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAACXBIWXMAAA7DAAAOwwHHb6hkAAACTFBMVEX////4+PgREREQEBAMDAzi4uISEhIAAACCgoK9vb2wsLB6enqpqanz8/Pr6+uysrI9PT0eHh6Hh4eVlZUcHBwnJydVVVXb29uYmJjMzMwtLS2QkJDXPTz0RUSGhoZycnLCwsIwMDDWJiTyKyleXl62trYUFBQBAQFsbGycnJwDAwOurq40NDR3d3dISEiLi4uamppTU1PR0dHt7e1OTk4aGhq8vLyAgICjo6N2dnZzc3NJSUlbW1tQUFD7+/vp6elERER9fX2BgYH94+L8y8r8zc3+6+v5pqX1T031X176u7r/8/P2aWf3hYTj4+N4eHg1NTUrKytcXFy7u7v2ZmX4iYgODg75n570TUv3fn33eHfzPTv7xsX09PQbGxtnZ2fX19eTk5MHBwetra30REL4ion/+fn2a2r2b26Xl5dXV1ehoaFDQ0PYPjz0RkTyLizzQD/0VVT+7u7zMS/zMC5iYmIPDw/4jYz2Y2H95eVkZGSrq6sNDQ0ICAj4i4r1YWD95uZRUVFHR0fxKyn0UlD96OjzMzH5+fkiIiJdXV3Kysrd3d2JiYmzs7PzR0X3goH+7+/1ZGP2cnHFxcUZGRmKior5o6P0RUP3dXT3b27yNTPs7OyDg4NCQkI4ODhoaGj2bGr5kI//+vr2cG/6r670WFb1aGf8xMOsrKz+7Oz81NP919f+9PQTExPq6uru7u6FhYU6OjppaWnHx8fGxsb6+vojIyPIyMibm5uZmZnZVVP1YF6WlpZYWFiioqLY2NiUlJQqKiq6uroKCgoOn7s3AAAC3klEQVR4nO2a91cTQRCAFxFGUFFiQbFisEIIIiEWVETsHXuJJfaKvaLYOzawImIXe+9d/zF3L/GFl4DZ2zfHQpzvvbyZX3bvy91ubuZyjBEEQRAEQRAEQaAQhTZTk2gVmsagCcSCEiSAKtAszhzx2ALNTQ5poUmgZYJWgVatARJt+gTaALRtB9Bel0ASQAfGOiZDJ79A5y61YZ1AV+gmQndI8Qv0sNeChQKp0NOIvXprEugDfUWI6hfL6roE1gqkQboIDkhldS1CawVYBiQ7M/sDZOkSGJAt7gAuYyVoEWAsx+0Y6CtDNAkEiDyBQYPNYcMWwClISEBVYEiuCkOz0AQUGaZbIJTGegaGp2SrkIe3CKN17wLt27AhCIzIN4dTSmBkwajRkgJW3A3HjBVV6rjxmgQmTPxbKE9CE5g8Zeq0wumSAjMCpfpMJIG4Wcbay5cSmC2OPGfuvPkiLkAR8CyERYsTlnhhqYzAMp4v53HFSp6sQhFYDWtEWAvr/ALrNwTDj1XkyzbydJMxbPMWu30risA2SDPidi/7R2tWgx2+cTt5ugtDYDfsMWLxXkmBfb5xJTzdjyGQCQd84aCEwCH+OWwMO1Jktx8NM7WcwLHjcOLkqdMApUxiEZ7h+Vkez53nyQUUAVZWbmzDi0xG4JI4D5evXL0mYgGOAKu4XnmjqoxJCbCbgetxK9zElvwU374TtBvqW4Cxu/fE4e8/CD8bF7DFm6Na6nb88NHjJzJfpyEUJP+5QHmiCk/xBBTx6BYIpZ4F0FqzZ4rtObVmkSVg9jGdG1tA+4PKxiHw/EXey1ev9Qm8cRlrz6lL4O07KHyfZJOsii0Q+ODrCz5Chl/g0+dgrBWQ64wsFJDrDS0U+AJfRfgGlZoEPC6o+l7xwwvVTNOf1znFxjZ0M10CLMaR/jP3F9MnUIPIE3CafImlFFsApyAhAVXUXmb7jSegSGhrRhAEQRAEQRAEIcsfHMYvMIKAKwMAAAAASUVORK5CYII=
++    mediatype: image/png
+   install:
+     spec:
+       deployments: null
+@@ -101,5 +100,5 @@ spec:
+     name: Red Hat Support
+   maturity: alpha
+   provider:
+-    name: Red Hat
++    name: OKD Community
+   version: 0.0.0
+-- 
+2.49.0
+
