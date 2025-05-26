@@ -1,0 +1,81 @@
+From 82e41d2a044daaed946bd6bc53e8178181b1ebb7 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Tue, 13 May 2025 15:13:08 +0100
+Subject: [PATCH] OKDify
+
+---
+ .../loki-operator.clusterserviceversion.yaml  | 24 +++++++++----------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
+
+diff --git a/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml b/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
+index 0660cf1f2..e200e38c2 100644
+--- a/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
++++ b/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
+@@ -4,18 +4,18 @@ metadata:
+   annotations:
+     alm-examples: '[]'
+     capabilities: Full Lifecycle
+-    categories: OpenShift Optional, Logging & Tracing
++    categories: OKD Optional, Logging & Tracing
+     certified: "false"
+     containerImage: quay.io/openshift-logging/loki-operator:0.1.0
+     description: |
+-      The Loki Operator for OCP provides a means for configuring and managing a Loki stack for cluster logging.
++      The Loki Operator for OKD provides a means for configuring and managing a Loki stack for cluster logging.
+       ## Prerequisites and Requirements
+       ### Loki Operator Namespace
+       The Loki Operator must be deployed to the global operator group namespace `openshift-operators-redhat`.
+       ### Memory Considerations
+       Loki is a memory intensive application.  The initial
+-      set of OCP nodes may not be large enough to support the Loki stack.  Additional OCP nodes must be added
+-      to the OCP cluster if you desire to run with the recommended (or better) memory.
++      set of OKD nodes may not be large enough to support the Loki stack.  Additional OKD nodes must be added
++      to the OKD cluster if you desire to run with the recommended (or better) memory.
+     features.operators.openshift.io/disconnected: "true"
+     features.operators.openshift.io/fips-compliant: "true"
+     features.operators.openshift.io/proxy-aware: "true"
+@@ -26,9 +26,7 @@ metadata:
+     olm.skipRange: '>=6.0.0-0 <6.2.0'
+     operatorframework.io/cluster-monitoring: "true"
+     operatorframework.io/suggested-namespace: openshift-operators-redhat
+-    operators.openshift.io/valid-subscription: '["OpenShift Container Platform", "OpenShift
+-      Platform Plus"]'
+-    support: AOS Cluster Logging
++    support: OKD Community
+   labels:
+     operatorframework.io/arch.amd64: supported
+     operatorframework.io/arch.arm64: supported
+@@ -2442,18 +2440,18 @@ spec:
+         - urn:alm:descriptor:io.kubernetes.conditions
+       version: v1beta1
+   description: |
+-    The Loki Operator for OCP provides a means for configuring and managing a Loki stack for cluster logging.
++    The Loki Operator for OKD provides a means for configuring and managing a Loki stack for cluster logging.
+     ## Prerequisites and Requirements
+     ### Loki Operator Namespace
+     The Loki Operator must be deployed to the global operator group namespace `openshift-operators-redhat`.
+     ### Memory Considerations
+     Loki is a memory intensive application.  The initial
+-    set of OCP nodes may not be large enough to support the Loki cluster.  Additional OCP nodes must be added
+-    to the OCP cluster if you desire to run with the recommended (or better) memory.
++    set of OKD nodes may not be large enough to support the Loki cluster.  Additional OKD nodes must be added
++    to the OKD cluster if you desire to run with the recommended (or better) memory.
+   displayName: Loki Operator
+   icon:
+-  - base64data: PHN2ZyBpZD0iYWZiNDE1NDktYzU3MC00OWI3LTg1Y2QtNjU3NjAwZWRmMmUxIiBkYXRhLW5hbWU9IkxheWVyIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDcyMS4xNSA3MjEuMTUiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuYTQ0OGZkZWEtNGE0Yy00Njc4LTk3NmEtYzM3ODUzMDhhZTA2IHsKICAgICAgICBmaWxsOiAjZGIzOTI3OwogICAgICB9CgogICAgICAuZTEzMzA4YjgtNzQ4NS00Y2IwLTk3NjUtOGE1N2I5M2Y5MWE2IHsKICAgICAgICBmaWxsOiAjY2IzNzI4OwogICAgICB9CgogICAgICAuZTc3Mjg2ZjEtMjJkYS00NGQxLThlZmItMWQxNGIwY2NhZTYyIHsKICAgICAgICBmaWxsOiAjZmZmOwogICAgICB9CgogICAgICAuYTA0MjBjYWMtZWJlNi00YzE4LWI5ODEtYWJiYTBiYTliMzY1IHsKICAgICAgICBmaWxsOiAjZTVlNWU0OwogICAgICB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8Y2lyY2xlIGNsYXNzPSJhNDQ4ZmRlYS00YTRjLTQ2NzgtOTc2YS1jMzc4NTMwOGFlMDYiIGN4PSIzNjAuNTgiIGN5PSIzNjAuNTgiIHI9IjM1OC4yOCIvPgogIDxwYXRoIGNsYXNzPSJlMTMzMDhiOC03NDg1LTRjYjAtOTc2NS04YTU3YjkzZjkxYTYiIGQ9Ik02MTMuNTQsMTA3LjMsMTA2Ljg4LDYxNGMxNDAsMTM4LjUxLDM2NS44MiwxMzguMDYsNTA1LjI2LTEuMzlTNzUyLDI0Ny4zMyw2MTMuNTQsMTA3LjNaIi8+CiAgPGc+CiAgICA8Y2lyY2xlIGNsYXNzPSJlNzcyODZmMS0yMmRhLTQ0ZDEtOGVmYi0xZDE0YjBjY2FlNjIiIGN4PSIyMzQuNyIgY3k9IjM1Ny4zIiByPSI0Ny43MiIvPgogICAgPGNpcmNsZSBjbGFzcz0iZTc3Mjg2ZjEtMjJkYS00NGQxLThlZmItMWQxNGIwY2NhZTYyIiBjeD0iMjM0LjciIGN5PSIxODIuOTQiIHI9IjQ3LjcyIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJlNzcyODZmMS0yMmRhLTQ0ZDEtOGVmYi0xZDE0YjBjY2FlNjIiIGN4PSIyMzQuNyIgY3k9IjUzOC4yMSIgcj0iNDcuNzIiLz4KICA8L2c+CiAgPHBvbHlnb24gY2xhc3M9ImU3NzI4NmYxLTIyZGEtNDRkMS04ZWZiLTFkMTRiMGNjYWU2MiIgcG9pbnRzPSI0MzUuMTkgMzQ3LjMgMzkwLjU0IDM0Ny4zIDM5MC41NCAxNzIuOTQgMzE2LjE2IDE3Mi45NCAzMTYuMTYgMTkyLjk0IDM3MC41NCAxOTIuOTQgMzcwLjU0IDM0Ny4zIDMxNi4xNiAzNDcuMyAzMTYuMTYgMzY3LjMgMzcwLjU0IDM2Ny4zIDM3MC41NCA1MjEuNjcgMzE2LjE2IDUyMS42NyAzMTYuMTYgNTQxLjY3IDM5MC41NCA1NDEuNjcgMzkwLjU0IDM2Ny4zIDQzNS4xOSAzNjcuMyA0MzUuMTkgMzQ3LjMiLz4KICA8cG9seWdvbiBjbGFzcz0iZTc3Mjg2ZjEtMjJkYS00NGQxLThlZmItMWQxNGIwY2NhZTYyIiBwb2ludHM9IjU5OS43NCAzMTcuMDMgNTU3Ljk3IDMxNy4wMyA1NTAuOTcgMzE3LjAzIDU1MC45NyAzMTAuMDMgNTUwLjk3IDI2OC4yNiA1NTAuOTcgMjY4LjI2IDQ2NC4zNiAyNjguMjYgNDY0LjM2IDQ0Ni4zNCA1OTkuNzQgNDQ2LjM0IDU5OS43NCAzMTcuMDMgNTk5Ljc0IDMxNy4wMyIvPgogIDxwb2x5Z29uIGNsYXNzPSJhMDQyMGNhYy1lYmU2LTRjMTgtYjk4MS1hYmJhMGJhOWIzNjUiIHBvaW50cz0iNTk5Ljc0IDMxMC4wMyA1NTcuOTcgMjY4LjI2IDU1Ny45NyAzMTAuMDMgNTk5Ljc0IDMxMC4wMyIvPgo8L3N2Zz4K
+-    mediatype: image/svg+xml
++  - base64data: iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAWlBMVEX////95OT4lZT6r6/yKyn0RUT8ysn1YF6fn59gYGBjY2Pf39/3enkAAACAgIB/f3+/v79AQEA8PDwgICAwMDAICAj2bWv6r673fXz0RkT2bWz1bWzxKyn0YF75ZGegAAAC50lEQVR4nO2a65abIBCAFeIlFVld26aX9P1fs4ICM3ZF8EK658z3R2M8mU8YgdFkGUEQBEEQBEEQBEH8n+SMvzT6baQo2IvilzdD5T+xvm/zpYmOn98cwnvmvQ1BxgoIHZmxQm3z4wKtjGwEFbgct3k17vASstAJFIg1sC0P+2JikZVK4K3z8TYZ9DEGXF23VdkU6Lw/VrfxBrnL/nME3pXBEGGghgDd2Wo0qISh2itQ3yMNVKSCz6ORSzu+WyCTcQYlaHMwEh0QmAzaYANm4xfgvjsikMmhnfeiDAp48JBArEFeskosoh0TyLph17B8hsDQa75+O2iwWwATPzmeLOA/P4FAcB6eI9Ag6vQCGBIgARL4TALjdMjK1wnoimBcDqB4CQXcmgyuSLYFOjjTdd2/BwMFVmrDLYGmh3NtP4XCBwMFhG79kusa0SXCloCEv96MH+7zto8VMLWhXhp+fxh+oE+Px1JgWNpIc9Q2QaCApzaE/MQC6loH2ACtbSS7DAsTAE1deA0YEkCRpLXpYEkSJuCrDRE5FHDXrBhcJLAb2gUVrA1/McPv5/P5hzly1AUSNgDsDgnSMFxA3QWlmC7T4L8LPk5B800TJQBzL7Q2XElBc5KMEtChIkdC+XEKKjrXB9FzAXpG5hWo4YAzoDgyvgWUAhdxsyHoadQdWdZG58AKfgHQ06g7UH9cKdDZC8UpqGYlq3Ppish2vJznoQnUH5cK2DRcTcGr14RzGuIUbEAKXi0wrwdqlIJY51qBZphaYID3oGoXt2i7eFne1Hq/QyHmg0kEtiGBzySQs0pwPBulFDALAvioOKXAiQ+rdwnAx/VgSZROQJdm5oVFeGl2noAqR2zIyi7DRSoBFTbitd35AuVtvTRLIuBKMx7SAgHvry19eGnG552b4JCdr24hAQJMlwT8vJfXsQJ5sdrmaQSAwcYfGJodBMQfDcQ0DL7qLxzagb/yTywEQRAEQRAEQRAEkZS/7wdXVOeT+/sAAAAASUVORK5CYII=
++    mediatype: image/png
+   install:
+     spec:
+       deployments: null
+@@ -2479,5 +2477,5 @@ spec:
+   maturity: alpha
+   minKubeVersion: 1.21.1
+   provider:
+-    name: Red Hat
++    name: OKD Community
+   version: 0.0.0
+-- 
+2.49.0
+

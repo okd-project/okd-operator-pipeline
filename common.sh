@@ -2,16 +2,16 @@
 
 
 BASE_REGISTRY=${BASE_REGISTRY:-"quay.io/okderators"}
-OKD_VERSION=${OKD_VERSION:-"4.18.0-okd-scos.9"}
+OKD_VERSION=${OKD_VERSION:-"4.18.0-okd-scos.10"}
 OKD_RELEASE=quay.io/okd/scos-release:${OKD_VERSION}
 CHANNEL=${CHANNEL:-alpha}
 DEFAULT_CHANNEL=${DEFAULT_CHANNEL:-alpha}
 BUNDLE_METADATA_OPTS="--channels=${CHANNEL} --default-channel=${DEFAULT_CHANNEL} --use-image-digests"
 
-MAJOR=$(echo "${OKD_VERSION}" | cut -d. -f1)
-MINOR=$(echo "${OKD_VERSION}" | cut -d. -f2)
+MAJOR=${MAJOR:-"$(echo "${OKD_VERSION}" | cut -d. -f1)"}
+MINOR=${MINOR:-"$(echo "${OKD_VERSION}" | cut -d. -f2)"}
 OCP_SHORT="${MAJOR}.${MINOR}"
-DATE=$(date +%Y-%m-%d-%H%M%S)
+DATE=${DATE:-"$(date +%Y-%m-%d-%H%M%S)"}
 OCP_DATE="${MAJOR}.${MINOR}.0-${DATE}"
 
 get_payload_component() {
@@ -24,8 +24,10 @@ apply_patch() {
   local -r name="$1"
   local -r branch="$2"
 
-  # Make sure only this submodule is initialized
-  git submodule update --init --recursive "${name}"
+  # Check if the submodule is already initialized
+  if [ ! -d "${name}" ]; then
+    git submodule update --init --recursive "${name}"
+  fi
 
   pushd "${name}"
   # Reset any previous patches
@@ -33,6 +35,20 @@ apply_patch() {
   # Apply patch to git repo
   git am -3 "../patches/${name}.patch"
   popd
+}
+
+reset_submodule() {
+  local -r name="$1"
+  local -r branch="$2"
+
+  # Check if the submodule is already initialized
+  if [ ! -d "${name}" ]; then
+    git submodule update --init --recursive "${name}"
+  fi
+  pushd "${name}"
+  # Clean untracked files and reset any changes
+  git clean -fdx
+  git reset --hard origin/${branch}
 }
 
 export_image_digest() {
@@ -57,4 +73,25 @@ export_image_digest() {
     fi
 
     export "$varname=$value"
+}
+
+replace_csv_product() {
+  local csv_file="$1"
+  local path="$2"
+
+  # YQ get the value from the yaml
+  local value=$(yq e "$path" "$csv_file")
+  # Look for instances of OpenShift and replace with OKD, OCP => OKD, and Red Hat to nothing
+  value=$(echo "$value" | sed -e 's/OpenShift/OKD/g' -e 's/OCP/OKD/g' -e 's/Red Hat//g')
+  # YQ set the value back to the yaml
+  yq e -i "$path = \"$value\"" "$csv_file"
+}
+
+set_csv_value() {
+  local csv_file="$1"
+  local path="$2"
+  local value="$3"
+
+  # YQ set the value back to the yaml
+  yq e -i "$path = \"$value\"" "$csv_file"
 }
