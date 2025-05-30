@@ -1,0 +1,30 @@
+FROM registry.access.redhat.com/ubi9/go-toolset:1.22 AS builder
+
+COPY --chown=default cert-manager/ .
+COPY --chown=default cert-manager/LICENSE /licenses/
+
+ENV GO_BUILD_TAGS=strictfipsruntime,openssl
+ENV GOEXPERIMENT=strictfipsruntime
+ENV CGO_ENABLED=1
+ENV GOFLAGS=""
+
+RUN cd $HOME/cmd/acmesolver && go build -o $HOME/_output/acmesolver -ldflags '-w -s' -tags ${GO_BUILD_TAGS} main.go
+RUN cd $HOME/cmd/cainjector && go build -o $HOME/_output/cainjector -ldflags '-w -s' -tags ${GO_BUILD_TAGS} main.go
+RUN cd $HOME/cmd/controller && go build -o $HOME/_output/controller -ldflags '-w -s' -tags ${GO_BUILD_TAGS} main.go
+RUN cd $HOME/cmd/webhook && go build -o $HOME/_output/webhook -ldflags '-w -s' -tags ${GO_BUILD_TAGS} main.go
+
+FROM quay.io/centos/centos:stream9
+
+ENV HOME=/opt/app-root/src
+
+COPY --from=builder $HOME/_output/acmesolver /app/cmd/acmesolver/acmesolver
+COPY --from=builder $HOME/_output/cainjector /app/cmd/cainjector/cainjector
+COPY --from=builder $HOME/_output/controller /app/cmd/controller/controller
+COPY --from=builder $HOME/_output/webhook /app/cmd/webhook/webhook
+COPY --from=builder /licenses /licenses
+
+USER 65534:65534
+
+LABEL io.k8s.display-name="Cert Manager ACME Solver"
+
+ENTRYPOINT ["/app/cmd/acmesolver/acmesolver"]
