@@ -89,3 +89,33 @@
 	path = cert-manager/istio-csr
 	url = https://github.com/openshift/cert-manager-istio-csr
 	branch = release-1.15
+[submodule "gitops/operator"]
+	path = gitops/operator
+	url = https://github.com/redhat-developer/gitops-operator
+	branch = v1.16
+[submodule "gitops/argo-cd"]
+	path = gitops/argo-cd
+	url = https://github.com/rh-gitops-midstream/downstream-argo-cd
+	branch = main
+[submodule "gitops/dex"]
+	path = gitops/dex
+	url = https://github.com/rh-gitops-midstream/downstream-dex
+[submodule "gitops/console-plugin"]
+	path = gitops/console-plugin
+	url = https://github.com/redhat-developer/gitops-console-plugin
+	branch = v1.15
+[submodule "gitops/argo-rollouts"]
+	path = gitops/argo-rollouts
+	url = https://github.com/rh-gitops-midstream/argo-rollouts
+[submodule "gitops/argocd-extension-installer"]
+	path = gitops/argocd-extension-installer
+	url = https://github.com/argoproj-labs/argocd-extension-installer
+[submodule "gitops/rollout-extension"]
+	path = gitops/rollout-extension
+	url = https://github.com/argoproj-labs/rollout-extension
+[submodule "gitops/backend"]
+	path = gitops/backend
+	url = https://github.com/redhat-developer/gitops-backend
+[submodule "gitops/must-gather"]
+	path = gitops/must-gather
+	url = https://github.com/redhat-developer/gitops-must-gather

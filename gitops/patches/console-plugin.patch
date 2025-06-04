@@ -1,0 +1,62 @@
+From d486be75a40982c428226d2087ee9cd2c4388c88 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Wed, 4 Jun 2025 13:39:24 +0100
+Subject: [PATCH] OKDify
+
+---
+ .konflux/Containerfile.plugin | 25 +++++++------------------
+ 1 file changed, 7 insertions(+), 18 deletions(-)
+
+diff --git a/.konflux/Containerfile.plugin b/.konflux/Containerfile.plugin
+index a57361c..b494ecf 100644
+--- a/.konflux/Containerfile.plugin
++++ b/.konflux/Containerfile.plugin
+@@ -14,7 +14,7 @@
+ #
+ # ------------------------------------------------------------------------
+ 
+-FROM registry.access.redhat.com/ubi9/nodejs-22:9.5-1734528986 AS builder
++FROM registry.access.redhat.com/ubi9/nodejs-22 AS builder
+ 
+ USER root
+ 
+@@ -39,7 +39,7 @@ RUN yarn build
+ 
+ ####################################################################################################
+ 
+-FROM --platform=linux/amd64 registry.redhat.io/ubi9/httpd-24:9.5-1733127463
++FROM --platform=linux/amd64 registry.access.redhat.com/ubi9/httpd-24
+ USER root
+ RUN chown -R 1001:0 /opt/app-root/src
+ USER 1001
+@@ -51,22 +51,11 @@ COPY --from=builder /usr/src/app/dist /var/www/html/plugin
+ CMD run-httpd
+ 
+ LABEL \
+-    name="openshift-gitops-1/gitops-console-plugin-rhel8" \
+     License="Apache 2.0" \
+-    com.redhat.component="openshift-gitops-console-plugin-container" \
+-    com.redhat.delivery.appregistry="false" \
+-    release=${CI_CONTAINER_RELEASE} \
+-    upstream-vcs-type="git" \
+-    upstream-version=${CI_UPSTREAM_VERSION} \
+-    upstream-vcs-ref="${COMMIT_SHA}" \
+-    version=${CI_CONTAINER_VERSION} \
+-    summary="Red Hat OpenShift GitOps Console Plugin" \
+-    maintainer="William Tam <wtam@redhat.com>" \
+-    io.openshift.tags="openshift,gitops-console-plugin" \
+-    io.k8s.display-name="Red Hat OpenShift GitOps Console Plugin" \
+-    io.k8s.description="Red Hat OpenShift GitOps Console Plugin" \
+-    io.openshift.maintainer.product="Red Hat OpenShift GitOps" \
+-    io.openshift.maintainer.component="William Tam <wtam@redhat.com>" \
+-    description="Red Hat OpenShift GitOps Console Plugin"
++    summary="OKD GitOps Console Plugin" \
++    maintainer="OKD Community <maintainers@okd.io>" \
++    io.k8s.display-name="OKD GitOps Console Plugin" \
++    io.k8s.description="OKD GitOps Console Plugin" \
++    description="OKD GitOps Console Plugin"
+ 
+ 
+-- 
+2.49.0
+

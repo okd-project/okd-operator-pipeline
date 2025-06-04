@@ -1,0 +1,37 @@
+From aa385b59048330ca5b1a481143d94666a1f2a395 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Wed, 4 Jun 2025 13:41:12 +0100
+Subject: [PATCH] OKDify
+
+---
+ .konflux/Containerfile.plugin | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
+
+diff --git a/.konflux/Containerfile.plugin b/.konflux/Containerfile.plugin
+index 1759b5f..5e77d3a 100644
+--- a/.konflux/Containerfile.plugin
++++ b/.konflux/Containerfile.plugin
+@@ -16,17 +16,10 @@
+ FROM registry.redhat.io/openshift4/ose-must-gather:v4.13.0
+ 
+ LABEL \
+-    name="openshift-gitops-1/must-gather-rhel8" \
+     License="Apache 2.0" \
+-    com.redhat.component="openshift-gitops-must-gather-container" \
+-    com.redhat.delivery.appregistry="false" \ 
+-    upstream-vcs-type="git" \
+-    summary="OpenShift GitOps Must Gather" \
+-    maintainer="William Tam <wtam@redhat.com>" \
+-    io.k8s.display-name="Red Hat OpenShift GitOps Must Gather"\
+-    io.openshift.tags="openshift,gitops-operator, must-gather" \
+-    io.openshift.maintainer.product="Red Hat OpenShift GitOps" \
+-    io.openshift.maintainer.component="William Tam <wtam@redhat.com>"  
++    summary="OKD GitOps Must Gather" \
++    maintainer="OKD Community <maintainers@okd.io>" \
++    io.k8s.display-name="OKD GitOps Must Gather"
+ 
+ # Save original gather script
+ RUN mv /usr/bin/gather /usr/bin/gather_original
+-- 
+2.49.0
+

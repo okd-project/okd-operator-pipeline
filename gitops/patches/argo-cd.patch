@@ -1,0 +1,180 @@
+From 41b0c81f6dc966bbd1c7b9f881339ae3612be10e Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Wed, 4 Jun 2025 12:50:17 +0100
+Subject: [PATCH] OKDify
+
+---
+ Containerfile.cli.plugin |  4 +--
+ Containerfile.plugin     | 60 ++++++++++++++++++++--------------------
+ 2 files changed, 32 insertions(+), 32 deletions(-)
+
+diff --git a/Containerfile.cli.plugin b/Containerfile.cli.plugin
+index 2c6420e..d2ca455 100644
+--- a/Containerfile.cli.plugin
++++ b/Containerfile.cli.plugin
+@@ -17,7 +17,7 @@
+ ####################################################################################################
+ # Argo CD Build stage which performs the actual build of Argo CD CLI binaries
+ ####################################################################################################
+-FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_8_golang_1.22 AS argo-cd-cli-build
++FROM registry.access.redhat.com/ubi9/go-toolset:1.22 AS argo-cd-cli-build
+ 
+ # Set the working directory for the build
+ WORKDIR /go/src/github.com/argoproj/
+@@ -48,7 +48,7 @@ RUN make GIT_TAG="v$(cat VERSION)" GOFLAGS="-mod=mod" BIN_NAME=argocd-darwin-amd
+ ####################################################################################################
+ # Package the binaries into the image using UBI (Universal Base Image)
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/ubi
++FROM quay.io/centos/centos:stream9
+ 
+ # This directory is checked by the ecosystem-cert-preflight-checks task in Konflux
+ COPY LICENSE /licenses/
+diff --git a/Containerfile.plugin b/Containerfile.plugin
+index f39b500..1b4d027 100644
+--- a/Containerfile.plugin
++++ b/Containerfile.plugin
+@@ -17,12 +17,12 @@
+ ####################################################################################################
+ # Argo CD UI stage
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/nodejs-18:1-136.1739758167 AS argocd-ui
++FROM registry.access.redhat.com/ubi9/nodejs-18 AS argocd-ui
+ 
+ USER root
+ 
+ # Install Yarn
+-RUN npm install --global /cachi2/output/deps/yarn-classic/yarn-1.22.22.tgz
++RUN npm install --global yarn@1.22.22
+ 
+ WORKDIR /src
+ 
+@@ -42,16 +42,22 @@ RUN NODE_ONLINE_ENV='offline' NODE_ENV='production' yarn build
+ ####################################################################################################
+ # Argo CD Build stage which performs the actual build of Argo CD binaries
+ ####################################################################################################
+-FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_8_golang_1.22 as argocd-build
++FROM registry.access.redhat.com/ubi9/go-toolset:1.22 as argocd-build
+ 
+ WORKDIR /go/src/github.com/argoproj/
+-COPY . .
++COPY --chown=default . .
+ 
+ WORKDIR /go/src/github.com/argoproj/argo-cd
+ 
+ ENV GOFLAGS="-mod=mod"
+ 
+-ARG EXTRA_BUILD_INFO='{Vendor Information: Red Hat OpenShift GitOps version: 1.16.0}'
++ARG EXTRA_BUILD_INFO='{Vendor Information: OKD GitOps version: 1.16.0}'
++ARG ARGO_CD_COMMIT
++ARG ARGO_CD_VERSION
++ARG KUSTOMIZE_VERSION
++ARG HELM_VERSION
++ARG HELM_COMMIT
++ARG GIT_LFS_VERSION
+ 
+ # Perform the build
+ COPY --from=argocd-ui /src/dist/app /go/src/github.com/argoproj/argo-cd/ui/dist/app
+@@ -64,11 +70,11 @@ export CGO_ENABLED=1 &&\
+ export GODEBUG="tarinsecurepath=0,zipinsecurepath=0" &&\
+ export LDFLAGS="-X ${PACKAGE}.version=${VERSION} \
+   -X ${PACKAGE}.buildDate=${BUILD_DATE} \
+-  -X ${PACKAGE}.gitCommit=${CI_ARGO_CD_UPSTREAM_COMMIT} \
++  -X ${PACKAGE}.gitCommit=${ARGO_CD_COMMIT} \
+   -X ${PACKAGE}.gitTreeState=clean \
+   -X ${PACKAGE}.kubectlVersion=${KUBECTL_VER}\
+   -X \"${PACKAGE}.extraBuildInfo=${EXTRA_BUILD_INFO}\" \
+-  -X ${PACKAGE}.gitTag=${CI_ARGO_CD_UPSTREAM_TAG}" &&\
++  -X ${PACKAGE}.gitTag=${ARGO_CD_VERSION}" &&\
+ go build -gcflags="all=-N -l" -v -ldflags "${LDFLAGS}" -tags strictfipsruntime -o ./dist/argocd ./cmd
+ 
+ 
+@@ -80,32 +86,37 @@ RUN if [ "$BUILD_ALL_CLIS" = "true" ] ; then \
+ 
+ # build kustomize
+ WORKDIR /go/src/github.com/argoproj/kustomize
+-RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 go build -mod=readonly -buildvcs=true -ldflags="-s -X sigs.k8s.io/kustomize/api/provenance.version=${CI_KUSTOMIZE_UPSTREAM_TAG} \
++RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 go build -mod=readonly -buildvcs=true -ldflags="-s \
++-X sigs.k8s.io/kustomize/api/provenance.version=${KUSTOMIZE_VERSION} \
+ -X sigs.k8s.io/kustomize/api/provenance.buildDate=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+--tags strictfipsruntime -o kustomize ./kustomize/main.go
++-tags strictfipsruntime -o bin/kustomize ./kustomize/main.go
+ 
+ # build helm
+ WORKDIR /go/src/github.com/argoproj/helm
+-RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 go build -ldflags="-w -s -X helm.sh/helm/v3/internal/version.version=${CI_HELM_UPSTREAM_TAG} \
+--X helm.sh/helm/v3/internal/version.gitCommit=${CI_HELM_UPSTREAM_COMMIT}" -tags strictfipsruntime ./cmd/helm
++RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 go build -ldflags="-w -s -X helm.sh/helm/v3/internal/version.version=${HELM_VERSION}) \
++-X helm.sh/helm/v3/internal/version.gitCommit=${HELM_COMMIT}" -tags strictfipsruntime ./cmd/helm
+ 
+ # build tini
+ WORKDIR /go/src/github.com/argoproj/tini
+ ENV CFLAGS="-DPR_SET_CHILD_SUBREAPER=36 -DPR_GET_CHILD_SUBREAPER=37"
++USER root
+ RUN yum install -y cmake
++USER default
+ RUN cmake . && make tini
+ 
+ # build connect-proxy
+ WORKDIR /go/src/github.com/argoproj/ssh-connect
+-RUN yum install -y gcc sed 
++USER root
++RUN yum install -y gcc sed
++USER default
+ RUN sed -i 's/SOCKLEN_T/socklen_t/g' connect.c 
+ RUN gcc -v connect.c -o connect-proxy
+ 
+ # build git-lfs
+ WORKDIR /go/src/github.com/argoproj/git-lfs
+ RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 \
+- go build -ldflags="-w -s -X 'github.com/git-lfs/git-lfs/v3/config.Vendor=Red Hat Inc' \
+- -X github.com/git-lfs/git-lfs/v3/config.GitCommit=${CI_GIT_LFS_UPSTREAM_TAG}" \
++ go build -ldflags="-w -s -X 'github.com/git-lfs/git-lfs/v3/config.Vendor=OKD Community' \
++ -X github.com/git-lfs/git-lfs/v3/config.GitCommit=${GIT_LFS_VERSION}" \
+  -gcflags="" -tags strictfipsruntime -trimpath  -o ./bin/git-lfs ./git-lfs.go
+ 
+ ####################################################################################################
+@@ -114,7 +125,7 @@ RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 \
+ ####################################################################################################
+ # Argo CD Base - used as the base for both the release and dev argocd images
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/ubi-minimal AS argocd-base
++FROM quay.io/centos/centos:stream9-minimal AS argocd-base
+ 
+ USER root
+ RUN microdnf install shadow-utils -y
+@@ -163,27 +174,16 @@ RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-applicationset-controller
+ RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-k8s-auth
+ 
+ USER 999
+-COPY --from=argocd-build  /go/src/github.com/argoproj/kustomize/kustomize /usr/local/bin/
++COPY --from=argocd-build  /go/src/github.com/argoproj/kustomize/bin/kustomize /usr/local/bin/
+ COPY --from=argocd-build  /go/src/github.com/argoproj/helm/helm /usr/local/bin/
+ COPY --from=argocd-build  /go/src/github.com/argoproj/tini/tini /usr/local/bin/
+ COPY --from=argocd-build  /go/src/github.com/argoproj/ssh-connect/connect-proxy /usr/local/bin/connect-proxy
+ COPY --from=argocd-build  /go/src/github.com/argoproj/git-lfs/bin/git-lfs /usr/local/bin/
+ 
+ LABEL \
+-    name="openshift-gitops-1/argocd-rhel8" \
+-    version=${CI_CONTAINER_VERSION} \
+     License="Apache 2.0" \
+-    com.redhat.component="openshift-gitops-argocd-container" \
+-    com.redhat.delivery.appregistry="false" \
+-    release=${CI_CONTAINER_RELEASE} \
+-    upstream-version=${CI_UPSTREAM_VERSION} \
+-    upstream-vcs-ref="${CI_ARGO_CD_UPSTREAM_COMMIT}" \
+-    upstream-vcs-type="git" \
+-    summary="Red Hat Openshift GitOps Argo CD" \
+-    io.openshift.expose-services="" \
+-    io.openshift.tags="openshift,gitops,argocd" \
+-    io.k8s.display-name="openshift-gitops-argocd" \
+-    maintainer="William Tam <wtam@redhat.com>" \
+-    description="Red Hat Openshift GitOps Argo CD"
++    summary="OKD GitOps Argo CD" \
++    io.k8s.display-name="okd-gitops-argocd" \
++    description="OKD GitOps Argo CD"
+ 
+ 
+-- 
+2.49.0
+
