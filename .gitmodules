@@ -119,3 +119,11 @@
 [submodule "gitops/must-gather"]
 	path = gitops/must-gather
 	url = https://github.com/redhat-developer/gitops-must-gather
+[submodule "node-feature-discovery/nfd"]
+	path = node-feature-discovery/nfd
+	url = https://github.com/openshift/node-feature-discovery
+	branch = release-4.18
+[submodule "node-feature-discovery/operator"]
+	path = node-feature-discovery/operator
+	url = https://github.com/openshift/cluster-nfd-operator
+	branch = release-4.18
