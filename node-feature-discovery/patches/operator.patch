@@ -1,0 +1,1598 @@
+From 0af84b9af4d4c954191d1421393a8683b33d7c8a Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Thu, 5 Jun 2025 16:45:02 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile                                    |    9 +-
+ .../bases/nfd.clusterserviceversion.yaml      | 1515 ++++++++---------
+ 2 files changed, 717 insertions(+), 807 deletions(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index 137aa947..f5d0caeb 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,16 +1,15 @@
+ # Build the manager binary
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.22-openshift-4.18 AS builder
+-WORKDIR /go/src/github.com/openshift/cluster-nfd-operator
++FROM registry.access.redhat.com/ubi9/go-toolset:1.22 AS builder
+ 
+ # Build
+-COPY . .
++COPY --chown=default . .
+ RUN make build
+ 
+ # Create production image for running the operator
+-FROM registry.ci.openshift.org/ocp/4.18:base-rhel9
++FROM quay.io/centos/centos:stream9
+ 
+ ARG CSV=4.18
+-COPY --from=builder /go/src/github.com/openshift/cluster-nfd-operator/node-feature-discovery-operator /
++COPY --from=builder /opt/app-root/src/node-feature-discovery-operator /
+ 
+ COPY manifests /manifests
+ 
+diff --git a/config/manifests/bases/nfd.clusterserviceversion.yaml b/config/manifests/bases/nfd.clusterserviceversion.yaml
+index c9b830cf..39c6cd88 100644
+--- a/config/manifests/bases/nfd.clusterserviceversion.yaml
++++ b/config/manifests/bases/nfd.clusterserviceversion.yaml
+@@ -63,7 +63,7 @@ metadata:
+         }
+       ]
+     capabilities: Deep Insights
+-    categories: Integration & Delivery,OpenShift Optional
++    categories: Integration & Delivery,OKD Optional
+     containerImage: quay.io/openshift/origin-cluster-nfd-operator:4.18
+     description: |-
+       The Node Feature Discovery Operator manages the detection of hardware features and configuration in a Kubernetes cluster by labeling the nodes with hardware-specific information. The Node Feature Discovery (NFD) will label the host with node-specific attributes, like PCI cards, kernel, or OS version, and many more.
+@@ -97,9 +97,9 @@ metadata:
+     operators.operatorframework.io/builder: operator-sdk-v1.16.0+git
+     operators.operatorframework.io/internal-objects: '["noderesourcetopologies.topology.node.k8s.io"]'
+     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+-    provider: Red Hat
++    provider: OKD Community
+     repository: https://github.com/openshift/cluster-nfd-operator
+-    support: Red Hat
++    support: OKD Community
+   labels:
+     operatorframework.io/arch.amd64: supported
+     operatorframework.io/arch.arm64: supported
+@@ -111,24 +111,24 @@ spec:
+   apiservicedefinitions: {}
+   customresourcedefinitions:
+     owned:
+-    - description: |
+-        The NodeFeatureDiscovery instance is the CustomResource being watched by the NFD-Operator, and holds all the needed information to setup the behaviour of the master and worker pods
+-      kind: NodeFeatureDiscovery
+-      name: nodefeaturediscoveries.nfd.openshift.io
+-      version: v1
+-    - description: |
+-        NodeFeatureRule resource specifies a configuration for feature-based customization of node objects, such as node labeling.
+-      kind: NodeFeatureRule
+-      name: nodefeaturerules.nfd.openshift.io
+-      version: v1alpha1
+-    - description: |
+-        NodeResourceTopology resource describes node resources and their topology.
+-      kind: NodeResourceTopology
+-      name: noderesourcetopologies.topology.node.k8s.io
+-      version: v1alpha1
+-    - kind: NodeResourceTopology
+-      name: noderesourcetopologies.topology.node.k8s.io
+-      version: v1alpha2
++      - description: |
++          The NodeFeatureDiscovery instance is the CustomResource being watched by the NFD-Operator, and holds all the needed information to setup the behaviour of the master and worker pods
++        kind: NodeFeatureDiscovery
++        name: nodefeaturediscoveries.nfd.openshift.io
++        version: v1
++      - description: |
++          NodeFeatureRule resource specifies a configuration for feature-based customization of node objects, such as node labeling.
++        kind: NodeFeatureRule
++        name: nodefeaturerules.nfd.openshift.io
++        version: v1alpha1
++      - description: |
++          NodeResourceTopology resource describes node resources and their topology.
++        kind: NodeResourceTopology
++        name: noderesourcetopologies.topology.node.k8s.io
++        version: v1alpha1
++      - kind: NodeResourceTopology
++        name: noderesourcetopologies.topology.node.k8s.io
++        version: v1alpha2
+   description: |-
+     The Node Feature Discovery Operator manages the detection of hardware features and configuration in a Kubernetes cluster by labeling the nodes with hardware-specific information. The Node Feature Discovery (NFD) will label the host with node-specific attributes, like PCI cards, kernel, or OS version, and many more.
+ 
+@@ -146,799 +146,710 @@ spec:
+     NFD-Topology-Updater is a daemon responsible for examining allocated resources on a worker node to account for resources available to be allocated to new pod on a per-zone basis (where a zone can be a NUMA node). It then communicates the information to nfd-master which does the NodeResourceTopology CR creation corresponding to all the nodes in the cluster. One instance of nfd-topology-updater is supposed to be running on each node of the cluster.
+   displayName: Node Feature Discovery Operator
+   icon:
+-  - base64data: |
+-      iVBORw0KGgoAAAANSUhEUgAAAikAAAIACAMAAABw7gzSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdC
+-      AK7OHOkAAAMAUExURUdwTNskLtgmMtohLdErLP0AANsjMP8AANgnRdckMNojL9smLtsjLdQqKtkj
+-      Lt8iLt0iL9wkLdsiLtgkL9ckJNkkLtgkL9s1NdgiL9ojMNwhLdojL98gMOAcMdskLd4lLt4iLdki
+-      Lt0lLt8iL9ojL9UjLtojMNoiLtokL9okL9kjL9okMNokLtokL9ckLdojL+QZM7IgON4fOtokL9oj
+-      L9ojL9sjL98jLNgiLtojMNkjL9kjL9okMNgiMNokL9ohMNkiL+EjLNohMNkiL9kiMNoiLdkkMNgi
+-      MNojL9okL9kiMNokMNchLdojL9giLtgjMNchMNokMOAlK98kLugjKNoiL+gjKNojL9kjL9ojMNok
+-      MNojMNkjLtckLegjKOgjJ9ojMNgkLegjKOgiKNQjL9okLuUkKdsjL+UhJugjKNckL9okMNoiL+ci
+-      KNgjMMMfMtkjL+gjKOcjKegjJugkKOgjKMEdNNohMOUhKOgjKOgiKOgjKOcjKdkjL9okL+YiKOcj
+-      KOgjKOghJtgiMMIfNL4gNMMfM9chL9klMNokL+YiJ9ohMOgjKOckKOgiKOgjKOcjKOgkKNkiLscg
+-      MtchLdgjLr0gNdcjL9IgLugkKOcjKeciKOkjKOgkKNojMMYgMtokL78gNb8fNr4gNMIgM+gjKNoh
+-      MOgjKeYkKMYgM68gN7wfNNokL9oiLugiKegjKNokMNIiLrcgNb4gNegkKLgfNbcgNrQfN8ogMrge
+-      NdQgLsQfNMAgNcAfNegjKMkgMcogMLwfNsIfM78gNb4fNMogM+ciKMceMswfMcwgMb4hNr0gNMYg
+-      MbwgNMEgM7EeN88hL8wfMckhM8ogM8ohMcAfNLciNtciK98kLN8jLNokMOgkKbkhNcIgNawiO64i
+-      OsAgNLohNdYjML4hNdkjMNgjMMYhM8siMsQhNNMjMbogN8giM9AiMsIiM80iMrwgNrMhOcwiMrYh
+-      OMEgNdEiMbghOM8iMuYjKb0hNLAhOuEkLOckKd4jLeQjK8IgNq0iOnrHRtUAAADadFJOUwAgE/sL
+-      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
+-    mediatype: image/png
++    - base64data: |
++        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
++        wP8BbF+t4TFgOKAAAAAASUVORK5CYII=
++      mediatype: image/png
+   install:
+     spec:
+       clusterPermissions:
+-      - rules:
+-        - apiGroups:
+-          - policy
+-          resourceNames:
+-          - nfd-worker
+-          resources:
+-          - podsecuritypolicies
+-          verbs:
+-          - use
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - nodes/status
+-          verbs:
+-          - get
+-          - patch
+-          - update
+-        - apiGroups:
+-          - nfd.openshift.io
+-          resources:
+-          - nodefeaturerules
+-          verbs:
+-          - get
+-          - list
+-          - watch
+-        - apiGroups:
+-          - topology.node.k8s.io
+-          resources:
+-          - noderesourcetopologies
+-          verbs:
+-          - create
+-          - get
+-          - update
+-        - apiGroups:
+-          - apps
+-          resources:
+-          - daemonsets
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - apps
+-          resources:
+-          - deployments
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - cert-manager.io
+-          resources:
+-          - certificates
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - cert-manager.io
+-          resources:
+-          - issuers
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - config.openshift.io
+-          resources:
+-          - clusteroperators
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - config.openshift.io
+-          resources:
+-          - clusteroperators/status
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - config.openshift.io
+-          resources:
+-          - clusterversions
+-          verbs:
+-          - get
+-        - apiGroups:
+-          - config.openshift.io
+-          resources:
+-          - proxies
+-          verbs:
+-          - get
+-          - list
+-        - apiGroups:
+-          - coordination.k8s.io
+-          resources:
+-          - leases
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - configmaps
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - endpoints
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - events
+-          verbs:
+-          - create
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - imagestreams/layers
+-          verbs:
+-          - get
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - namespaces
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - nodes
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - persistentvolumeclaims
+-          verbs:
+-          - get
+-          - list
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - persistentvolumes
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - pods
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - pods/log
+-          verbs:
+-          - get
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - secrets
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - serviceaccounts
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - services
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - monitoring.coreos.com
+-          resources:
+-          - prometheusrules
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - monitoring.coreos.com
+-          resources:
+-          - servicemonitors
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - nfd.openshift.io
+-          resources:
+-          - nodefeaturediscoveries
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - nfd.openshift.io
+-          resources:
+-          - nodefeaturediscoveries/finalizers
+-          verbs:
+-          - update
+-        - apiGroups:
+-          - nfd.openshift.io
+-          resources:
+-          - nodefeaturediscoveries/status
+-          verbs:
+-          - get
+-          - patch
+-          - update
+-        - apiGroups:
+-          - rbac.authorization.k8s.io
+-          resources:
+-          - clusterrolebindings
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - rbac.authorization.k8s.io
+-          resources:
+-          - clusterroles
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - rbac.authorization.k8s.io
+-          resources:
+-          - rolebindings
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - rbac.authorization.k8s.io
+-          resources:
+-          - roles
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - route.openshift.io
+-          resources:
+-          - routes
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - watch
+-        - apiGroups:
+-          - security.openshift.io
+-          resources:
+-          - securitycontextconstraints
+-          verbs:
+-          - create
+-          - delete
+-          - get
+-          - list
+-          - patch
+-          - update
+-          - use
+-          - watch
+-        - apiGroups:
+-          - authentication.k8s.io
+-          resources:
+-          - tokenreviews
+-          verbs:
+-          - create
+-        - apiGroups:
+-          - authorization.k8s.io
+-          resources:
+-          - subjectaccessreviews
+-          verbs:
+-          - create
+-        serviceAccountName: nfd-operator
++        - rules:
++            - apiGroups:
++                - policy
++              resourceNames:
++                - nfd-worker
++              resources:
++                - podsecuritypolicies
++              verbs:
++                - use
++            - apiGroups:
++                - ""
++              resources:
++                - nodes/status
++              verbs:
++                - get
++                - patch
++                - update
++            - apiGroups:
++                - nfd.openshift.io
++              resources:
++                - nodefeaturerules
++              verbs:
++                - get
++                - list
++                - watch
++            - apiGroups:
++                - topology.node.k8s.io
++              resources:
++                - noderesourcetopologies
++              verbs:
++                - create
++                - get
++                - update
++            - apiGroups:
++                - apps
++              resources:
++                - daemonsets
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - apps
++              resources:
++                - deployments
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - cert-manager.io
++              resources:
++                - certificates
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - cert-manager.io
++              resources:
++                - issuers
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - config.openshift.io
++              resources:
++                - clusteroperators
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - config.openshift.io
++              resources:
++                - clusteroperators/status
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - config.openshift.io
++              resources:
++                - clusterversions
++              verbs:
++                - get
++            - apiGroups:
++                - config.openshift.io
++              resources:
++                - proxies
++              verbs:
++                - get
++                - list
++            - apiGroups:
++                - coordination.k8s.io
++              resources:
++                - leases
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - configmaps
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - endpoints
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - events
++              verbs:
++                - create
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - imagestreams/layers
++              verbs:
++                - get
++            - apiGroups:
++                - ""
++              resources:
++                - namespaces
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - nodes
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - persistentvolumeclaims
++              verbs:
++                - get
++                - list
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - persistentvolumes
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - pods
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - pods/log
++              verbs:
++                - get
++            - apiGroups:
++                - ""
++              resources:
++                - secrets
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - serviceaccounts
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - ""
++              resources:
++                - services
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - monitoring.coreos.com
++              resources:
++                - prometheusrules
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - monitoring.coreos.com
++              resources:
++                - servicemonitors
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - nfd.openshift.io
++              resources:
++                - nodefeaturediscoveries
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - nfd.openshift.io
++              resources:
++                - nodefeaturediscoveries/finalizers
++              verbs:
++                - update
++            - apiGroups:
++                - nfd.openshift.io
++              resources:
++                - nodefeaturediscoveries/status
++              verbs:
++                - get
++                - patch
++                - update
++            - apiGroups:
++                - rbac.authorization.k8s.io
++              resources:
++                - clusterrolebindings
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - rbac.authorization.k8s.io
++              resources:
++                - clusterroles
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - rbac.authorization.k8s.io
++              resources:
++                - rolebindings
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - rbac.authorization.k8s.io
++              resources:
++                - roles
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - route.openshift.io
++              resources:
++                - routes
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - watch
++            - apiGroups:
++                - security.openshift.io
++              resources:
++                - securitycontextconstraints
++              verbs:
++                - create
++                - delete
++                - get
++                - list
++                - patch
++                - update
++                - use
++                - watch
++            - apiGroups:
++                - authentication.k8s.io
++              resources:
++                - tokenreviews
++              verbs:
++                - create
++            - apiGroups:
++                - authorization.k8s.io
++              resources:
++                - subjectaccessreviews
++              verbs:
++                - create
++          serviceAccountName: nfd-operator
+       deployments:
+-      - name: nfd-controller-manager
+-        spec:
+-          replicas: 1
+-          selector:
+-            matchLabels:
+-              control-plane: controller-manager
+-          strategy: {}
+-          template:
+-            metadata:
+-              labels:
++        - name: nfd-controller-manager
++          spec:
++            replicas: 1
++            selector:
++              matchLabels:
+                 control-plane: controller-manager
+-            spec:
+-              containers:
+-              - args:
+-                - --secure-listen-address=0.0.0.0:8443
+-                - --upstream=http://127.0.0.1:8080/
+-                - --logtostderr=true
+-                - --v=6
+-                - --tls-cert-file=/etc/secrets/tls.crt
+-                - --tls-private-key-file=/etc/secrets/tls.key
+-                - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+-                image: registry.redhat.io/openshift4/ose-kube-rbac-proxy
+-                name: kube-rbac-proxy
+-                ports:
+-                - containerPort: 8443
+-                  name: https
+-                resources:
+-                  limits:
+-                    cpu: 500m
+-                    memory: 128Mi
+-                  requests:
+-                    cpu: 250m
+-                    memory: 64Mi
+-                securityContext:
+-                  readOnlyRootFilesystem: true
+-                volumeMounts:
+-                - mountPath: /etc/secrets
+-                  name: node-feature-discovery-operator-tls
+-              - args:
+-                - --metrics-bind-address=127.0.0.1:8080
+-                - --leader-elect
+-                command:
+-                - /node-feature-discovery-operator
+-                env:
+-                - name: SSL_CERT_DIR
+-                  value: /etc/pki/tls/certs
+-                - name: POD_NAMESPACE
+-                  valueFrom:
+-                    fieldRef:
+-                      fieldPath: metadata.namespace
+-                - name: POD_NAME
+-                  valueFrom:
+-                    fieldRef:
+-                      fieldPath: metadata.name
+-                - name: OPERATOR_NAME
+-                  value: cluster-nfd-operator
+-                - name: NODE_FEATURE_DISCOVERY_IMAGE
+-                  value: quay.io/openshift/origin-node-feature-discovery:4.18
+-                image: quay.io/openshift/origin-cluster-nfd-operator:4.18
+-                livenessProbe:
+-                  httpGet:
+-                    path: /healthz
+-                    port: 8081
+-                  initialDelaySeconds: 15
+-                  periodSeconds: 20
+-                name: manager
+-                ports:
+-                - containerPort: 8080
+-                  name: metrics
+-                readinessProbe:
+-                  httpGet:
+-                    path: /readyz
+-                    port: 8081
+-                  initialDelaySeconds: 5
+-                  periodSeconds: 10
+-                resources: {}
+-                securityContext:
+-                  allowPrivilegeEscalation: false
+-                  capabilities:
+-                    drop:
+-                    - ALL
+-                  readOnlyRootFilesystem: true
+-              serviceAccountName: nfd-operator
+-              terminationGracePeriodSeconds: 10
+-              volumes:
+-              - name: node-feature-discovery-operator-tls
+-                secret:
+-                  secretName: node-feature-discovery-operator-tls
++            strategy: {}
++            template:
++              metadata:
++                labels:
++                  control-plane: controller-manager
++              spec:
++                containers:
++                  - args:
++                      - --secure-listen-address=0.0.0.0:8443
++                      - --upstream=http://127.0.0.1:8080/
++                      - --logtostderr=true
++                      - --v=6
++                      - --tls-cert-file=/etc/secrets/tls.crt
++                      - --tls-private-key-file=/etc/secrets/tls.key
++                      - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
++                    image: registry.redhat.io/openshift4/ose-kube-rbac-proxy
++                    name: kube-rbac-proxy
++                    ports:
++                      - containerPort: 8443
++                        name: https
++                    resources:
++                      limits:
++                        cpu: 500m
++                        memory: 128Mi
++                      requests:
++                        cpu: 250m
++                        memory: 64Mi
++                    securityContext:
++                      readOnlyRootFilesystem: true
++                    volumeMounts:
++                      - mountPath: /etc/secrets
++                        name: node-feature-discovery-operator-tls
++                  - args:
++                      - --metrics-bind-address=127.0.0.1:8080
++                      - --leader-elect
++                    command:
++                      - /node-feature-discovery-operator
++                    env:
++                      - name: SSL_CERT_DIR
++                        value: /etc/pki/tls/certs
++                      - name: POD_NAMESPACE
++                        valueFrom:
++                          fieldRef:
++                            fieldPath: metadata.namespace
++                      - name: POD_NAME
++                        valueFrom:
++                          fieldRef:
++                            fieldPath: metadata.name
++                      - name: OPERATOR_NAME
++                        value: cluster-nfd-operator
++                      - name: NODE_FEATURE_DISCOVERY_IMAGE
++                        value: quay.io/openshift/origin-node-feature-discovery:4.18
++                    image: quay.io/openshift/origin-cluster-nfd-operator:4.18
++                    livenessProbe:
++                      httpGet:
++                        path: /healthz
++                        port: 8081
++                      initialDelaySeconds: 15
++                      periodSeconds: 20
++                    name: manager
++                    ports:
++                      - containerPort: 8080
++                        name: metrics
++                    readinessProbe:
++                      httpGet:
++                        path: /readyz
++                        port: 8081
++                      initialDelaySeconds: 5
++                      periodSeconds: 10
++                    resources: {}
++                    securityContext:
++                      allowPrivilegeEscalation: false
++                      capabilities:
++                        drop:
++                          - ALL
++                      readOnlyRootFilesystem: true
++                serviceAccountName: nfd-operator
++                terminationGracePeriodSeconds: 10
++                volumes:
++                  - name: node-feature-discovery-operator-tls
++                    secret:
++                      secretName: node-feature-discovery-operator-tls
+       permissions:
+-      - rules:
+-        - apiGroups:
+-          - ""
+-          - coordination.k8s.io
+-          resources:
+-          - configmaps
+-          - leases
+-          verbs:
+-          - get
+-          - list
+-          - watch
+-          - create
+-          - update
+-          - patch
+-          - delete
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - events
+-          verbs:
+-          - create
+-          - patch
+-        - apiGroups:
+-          - rbac.authorization.k8s.io
+-          resources:
+-          - roles
+-          - rolebindings
+-          - clusterroles
+-          - clusterrolebindings
+-          verbs:
+-          - '*'
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - pods
+-          - services
+-          - endpoints
+-          - persistentvolumeclaims
+-          - events
+-          - configmaps
+-          - secrets
+-          - serviceaccounts
+-          - nodes
+-          verbs:
+-          - '*'
+-        - apiGroups:
+-          - ""
+-          resources:
+-          - namespaces
+-          verbs:
+-          - get
+-          - list
+-          - watch
+-        - apiGroups:
+-          - apps
+-          resources:
+-          - deployments
+-          - daemonsets
+-          - replicasets
+-          - statefulsets
+-          verbs:
+-          - '*'
+-        - apiGroups:
+-          - monitoring.coreos.com
+-          resources:
+-          - servicemonitors
+-          verbs:
+-          - get
+-          - create
+-        - apiGroups:
+-          - nfd.openshift.io
+-          resources:
+-          - '*'
+-          verbs:
+-          - '*'
+-        serviceAccountName: nfd-operator
++        - rules:
++            - apiGroups:
++                - ""
++                - coordination.k8s.io
++              resources:
++                - configmaps
++                - leases
++              verbs:
++                - get
++                - list
++                - watch
++                - create
++                - update
++                - patch
++                - delete
++            - apiGroups:
++                - ""
++              resources:
++                - events
++              verbs:
++                - create
++                - patch
++            - apiGroups:
++                - rbac.authorization.k8s.io
++              resources:
++                - roles
++                - rolebindings
++                - clusterroles
++                - clusterrolebindings
++              verbs:
++                - '*'
++            - apiGroups:
++                - ""
++              resources:
++                - pods
++                - services
++                - endpoints
++                - persistentvolumeclaims
++                - events
++                - configmaps
++                - secrets
++                - serviceaccounts
++                - nodes
++              verbs:
++                - '*'
++            - apiGroups:
++                - ""
++              resources:
++                - namespaces
++              verbs:
++                - get
++                - list
++                - watch
++            - apiGroups:
++                - apps
++              resources:
++                - deployments
++                - daemonsets
++                - replicasets
++                - statefulsets
++              verbs:
++                - '*'
++            - apiGroups:
++                - monitoring.coreos.com
++              resources:
++                - servicemonitors
++              verbs:
++                - get
++                - create
++            - apiGroups:
++                - nfd.openshift.io
++              resources:
++                - '*'
++              verbs:
++                - '*'
++          serviceAccountName: nfd-operator
+     strategy: deployment
+   installModes:
+-  - supported: true
+-    type: OwnNamespace
+-  - supported: true
+-    type: SingleNamespace
+-  - supported: false
+-    type: MultiNamespace
+-  - supported: false
+-    type: AllNamespaces
++    - supported: true
++      type: OwnNamespace
++    - supported: true
++      type: SingleNamespace
++    - supported: false
++      type: MultiNamespace
++    - supported: false
++      type: AllNamespaces
+   keywords:
+-  - feature-discovery
+-  - feature-detection
+-  - node-labels
++    - feature-discovery
++    - feature-detection
++    - node-labels
+   links:
+-  - name: Node Feature Discovery Operator
+-    url: https://docs.openshift.com/container-platform/4.18/hardware_enablement/psap-node-feature-discovery-operator.html
+-  - name: Node Feature Discovery Documentation
+-    url: https://kubernetes-sigs.github.io/node-feature-discovery/stable/get-started/index.html
++    - name: Node Feature Discovery Operator
++      url: https://docs.openshift.com/container-platform/4.18/hardware_enablement/psap-node-feature-discovery-operator.html
++    - name: Node Feature Discovery Documentation
++      url: https://kubernetes-sigs.github.io/node-feature-discovery/stable/get-started/index.html
+   maintainers:
+-  - email: support@redhat.com
+-    name: Red Hat Support
++    - email: maintainers@okd.io
++      name: OKD Community
+   maturity: stable
+   minKubeVersion: 1.22.0
+   provider:
+-    name: Red Hat
+-    url: https://github.com/openshift/cluster-nfd-operator
++    name: OKD Community
++    url: https://okd.io
+   version: 4.18.0
+-- 
+2.49.0
+
