@@ -1,0 +1,25 @@
+From a902e249df47d063f65792d09c81b1b14fa5edc2 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Fri, 6 Jun 2025 12:44:25 +0100
+Subject: [PATCH] OKDify
+
+---
+ images/entrypoint.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/images/entrypoint.sh b/images/entrypoint.sh
+index 13f5496..c9f39d3 100755
+--- a/images/entrypoint.sh
++++ b/images/entrypoint.sh
+@@ -36,7 +36,7 @@ get_source_folder_for_rhel_version()
+                 rhelmajor="$(echo "$PLATFORM_ID" | sed -E 's/^platform:el([0-9]+)$/\1/')"
+             fi
+         ;;
+-        rhel) rhelmajor=$(echo "${VERSION_ID}" | cut -f 1 -d .)
++        rhel|centos) rhelmajor=$(echo "${VERSION_ID}" | cut -f 1 -d .)
+         ;;
+         fedora)
+             if [ "${VARIANT_ID}" = "coreos" ]; then
+-- 
+2.49.0
+

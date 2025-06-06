@@ -22,6 +22,8 @@ IMG_KUBE_RBAC_PROXY=$(get_payload_component kube-rbac-proxy)
 BUNDLE_IMG="${REGISTRY}/operator-bundle:${OCP_DATE}"
 
 apply_patch operator release-${OCP_SHORT}
+apply_patch cni release-${OCP_SHORT}
+apply_patch infiniband-cni release-${OCP_SHORT}
 
 # Build the images
 podman build -t "${IMG_OPERATOR}" -f operator.Containerfile ../
@@ -61,8 +63,8 @@ yq e -i "with((select(.kind == \"Deployment\") | .spec.template.spec.containers[
  .env |= map(select(.name == \"METRICS_EXPORTER_IMAGE\").value = \"${IMG_NETWORK_METRICS_EXPORTER}\") |
  .env |= map(select(.name == \"SRIOV_NETWORK_CONFIG_DAEMON_IMAGE\").value = \"${IMG_NETWORK_CONFIG_DAEMON}\") |
  .env |= map(select(.name == \"SRIOV_NETWORK_WEBHOOK_IMAGE\").value = \"${IMG_NETWORK_WEBHOOK}\") |
- .env |= map(select(.name == \"METRICS_EXPORTER_KUBE_RBAC_PROXY_IMAGE\").value = \"${IMG_KUBE_RBAC_PROXY}\"))" \
-    ./config/manager/manager.yaml
+ .env |= map(select(.name == \"METRICS_EXPORTER_KUBE_RBAC_PROXY_IMAGE\").value = \"${IMG_KUBE_RBAC_PROXY}\")
+)" ./config/manager/manager.yaml
 yq e -i ".spec.template.spec.containers[0].image = \"controller:latest\"" ./config/manager/manager.yaml
 yq e -i ".metadata.annotations.containerImage = \"${IMG_OPERATOR}\"" ./config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
 

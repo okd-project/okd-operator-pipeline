@@ -13,7 +13,7 @@ COPY --chown=default ./rdma-cni .
 RUN make clean && \
     GO_TAGS="" GO_BUILD_OPTS="CGO_ENABLED=1 GOOS=$(go env GOOS) GOARCH=$(go env GOARCH)" make build
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM quay.io/centos/centos:stream9-minimal
 
 COPY --from=builder-ubi9 /opt/app-root/src/build/rdma /usr/bin/
 

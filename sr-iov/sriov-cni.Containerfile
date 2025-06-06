@@ -13,7 +13,7 @@ COPY --chown=default ./cni .
 RUN make clean && \
     GO_TAGS="" GO_BUILD_OPTS=CGO_ENABLED=1 make build
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM quay.io/centos/centos:stream9-minimal
 
 COPY --from=builder-ubi9 /opt/app-root/src/build/sriov /usr/bin/
 
