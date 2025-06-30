@@ -127,3 +127,157 @@
 	path = node-feature-discovery/operator
 	url = https://github.com/openshift/cluster-nfd-operator
 	branch = release-4.18
+[submodule "service-mesh/kiali-operator"]
+	path = service-mesh/kiali-operator
+	url = https://github.com/kiali/kiali-operator
+	branch = v2.11
+[submodule "service-mesh/kiali-console-plugin"]
+	path = service-mesh/kiali-console-plugin
+	url = https://github.com/kiali/openshift-servicemesh-plugin
+	branch = v2.11
+[submodule "service-mesh/istio"]
+	path = service-mesh/istio
+	url = https://github.com/openshift-service-mesh/istio.git
+	branch = release-1.24
+[submodule "service-mesh/proxy"]
+	path = service-mesh/proxy
+	url = https://github.com/openshift-service-mesh/proxy.git
+	branch = release-1.24
+[submodule "service-mesh/istio-must-gather"]
+	path = service-mesh/istio-must-gather
+	url = https://github.com/openshift-service-mesh/istio-must-gather.git
+[submodule "service-mesh/ztunnel"]
+	path = service-mesh/ztunnel
+	url = https://github.com/openshift-service-mesh/ztunnel.git
+	branch = release-1.24
+[submodule "service-mesh/operator"]
+	path = service-mesh/operator
+	url = https://github.com/openshift-service-mesh/sail-operator
+	branch = release-3.0
+[submodule "service-mesh/kiali"]
+	path = service-mesh/kiali
+	url = https://github.com/kiali/kiali.git
+	branch = v2.11
+[submodule "acm/lighthouse"]
+	path = acm/lighthouse
+	url = https://github.com/submariner-io/lighthouse.git
+	branch = release-0.20
+[submodule "acm/submariner"]
+	path = acm/submariner
+	url = https://github.com/submariner-io/submariner.git
+	branch = release-0.20
+[submodule "acm/subctl"]
+	path = acm/subctl
+	url = https://github.com/submariner-io/subctl.git
+	branch = release-0.20
+[submodule "acm/submariner-operator"]
+	path = acm/submariner-operator
+	url = https://github.com/submariner-io/submariner-operator.git
+	branch = release-0.20
+[submodule "acm/siteconfig"]
+	path = acm/siteconfig
+	url = https://github.com/stolostron/siteconfig.git
+	branch = release-2.15
+[submodule "acm/shipyard"]
+	path = acm/shipyard
+	url = https://github.com/submariner-io/shipyard.git
+	branch = release-0.20
+[submodule "acm/flightctl"]
+	path = acm/flightctl
+	url = https://github.com/flightctl/flightctl.git
+	branch = release-0.8
+[submodule "acm/search-indexer"]
+	path = acm/search-indexer
+	url = https://github.com/stolostron/search-indexer.git
+	branch = release-2.14
+[submodule "acm/insights-metrics"]
+	path = acm/insights-metrics
+	url = https://github.com/stolostron/insights-metrics.git
+	branch = release-2.14
+[submodule "acm/multicluster-observability-operator"]
+	path = acm/multicluster-observability-operator
+	url = https://github.com/stolostron/multicluster-observability-operator.git
+	branch = release-2.15
+[submodule "acm/node-exporter"]
+	path = acm/node-exporter
+	url = https://github.com/stolostron/node-exporter.git
+	branch = release-2.15
+[submodule "acm/observatorium-operator"]
+	path = acm/observatorium-operator
+	url = https://github.com/stolostron/observatorium-operator.git
+	branch = release-2.15
+[submodule "acm/observatorium"]
+	path = acm/observatorium
+	url = https://github.com/stolostron/observatorium.git
+	branch = release-2.15
+[submodule "acm/memcached_exporter"]
+	path = acm/memcached_exporter
+	url = https://github.com/stolostron/memcached_exporter.git
+	branch = release-2.15
+[submodule "acm/multicluster-observability-addon"]
+	path = acm/multicluster-observability-addon
+	url = https://github.com/stolostron/multicluster-observability-addon.git
+[submodule "acm/kube-state-metrics"]
+	path = acm/kube-state-metrics
+	url = https://github.com/stolostron/kube-state-metrics.git
+	branch = release-2.15
+[submodule "acm/governance-policy-framework-addon"]
+	path = acm/governance-policy-framework-addon
+	url = https://github.com/stolostron/governance-policy-framework-addon.git
+	branch = release-2.15
+[submodule "acm/grafana"]
+	path = acm/grafana
+	url = https://github.com/stolostron/grafana.git
+	branch = release-2.15
+[submodule "acm/acm-cli"]
+	path = acm/acm-cli
+	url = https://github.com/stolostron/acm-cli.git
+	branch = release-2.14
+[submodule "acm/multicloud-integrations"]
+	path = acm/multicloud-integrations
+	url = https://github.com/stolostron/multicloud-integrations.git
+	branch = release-2.15
+[submodule "acm/search-collector"]
+	path = acm/search-collector
+	url = https://github.com/stolostron/search-collector.git
+	branch = release-2.15
+[submodule "acm/console"]
+	path = acm/console
+	url = https://github.com/stolostron/console.git
+	branch = release-2.15
+[submodule "acm/multiclusterhub-operator"]
+	path = acm/multiclusterhub-operator
+	url = https://github.com/stolostron/multiclusterhub-operator.git
+	branch = release-2.15
+[submodule "acm/insights-client"]
+	path = acm/insights-client
+	url = https://github.com/stolostron/insights-client.git
+	branch = release-2.14
+[submodule "acm/search-v2-api"]
+	path = acm/search-v2-api
+	url = https://github.com/stolostron/search-v2-api.git
+	branch = release-2.14
+[submodule "acm/volsync-addon-controller"]
+	path = acm/volsync-addon-controller
+	url = https://github.com/stolostron/volsync-addon-controller.git
+	branch = release-2.15
+[submodule "acm/cluster-backup-operator"]
+	path = acm/cluster-backup-operator
+	url = https://github.com/stolostron/cluster-backup-operator.git
+	branch = release-2.15
+[submodule "acm/config-policy-controller"]
+	path = acm/config-policy-controller
+	url = https://github.com/stolostron/config-policy-controller.git
+	branch = release-2.15
+[submodule "acm/klusterlet-addon-controller"]
+	path = acm/klusterlet-addon-controller
+	url = https://github.com/stolostron/klusterlet-addon-controller.git
+	branch = release-2.15
+[submodule "acm/cluster-permission"]
+	path = acm/cluster-permission
+	url = https://github.com/stolostron/cluster-permission.git
+	branch = release-2.15
+[submodule "acm/multicloud-operators-application"]
+	path = acm/multicloud-operators-application
+	url = https://github.com/stolostron/multicloud-operators-application.git
+	branch = release-2.15
