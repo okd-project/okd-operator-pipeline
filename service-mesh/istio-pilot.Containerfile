@@ -26,7 +26,7 @@ RUN go version
 
 RUN go build -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \n') ${LDFLAGS:-}" \
     -tags strictfipsruntime \
-    -o ./bin/pilot-discovery ./pilot/cmd/pilot-discovery
+    -o /tmp/out/pilot-discovery ./pilot/cmd/pilot-discovery
 
 RUN cp ./tools/packaging/common/envoy_bootstrap.json /tmp/out/envoy_bootstrap.json
 

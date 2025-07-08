@@ -47,6 +47,8 @@ ENV container="oci"
 COPY --from=gobuilder /opt/app-root/src/out/*_*/sail-operator /usr/local/bin/
 COPY --from=gobuilder /opt/app-root/src/resources /var/lib/sail-operator/resources
 
+RUN ln -s /usr/local/bin/sail-operator /sail-operator
+
 # Copy the Sail operator license
 COPY operator/LICENSE /licenses/LICENSE
 

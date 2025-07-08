@@ -127,14 +127,22 @@
 	path = node-feature-discovery/operator
 	url = https://github.com/openshift/cluster-nfd-operator
 	branch = release-4.18
+[submodule "cluster-observability/operator"]
+	path = cluster-observability/operator
+	url = https://github.com/rhobs/observability-operator
+	branch = release-1.2
+[submodule "cluster-observability/manifests"]
+	path = cluster-observability/manifests
+	url = https://github.com/rhobs/konflux-coo
+	branch = release-1.2
 [submodule "service-mesh/kiali-operator"]
 	path = service-mesh/kiali-operator
 	url = https://github.com/kiali/kiali-operator
-	branch = v2.11
+	branch = v2.4
 [submodule "service-mesh/kiali-console-plugin"]
 	path = service-mesh/kiali-console-plugin
 	url = https://github.com/kiali/openshift-servicemesh-plugin
-	branch = v2.11
+	branch = v2.4
 [submodule "service-mesh/istio"]
 	path = service-mesh/istio
 	url = https://github.com/openshift-service-mesh/istio.git
@@ -157,7 +165,7 @@
 [submodule "service-mesh/kiali"]
 	path = service-mesh/kiali
 	url = https://github.com/kiali/kiali.git
-	branch = v2.11
+	branch = v2.4
 [submodule "acm/lighthouse"]
 	path = acm/lighthouse
 	url = https://github.com/submariner-io/lighthouse.git

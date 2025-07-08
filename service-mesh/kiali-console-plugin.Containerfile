@@ -81,7 +81,7 @@ COPY --from=uibuilder --chown=${USER_UID}:${USER_UID} /tmp/dist /usr/share/nginx
 COPY --from=builder --chown=${USER_UID}:${USER_UID} ${NGINX_CONTAINER_SCRIPTS_PATH}/common.sh ${NGINX_CONTAINER_SCRIPTS_PATH}/common.sh
 
 # Copy the OSSMC license
-COPY openshift-servicemesh-plugin/LICENSE /licenses/LICENSE
+COPY kiali-console-plugin/LICENSE /licenses/LICENSE
 
 EXPOSE 9443
 

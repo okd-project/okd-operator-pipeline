@@ -1,30 +1,56 @@
+ARG SHORT_VERSION
 ###########################################################################
 # Istio Pilot Agent build                                                 #
 ###########################################################################
 
 FROM registry.access.redhat.com/ubi9/go-toolset:1.23 AS gobuilder
 
-ARG ISTIO_GIT_TAG
-ARG ISTIO_GIT_SHA
+ARG VERSION
+ARG ISTIO_REVISION
 
-COPY --chown=default istio proxy-scripts/build-pilot-agent.sh ./
+COPY --chown=default service-mesh/istio .
 
-RUN go version
+RUN mkdir /tmp/out
+ENV CGO_ENABLED=1
+ENV LDFLAGS="\
+-X istio.io/istio/pkg/version.buildVersion=${VERSION} \
+-X istio.io/istio/pkg/version.buildGitRevision=${ISTIO_REVISION} \
+-X istio.io/istio/pkg/version.buildTag=${VERSION} \
+-X istio.io/istio/pkg/version.buildStatus=Clean \
+-s -w"
 
-RUN bash build-pilot-agent.sh
+RUN go build -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \n') ${LDFLAGS:-}" \
+       -o /tmp/out ./pilot/cmd/pilot-agent
+
+RUN cp ./tools/packaging/common/envoy_bootstrap.json /tmp/out/envoy_bootstrap.json
 
 ###########################################################################
 # Istio Proxy build                                                       #
 ###########################################################################
 
-# automatically updated by renovate
-FROM quay.io/redhat-user-workloads/service-mesh-tenant/ossm-3-0-proxy-debug@sha256:5bdb520ce92a65ecf192a261f3dc13f368cc6fe090b429a85f5299ba9725d68e AS proxy_debug
+FROM quay.io/maistra-dev/maistra-builder:${SHORT_VERSION} AS proxy_debug
+
+ENV BAZEL_DISK_CACHE=/work/bazel-cache
+
+COPY .git .git
+COPY service-mesh/proxy service-mesh/proxy
+
+WORKDIR /work/service-mesh/proxy
+
+#RUN bash ./ossm/ci/common.sh && \
+#    bazel build @envoy//test/tools/wee8_compile:wee8_compile_tool && \
+#    mv ./bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool ./wee8_compile_tool
+
+RUN ./ossm/ci/pre-submit.sh
+
+#RUN ./wee8_compile_tool extensions/stats.wasm extensions/stats.compiled.wasm && \
+#    ./wee8_compile_tool extensions/metadata_exchange.wasm extensions/metadata_exchange.compiled.wasm
 
 # stripping proxy needs root privileges
 USER 0
 
 # strip debugsymbols
-RUN strip /proxy/bazel-bin/envoy
+RUN strip /work/service-mesh/proxy/bazel-bin/envoy
 
 ###########################################################################
 # Istio Proxy image                                                       #
@@ -32,30 +58,28 @@ RUN strip /proxy/bazel-bin/envoy
 
 FROM quay.io/centos/centos:stream9-minimal AS release
 
-ARG PROXY_GIT_TAG
-ARG PROXY_GIT_SHA
-ARG PROXY_GIT_URL
+ARG VERSION
+ARG ISTIO_REVISION
 
 # Name must match the repository name
-LABEL com.github.url="${PROXY_GIT_URL}"
-LABEL com.github.commit="${PROXY_GIT_SHA}"
+LABEL com.github.commit="${ISTIO_REVISION}"
 LABEL summary="OKD Service Mesh Proxy V2 OKD container image"
 LABEL description="OKD Service Mesh Proxy V2 OKD container image"
-LABEL version="${PROXY_GIT_TAG}"
-LABEL istio_version="${PROXY_GIT_TAG}"
+LABEL version="${VERSION}"
+LABEL istio_version="${VERSION}"
 LABEL io.k8s.display-name="OKD Service Mesh Proxy V2"
 LABEL io.k8s.description="OKD Service Mesh Proxy V2 OKD container image"
 
-ENV ISTIO_VERSION="${PROXY_GIT_TAG}"
+ENV ISTIO_VERSION="${VERSION}"
 ENV container="oci"
 
 # Environment variables indicating this proxy's version/capabilities as opaque string
 # ISTIO_META_ISTIO_PROXY_VERSION and ISTIO_META_ISTIO_VERSION need to match
-ENV ISTIO_META_ISTIO_PROXY_VERSION="${PROXY_GIT_TAG}"
+ENV ISTIO_META_ISTIO_PROXY_VERSION="${VERSION}"
 # Environment variable indicating the exact proxy sha - for debugging or version-specific configs
-ENV ISTIO_META_ISTIO_PROXY_SHA="${PROXY_GIT_SHA}"
+ENV ISTIO_META_ISTIO_PROXY_SHA="${ISTIO_REVISION}"
 # Environment variable indicating the exact build, for debugging
-ENV ISTIO_META_ISTIO_VERSION="${PROXY_GIT_TAG}"
+ENV ISTIO_META_ISTIO_VERSION="${VERSION}"
 
 # Install openssl library
 RUN microdnf install -y openssl && microdnf clean all
@@ -63,17 +87,17 @@ RUN ln -s /usr/lib64/libcrypto.so.3 /usr/lib64/libcrypto.so && ln -s /usr/lib64/
 
 COPY --from=gobuilder /tmp/out/pilot-agent /usr/local/bin/pilot-agent
 COPY --from=gobuilder /tmp/out/envoy_bootstrap.json /var/lib/istio/envoy/envoy_bootstrap_tmpl.json
-COPY --from=proxy_debug /proxy/bazel-bin/envoy /usr/local/bin/envoy
+COPY --from=proxy_debug /work/service-mesh/proxy/bazel-bin/envoy /usr/local/bin/envoy
 
 # WASM extensions
-COPY --from=proxy_debug /proxy/bazel-bin/extensions/stats.wasm /etc/istio/extensions/stats-filter.wasm
-COPY --from=proxy_debug /proxy/bazel-bin/extensions/stats.compiled.wasm /etc/istio/extensions/stats-filter.compiled.wasm
-
-COPY --from=proxy_debug /proxy/bazel-bin/extensions/metadata_exchange.wasm /etc/istio/extensions/metadata-exchange-filter.wasm
-COPY --from=proxy_debug /proxy/bazel-bin/extensions/metadata_exchange.compiled.wasm /etc/istio/extensions/metadata-exchange-filter.compiled.wasm
+#COPY --from=proxy_debug /proxy/bazel-bin/extensions/stats.wasm /etc/istio/extensions/stats-filter.wasm
+#COPY --from=proxy_debug /proxy/bazel-bin/extensions/stats.compiled.wasm /etc/istio/extensions/stats-filter.compiled.wasm
+#
+#COPY --from=proxy_debug /proxy/bazel-bin/extensions/metadata_exchange.wasm /etc/istio/extensions/metadata-exchange-filter.wasm
+#COPY --from=proxy_debug /proxy/bazel-bin/extensions/metadata_exchange.compiled.wasm /etc/istio/extensions/metadata-exchange-filter.compiled.wasm
 
 # Container image needs to contain licensing info
-COPY proxy/LICENSE /licenses/LICENSE
+COPY service-mesh/proxy/LICENSE /licenses/LICENSE
 
 # Pilot-agent and envoy may run with effective uid 0 in order to run envoy with
 # CAP_NET_ADMIN, so any iptables rule matching on "-m owner --uid-owner

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail
+set -euox pipefail
 
 BASE_REGISTRY=${BASE_REGISTRY:-"quay.io/okderators"}
 OKD_VERSION=${OKD_VERSION:-"4.18.0-okd-scos.10"}
@@ -21,12 +21,10 @@ get_payload_component() {
   oc adm release info --image-for="${component}" "${OKD_RELEASE}"
 }
 
-submodule_initialize() {
+submodule_exists() {
   local -r name="$1"
-  local -r branch="$2"
 
   # Check for directory
-  EXISTS=false
   if [ -d "${name}" ]; then
     pushd "${name}"
     GIT_DIR="$(git rev-parse --git-dir)"
@@ -34,22 +32,37 @@ submodule_initialize() {
     popd
     # Check if the current directory is equal to the git directory
     if [ "${GIT_DIR}" = "${CURRENT_DIR}" ]; then
-      EXISTS=true
+      return 1
     fi
   fi
 
+  return 0
+}
+
+submodule_reset() {
+  local -r name="$1"
+  local -r branch="$2"
+
+  # Check if the submodule exists
+  EXISTS=$(submodule_exists "${name}")
   if [ "${EXISTS}" = true ]; then
-    # Clean up the submodule if it exists
-    git submodule deinit -f "${name}" || true
+    git clean -fdx
+    git reset --hard origin/${branch}
+    git submodule deinit -f "${name}"
   fi
+}
+
+submodule_initialize() {
+  local -r name="$1"
+  local -r branch="$2"
+
+  submodule_reset "${name}" "${branch}"
 
   git submodule update --init --recursive "${name}" || true
 
   # Check for patch file
   if [ -f "patches/${name}.patch" ]; then
     pushd "${name}"
-    git clean -fdx
-    git reset --hard origin/$branch
     git am -3 "../patches/${name}.patch"
     popd
   fi
@@ -71,12 +84,6 @@ apply_patch() {
   # Apply patch to git repo
   git am -3 "../patches/${name}.patch"
   popd
-}
-
-reset_submodule() {
-  local -r name="$1"
-
-  git submodule deinit -f "${name}" || true
 }
 
 export_image_digest() {

@@ -14,12 +14,8 @@ USER 0
 
 WORKDIR /src/yarn
 
-# Copy the yarn installation folder
-COPY yarn-install .
-
 # Install yarn
-RUN npm install --offline && \
-    ln -s $PWD/node_modules/yarn/bin/yarn /usr/local/bin/yarn && \
+RUN npm install -g yarn && \
     \
     # Show node and yarn versions
     node --version && \
@@ -34,7 +30,7 @@ COPY kiali/frontend .
 RUN sed -i "s|\$(git rev-parse HEAD)|${KIALI_GIT_SHA}|g" package.json && \
     \
     # Build the Kiali frontend
-    yarn install --offline --frozen-lockfile --ignore-scripts && \
+    yarn install --frozen-lockfile --ignore-scripts && \
     yarn build && \
     \
     # Move the Kiali console to a temporal folder
@@ -50,10 +46,8 @@ FROM registry.access.redhat.com/ubi9/go-toolset:1.23 AS gobuilder
 ARG KIALI_GIT_TAG \
     KIALI_GIT_SHA
 
-WORKDIR /src
-
 # Copy the Kiali source code
-COPY kiali .
+COPY --chown=default kiali .
 
 # Environment variables
 ENV CGO_ENABLED=1 \
@@ -65,8 +59,7 @@ RUN go version && \
     go build -o /tmp/kiali-unstripped -ldflags "-X main.version=${KIALI_GIT_TAG} -X main.commitHash=${KIALI_GIT_SHA} -X main.goVersion=$(go version 2>/dev/null | grep -Eo  '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" -tags strictfipsruntime && \
     \
     # Compress go binaries
-    strip -o /tmp/kiali -s /tmp/kiali-unstripped && \
-    rm -rf /src
+    strip -o /tmp/kiali -s /tmp/kiali-unstripped
 
 ###########################################################################
 # Kiali Server image                                                      #
