@@ -1,0 +1,53 @@
+#!/usr/bin/bash
+
+source ../common.sh
+
+REGISTRY="${BASE_REGISTRY}/acm"
+
+IMG_ACM_CLI="${REGISTRY}/cli:${OCP_DATE}"
+IMG_CLUSTER_BACKUP_OPERATOR="${REGISTRY}/cluster-backup-operator:${OCP_DATE}"
+IMG_CLUSTER_PERMISSION=OPERATOR="${REGISTRY}/cluster-permission:${OCP_DATE}"
+IMG_CONFIG_POLICY_CONTROLLER="${REGISTRY}/config-policy-controller:${OCP_DATE}"
+IMG_CONSOLE=OPERATOR="${REGISTRY}/console:${OCP_DATE}"
+IMG_ENDPOINT_MONITORING_OPERATOR="${REGISTRY}/endpoint-monitoring-operator:${OCP_DATE}"
+IMG_FLIGHTCTL_OCP_UI="${REGISTRY}/flightctl-ocp-ui:${OCP_DATE}"
+IMG_FLIGHTCTL_PERIODIC="${REGISTRY}/flightctl-periodic:${OCP_DATE}"
+IMG_FLIGHTCTL_UI=OPERATOR="${REGISTRY}/flightctl-ui:${OCP_DATE}"
+IMG_FLIGHTCTL_WORKER="${REGISTRY}/flightctl-worker:${OCP_DATE}"
+IMG_GOVERNANCE_POLICY_FRAMEWORK_ADDON="${REGISTRY}/governance-policy-framework-addon:${OCP_DATE}"
+IMG_GRAFANA=OPERATOR="${REGISTRY}/grafana:${OCP_DATE}"
+IMG_GRAFANA_DASHBOARD_LOADER="${REGISTRY}/grafana-dashboard-loader:${OCP_DATE}"
+IMG_INSIGHTS_CLIENT="${REGISTRY}/insights-client:${OCP_DATE}"
+IMG_INSIGHTS_METRICS="${REGISTRY}/insights-metrics:${OCP_DATE}"
+IMG_KUSTERLET_ADDON_CONTROLLER="${REGISTRY}/kusterlet-addon-controller:${OCP_DATE}"
+IMG_KUBE_STATE_METRICS="${REGISTRY}/kube-state-metrics:${OCP_DATE}"
+IMG_LIGHTHOUSE_AGENT="${REGISTRY}/lighthouse-agent:${OCP_DATE}"
+IMG_LIGHTHOUSE_COREDNS="${REGISTRY}/lighthouse-coredns:${OCP_DATE}"
+IMG_MEMCACHED_EXPORTER="${REGISTRY}/memcached-exporter:${OCP_DATE}"
+IMG_METRICS_COLLECTOR="${REGISTRY}/metrics-collector:${OCP_DATE}"
+IMG_MULTICLOUD_INTEGRATIONS="${REGISTRY}/multicloud-integrations:${OCP_DATE}"
+IMG_MULTICLUSTER_OBSERVABILITY_ADDON="${REGISTRY}/multicluster-observability-addon:${OCP_DATE}"
+IMG_MULTICLUSTER_OBSERVABILITY_OPERATOR="${REGISTRY}/multicluster-observability-operator:${OCP_DATE}"
+IMG_MULTICLUSTER_OPERATORS_APPLICATION="${REGISTRY}/multicluster-operators-application:${OCP_DATE}"
+IMG_MULTICLUSTERHUB_OPERATOR="${REGISTRY}/multiclusterhub-operator:${OCP_DATE}"
+IMG_NETTEST="${REGISTRY}/nettest:${OCP_DATE}"
+IMG_NODE_EXPORTER="${REGISTRY}/node-exporter:${OCP_DATE}"
+IMG_OBSERVATORIUM="${REGISTRY}/observatorium:${OCP_DATE}"
+IMG_OBSERVATORIUM_OPERATOR="${REGISTRY}/observatorium-operator:${OCP_DATE}"
+IMG_RBAC_QUERY_PROXY="${REGISTRY}/rbac-query-proxy:${OCP_DATE}"
+IMG_KUBE_RBAC_PROXY="$(get_payload_component "kube-rbac-proxy")"
+IMG_SEARCH_INDEXER="${REGISTRY}/search-indexer:${OCP_DATE}"
+IMG_SEARCH_V2_API="${REGISTRY}/search-v2-api:${OCP_DATE}"
+IMG_SEARCH_V2_OPERATOR="${REGISTRY}/search-v2-operator:${OCP_DATE}"
+IMG_SITECONFIG="${REGISTRY}/siteconfig:${OCP_DATE}"
+IMG_SUBCTL="${REGISTRY}/subctl:${OCP_DATE}"
+IMG_SUBMARINER_GATEWAY="${REGISTRY}/submariner-gateway:${OCP_DATE}"
+IMG_SUBMARINER_GLOBALNET="${REGISTRY}/submariner-globalnet:${OCP_DATE}"
+IMG_SUBMARINER_OPERATOR="${REGISTRY}/submariner-operator:${OCP_DATE}"
+IMG_SUBMARINER_ROUTE_AGENT="${REGISTRY}/submariner-route-agent:${OCP_DATE}"
+IMG_VOLSYNC_ADDON_CONTROLLER="${REGISTRY}/volsync-addon-controller:${OCP_DATE}"
+IMG_VOLSYNC=OPERATOR="${REGISTRY}/volsync:${OCP_DATE}"
+
+
+# Build the images
+podman build -t "${IMG_ACM_CLI}" -f acm-cli.Containerfile --build-arg "VERSION=$OCP_DATE" ../
