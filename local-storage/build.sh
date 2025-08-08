@@ -1,11 +1,8 @@
 #!/bin/bash
 
-set -e -x
+NAMESPACE="local-storage"
 
 source ../common.sh
-
-REGISTRY="${BASE_REGISTRY}/local-storage"
-REGISTRY_NAMESPACE="local-storage"
 
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_DISKMAKER="${REGISTRY}/diskmaker:${OCP_DATE}"

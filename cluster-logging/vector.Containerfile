@@ -28,6 +28,10 @@ RUN PROTOC=/src/thirdparty/protoc/protoc-linux-$(arch) make build
 
 FROM quay.io/centos/centos:stream9
 
+# No weak dependencies
+RUN dnf install --setopt=nodocs -y systemd \
+    && dnf clean all
+
 COPY --from=builder /src/target/release/vector /usr/bin/
 
 WORKDIR /usr/bin

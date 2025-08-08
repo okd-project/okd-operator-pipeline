@@ -1,13 +1,10 @@
 #!/bin/bash
 
-set -e -x
-
+NAMESPACE="cert-manager"
 MAJOR=1
 MINOR=15
 
 source ../common.sh
-
-REGISTRY="${BASE_REGISTRY}/cert-manager"
 
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_CERT_MANAGER="${REGISTRY}/cert-manager:${OCP_DATE}"

@@ -1,14 +1,10 @@
 #!/bin/bash
 
-set -e -x
-
+NAMESPACE="cluster-logging"
 export MAJOR=6
-export MINOR=2
+export MINOR=3
 
 source ../common.sh
-
-REGISTRY_NAMESPACE="cluster-logging"
-REGISTRY="${BASE_REGISTRY}/${REGISTRY_NAMESPACE}"
 
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_LOG_FILE_METRIC_EXPORTER="${REGISTRY}/log-file-metric-exporter:${OCP_DATE}"
@@ -101,5 +97,5 @@ podman push $IMG_BUNDLE
 
 popd
 
-reset_submodule loki release-${OCP_SHORT}
-reset_submodule operator release-${OCP_SHORT}
+submodule_reset loki release-${OCP_SHORT}
+submodule_reset operator release-${OCP_SHORT}

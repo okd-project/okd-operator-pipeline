@@ -1,8 +1,8 @@
 #!/bin/bash
 
-source ../common.sh
+NAMESPACE="node-feature-discovery"
 
-OCP_DATE="4.18.0-2025-06-05-152324"
+source ../common.sh
 
 REGISTRY="${BASE_REGISTRY}/node-feature-discovery"
 
@@ -15,12 +15,10 @@ submodule_initialize nfd release-${OCP_SHORT}
 submodule_initialize operator release-${OCP_SHORT}
 
 ## Build the images
-#podman build -f operator/Dockerfile -t ${IMG_OPERATOR} operator
-#podman build -f nfd/Dockerfile --build-arg VERSION=${OCP_DATE} -t ${IMG_NFD} nfd
-#
-## Push the images
-#podman push ${IMG_OPERATOR}
-#podman push ${IMG_NFD}
+podman build -f operator/Dockerfile -t ${IMG_OPERATOR} operator
+podman build -f nfd/Dockerfile --build-arg VERSION=${OCP_DATE} -t ${IMG_NFD} nfd
+
+push_all_images
 
 # Create the bundle
 pushd operator

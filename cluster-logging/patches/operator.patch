@@ -1,4 +1,4 @@
-From 0bc70a3cb14fc08359636cfd6f54bf04fa65bede Mon Sep 17 00:00:00 2001
+From a1af8f663f430b8a648f7204146a6c059cd707d0 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Sun, 25 May 2025 18:18:42 +0100
 Subject: [PATCH] OKDify
@@ -8,15 +8,15 @@ Subject: [PATCH] OKDify
  1 file changed, 16 insertions(+), 18 deletions(-)
 
 diff --git a/config/manifests/bases/cluster-logging.clusterserviceversion.yaml b/config/manifests/bases/cluster-logging.clusterserviceversion.yaml
-index 8857bc00f..37ae6c080 100644
+index 8512fa74d..9ee7fd8a9 100644
 --- a/config/manifests/bases/cluster-logging.clusterserviceversion.yaml
 +++ b/config/manifests/bases/cluster-logging.clusterserviceversion.yaml
 @@ -3,10 +3,10 @@ kind: ClusterServiceVersion
  metadata:
    annotations:
      capabilities: Seamless Upgrades
--    categories: OpenShift Optional, Logging & Tracing
-+    categories: OKD Optional, Logging & Tracing
+-    categories: OpenShift Optional, Logging & Tracing, Observability
++    categories: OKD Optional, Logging & Tracing, Observability
      certified: "false"
      containerImage: quay.io/openshift-logging/cluster-logging-operator:latest
 -    description: The Red Hat OpenShift Logging Operator for OCP provides a means for
@@ -37,7 +37,7 @@ index 8857bc00f..37ae6c080 100644
      target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
    labels:
      operatorframework.io/arch.amd64: supported
-@@ -1312,7 +1310,7 @@ spec:
+@@ -1226,7 +1224,7 @@ spec:
          path: outputs[0].name
        - description: |-
            OTLP configures forwarding log events to a receiver using the OpenTelemetry Protocol
@@ -46,7 +46,7 @@ index 8857bc00f..37ae6c080 100644
          displayName: OpenTelemetry Output
          path: outputs[0].otlp
        - description: Authentication sets credentials for authenticating the requests.
-@@ -1898,26 +1896,26 @@ spec:
+@@ -1817,26 +1815,26 @@ spec:
          - urn:alm:descriptor:com.tectonic.ui:logFileMetricsExporterConditions
        version: v1alpha1
    description: |-
@@ -83,7 +83,7 @@ index 8857bc00f..37ae6c080 100644
    install:
      spec:
        deployments: null
-@@ -1940,11 +1938,11 @@ spec:
+@@ -1859,11 +1857,11 @@ spec:
    links:
    - name: Documentation
      url: https://github.com/openshift/cluster-logging-operator/blob/master/README.adoc
@@ -96,7 +96,7 @@ index 8857bc00f..37ae6c080 100644
    provider:
 -    name: Red Hat
 +    name: OKD Community
-   version: 6.2.0
+   version: 6.3.0
 -- 
-2.49.0
+2.50.1
 

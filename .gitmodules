@@ -289,3 +289,171 @@
 	path = acm/multicloud-operators-application
 	url = https://github.com/stolostron/multicloud-operators-application.git
 	branch = release-2.15
+[submodule "acm/flightctl-ui"]
+	path = acm/flightctl-ui
+	url = https://github.com/flightctl/flightctl-ui.git
+	branch = release-0.8
+[submodule "acm/search-v2-operator"]
+	path = acm/search-v2-operator
+	url = https://github.com/stolostron/search-v2-operator.git
+	branch = release-2.15
+[submodule "acm/volsync"]
+	path = acm/volsync
+	url = https://github.com/stolostron/volsync-operator-product-build.git
+	branch = release-0.13
+[submodule "multicluster-engine/managed-serviceaccount"]
+	path = multicluster-engine/managed-serviceaccount
+	url = https://github.com/stolostron/managed-serviceaccount
+	branch = backplane-2.10
+[submodule "multicluster-engine/ocm"]
+	path = multicluster-engine/ocm
+	url = https://github.com/stolostron/ocm.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/cluster-proxy"]
+	path = multicluster-engine/cluster-proxy
+	url = https://github.com/stolostron/cluster-proxy
+	branch = backplane-2.10
+[submodule "multicluster-engine/backplane-operator"]
+	path = multicluster-engine/backplane-operator
+	url = https://github.com/stolostron/backplane-operator
+	branch = backplane-2.10
+[submodule "multicluster-engine/provider-credential-controller"]
+	path = multicluster-engine/provider-credential-controller
+	url = https://github.com/stolostron/provider-credential-controller.git
+	branch = backplane-2.10
+[submodule "acm/assisted-installer-agent"]
+	path = multicluster-engine/assisted-installer-agent
+	url = https://github.com/openshift/assisted-installer-agent
+	branch = release-ocm-2.15
+[submodule "acm/assisted-installer"]
+	path = multicluster-engine/assisted-installer
+	url = https://github.com/openshift/assisted-installer
+	branch = release-ocm-2.15
+[submodule "acm/assisted-image-service"]
+	path = multicluster-engine/assisted-image-service
+	url = https://github.com/openshift/assisted-image-service.git
+	branch = release-ocm-2.15
+[submodule "multicluster-engine/console"]
+	path = multicluster-engine/console
+	url = https://github.com/stolostron/console.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/clusterclaims-controller"]
+	path = multicluster-engine/clusterclaims-controller
+	url = https://github.com/stolostron/clusterclaims-controller
+	branch = backplane-2.10
+[submodule "acm/hypershift"]
+	path = multicluster-engine/hypershift
+	url = https://github.com/openshift/hypershift.git
+	branch = release-4.21
+[submodule "multicluster-engine/discovery"]
+	path = multicluster-engine/discovery
+	url = https://github.com/stolostron/discovery.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/hive"]
+	path = multicluster-engine/hive
+	url = https://github.com/openshift/hive.git
+	branch = master
+[submodule "multicluster-engine/backplane-must-gather"]
+	path = multicluster-engine/backplane-must-gather
+	url = https://github.com/stolostron/backplane-must-gather.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/multicloud-operators-foundation"]
+	path = multicluster-engine/multicloud-operators-foundation
+	url = https://github.com/stolostron/multicloud-operators-foundation.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/cluster-proxy-addon"]
+	path = multicluster-engine/cluster-proxy-addon
+	url = https://github.com/stolostron/cluster-proxy-addon.git
+	branch = backplane-2.10
+[submodule "acm/assisted-service"]
+	path = multicluster-engine/assisted-service
+	url = https://github.com/openshift/assisted-service.git
+	branch = release-ocm-2.15
+[submodule "multicluster-engine/cluster-curator-controller"]
+	path = multicluster-engine/cluster-curator-controller
+	url = https://github.com/stolostron/cluster-curator-controller.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/cluster-image-set-controller"]
+	path = multicluster-engine/cluster-image-set-controller
+	url = https://github.com/stolostron/cluster-image-set-controller.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/managedcluster-import-controller"]
+	path = multicluster-engine/managedcluster-import-controller
+	url = https://github.com/stolostron/managedcluster-import-controller.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/image-based-install-operator"]
+	path = multicluster-engine/image-based-install-operator
+	url = https://github.com/openshift/image-based-install-operator.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/clusterlifecycle-state-metrics"]
+	path = multicluster-engine/clusterlifecycle-state-metrics
+	url = https://github.com/stolostron/clusterlifecycle-state-metrics.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/hypershift-addon-operator"]
+	path = multicluster-engine/hypershift-addon-operator
+	url = https://github.com/stolostron/hypershift-addon-operator.git
+	branch = backplane-2.10
+[submodule "acm/governance-policy-addon-controller"]
+	path = acm/governance-policy-addon-controller
+	url = https://github.com/stolostron/governance-policy-addon-controller.git
+	branch = release-2.15
+[submodule "acm/cert-policy-controller"]
+	path = acm/cert-policy-controller
+	url = https://github.com/stolostron/cert-policy-controller.git
+	branch = release-2.15
+[submodule "acm/governance-policy-propagator"]
+	path = acm/governance-policy-propagator
+	url = https://github.com/stolostron/governance-policy-propagator.git
+	branch = release-2.15
+[submodule "acm/multicloud-operators-channel"]
+	path = acm/multicloud-operators-channel
+	url = https://github.com/stolostron/multicloud-operators-channel.git
+	branch = release-2.15
+[submodule "acm/multicloud-operators-subscription"]
+	path = acm/multicloud-operators-subscription
+	url = https://github.com/stolostron/multicloud-operators-subscription.git
+	branch = release-2.15
+[submodule "acm/submariner-addon"]
+	path = acm/submariner-addon
+	url = https://github.com/stolostron/submariner-addon.git
+	branch = release-2.15
+[submodule "acm/thanos-receive-controller"]
+	path = acm/thanos-receive-controller
+	url = https://github.com/stolostron/thanos-receive-controller.git
+	branch = release-2.15
+[submodule "acm/prometheus"]
+	path = acm/prometheus
+	url = https://github.com/stolostron/prometheus.git
+	branch = release-2.15
+[submodule "acm/prometheus-alertmanager"]
+	path = acm/prometheus-alertmanager
+	url = https://github.com/stolostron/prometheus-alertmanager.git
+	branch = release-2.15
+[submodule "acm/thanos"]
+	path = acm/thanos
+	url = https://github.com/stolostron/thanos.git
+	branch = release-2.15
+[submodule "acm/must-gather"]
+	path = acm/must-gather
+	url = https://github.com/stolostron/must-gather.git
+	branch = release-2.15
+[submodule "acm/prometheus-operator"]
+	path = acm/prometheus-operator
+	url = https://github.com/stolostron/prometheus-operator.git
+	branch = release-2.15
+[submodule "multicluster-engine/cluster-api-provider-agent"]
+	path = multicluster-engine/cluster-api-provider-agent
+	url = https://github.com/openshift/cluster-api-provider-agent
+	branch = release-ocm-2.15
+[submodule "multicluster-engine/cluster-api-provider-kubevirt"]
+	path = multicluster-engine/cluster-api-provider-kubevirt
+	url = https://github.com/openshift/cluster-api-provider-kubevirt.git
+	branch = release-4.21
+[submodule "multicluster-engine/cluster-api-installer"]
+	path = multicluster-engine/cluster-api-installer
+	url = https://github.com/stolostron/cluster-api-installer.git
+	branch = backplane-2.10
+[submodule "multicluster-engine/cluster-api-provider-openshift-assisted"]
+	path = multicluster-engine/cluster-api-provider-openshift-assisted
+	url = https://github.com/openshift-assisted/cluster-api-provider-openshift-assisted.git
+	branch = backplane-2.10

@@ -1,10 +1,8 @@
 #!/bin/bash
 
-set -e -x
+NAMESPACE="metallb"
 
 source ../common.sh
-
-REGISTRY="${BASE_REGISTRY}/metallb"
 
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_METALLB="${REGISTRY}/metallb:${OCP_DATE}"

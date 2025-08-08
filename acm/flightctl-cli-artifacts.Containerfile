@@ -1,0 +1,67 @@
+FROM registry.access.redhat.com/ubi9/go-toolset:1.23 AS builder
+
+USER 0
+RUN dnf install --nodocs -y jq
+USER default
+
+COPY --chown=default acm/flightctl acm/flightctl
+COPY --chown=default .git .git
+
+WORKDIR $HOME/acm/flightctl
+RUN make build-multiarch-clis
+
+
+FROM registry.access.redhat.com/ubi9/ubi:latest AS certs
+
+RUN dnf install --nodocs -y nginx && \
+    rm -f /etc/nginx/nginx.conf /etc/nginx/conf.d/default.conf && \
+    dnf clean all
+
+ENV USER_UID=1001 \
+    USER_NAME=server \
+    HOME=/home/server \
+    NGINX_CONF_PATH=/etc/nginx/nginx.conf \
+    ENTRYPOINT_PATH=/usr/local/bin/entrypoint.sh
+
+COPY --from=builder /opt/app-root/src/acm/flightctl/packaging/containers/cli-artifacts/nginx.conf ${NGINX_CONF_PATH}
+COPY --from=builder /opt/app-root/src/acm/flightctl/packaging/containers/cli-artifacts/entrypoint.sh ${ENTRYPOINT_PATH}
+
+USER root
+
+RUN mkdir -p ${HOME}/src/gh-archives \
+    chown ${USER_UID}:0 ${HOME} && \
+    chmod 755 ${HOME} && \
+    sed '/^\s*listen\s*\[::\]:8090/d' ${NGINX_CONF_PATH} > ${NGINX_CONF_PATH}.ipv4 && \
+    sed '/^\s*listen\s*8090/d' ${NGINX_CONF_PATH} > ${NGINX_CONF_PATH}.ipv6 && \
+    chmod 755 ${NGINX_CONF_PATH} ${NGINX_CONF_PATH}.ipv* && \
+    chmod -R 775 /var/lib/nginx && \
+    chown -R ${USER_UID}:0 /root && \
+    chown -R ${USER_UID}:0 /var/lib/nginx && \
+    chmod -R 775 /var/log/nginx && \
+    chown -R ${USER_UID}:0 /var/log/nginx && \
+    chmod -R 775 /var/run && \
+    chown -R ${USER_UID}:0 /var/run && \
+    chmod +x ${ENTRYPOINT_PATH}
+
+USER ${USER_UID}
+
+WORKDIR ${HOME}/src
+
+COPY --from=builder /opt/app-root/src/acm/flightctl/bin/clis/gh-archives/ ${HOME}/src/gh-archives/
+
+USER root
+RUN chmod -R 755 ${HOME}/src/gh-archives/ && \
+    chown -R ${USER_UID}:0 ${HOME}/src/gh-archives/ && \
+    chmod 666 ${HOME}/src/gh-archives/index.json
+USER ${USER_UID}
+
+LABEL \
+    description="Container image exposing multi-arch Flight Control CLI binaries over HTTP" \
+    io.k8s.description="Container image exposing multi-arch Flight Control CLI binaries over HTTP" \
+    io.k8s.display-name="Flight Control CLI multiarch artifacts with server" \
+    name="flightctl-cli-artifacts" \
+    summary="Container image exposing multi-arch Flight Control CLI binaries over HTTP"
+
+EXPOSE 8090
+
+ENTRYPOINT ${ENTRYPOINT_PATH}

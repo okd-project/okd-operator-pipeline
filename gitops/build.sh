@@ -1,11 +1,10 @@
 #!/bin/bash
 
+NAMESPACE="gitops"
 MAJOR=1
 MINOR=16
 
 source ../common.sh
-
-REGISTRY="${BASE_REGISTRY}/gitops"
 
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_ARGOCD="${REGISTRY}/argocd:${OCP_DATE}"
@@ -100,12 +99,12 @@ podman push ${IMG_BUNDLE}
 popd
 
 # Reset submodules
-reset_submodule argo-cd
-reset_submodule argo-rollouts
-reset_submodule argocd-extension-installer
-reset_submodule backend
-reset_submodule console-plugin
-reset_submodule dex
-reset_submodule must-gather
-reset_submodule operator
-reset_submodule rollout-extension
+submodule_reset argo-cd
+submodule_reset argo-rollouts
+submodule_reset argocd-extension-installer
+submodule_reset backend
+submodule_reset console-plugin
+submodule_reset dex
+submodule_reset must-gather
+submodule_reset operator
+submodule_reset rollout-extension

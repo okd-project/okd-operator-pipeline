@@ -1,10 +1,8 @@
 #!/bin/bash
 
-set -e -x
+NAMESPACE="ingress-node-firewall"
 
 source ../common.sh
-
-REGISTRY="${BASE_REGISTRY}/ingress-node-firewall"
 
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_DAEMON="${REGISTRY}/daemon:${OCP_DATE}"

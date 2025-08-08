@@ -1,11 +1,8 @@
 #!/bin/bash
 
-set -e -x
+NAMESPACE="sr-iov"
 
 source ../common.sh
-
-REGISTRY="${BASE_REGISTRY}/sr-iov"
-REGISTRY_NAMESPACE="sr-iov"
 
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_CNI="${REGISTRY}/sriov-cni:${OCP_DATE}"

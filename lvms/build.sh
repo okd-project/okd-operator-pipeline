@@ -1,11 +1,8 @@
 #!/bin/bash
 
-set -e -x
+NAMESPACE="lvms"
 
 source ../common.sh
-
-REGISTRY="${BASE_REGISTRY}/lvms"
-REGISTRY_NAMESPACE="lvms"
 
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_MUST_GATHER="${REGISTRY}/must-gather:${OCP_DATE}"
