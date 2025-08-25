@@ -14,6 +14,12 @@ IMG_BUNDLE="${REGISTRY}/operator-bundle:${OCP_DATE}"
 
 apply_patch operator release-${OCP_SHORT}
 
+# Non-standard modification to enable incoming BGPD connections
+if [ "${ACCEPT_INCOMING_BGP_CONNECTIONS:-false}" = "true" ]; then
+  echo "ACCEPT_INCOMING_BGP_CONNECTIONS is set to true, enabling FRR"
+  yq -i ".frrk8s.frr.acceptIncomingBGPConnections = true" operator/bindata/deployment/helm/frr-k8s/values.yaml
+fi
+
 # Build the images
 podman build -t "${IMG_OPERATOR}" -f operator.Containerfile ./operator
 podman build -t "${IMG_METALLB}" -f metallb.Containerfile ../
