@@ -163,7 +163,7 @@ function push_all_images() {
           continue
       fi
       # Ignore if value does not start with "quay.io/okderators/"
-      if [[ ${!img} != $REGISTY* ]]; then
+      if [[ ${!img} != $REGISTRY* ]]; then
           continue
       fi
       if [[ $img == IMG_* ]]; then
