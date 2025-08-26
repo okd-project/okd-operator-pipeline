@@ -38,3 +38,6 @@ podman build -t "${IMG_BUNDLE}" -f bundle.Dockerfile .
 podman push "${IMG_BUNDLE}"
 
 popd
+
+submodule_reset nfd release-${OCP_SHORT}
+submodule_reset operator release-${OCP_SHORT}
