@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAMESPACE="sr-iov"
+NAMESPACE="node-feature-discovery"
 
 source ../common.sh
 
