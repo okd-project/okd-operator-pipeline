@@ -9,7 +9,7 @@ if [ -z "${NAMESPACE:-}" ]; then
 fi
 
 BASE_REGISTRY=${BASE_REGISTRY:-"quay.io/okderators"}
-OKD_VERSION=${OKD_VERSION:-"4.18.0-okd-scos.10"}
+OKD_VERSION=${OKD_VERSION:-"4.19.0-okd-scos.16"}
 REGISTRY="${BASE_REGISTRY}/$NAMESPACE"
 OKD_RELEASE=quay.io/okd/scos-release:${OKD_VERSION}
 CHANNEL=${CHANNEL:-alpha}
@@ -73,6 +73,24 @@ submodule_initialize() {
     git am -3 "../patches/${name}.patch"
     popd
   fi
+}
+
+submodule_update() {
+  local -r name="$1"
+  local -r branch="$2"
+  local -r url="$3"
+
+  submodule_reset "${name}" "${branch}"
+
+  git submodule update --init --recursive "${name}"
+
+  git submodule add -f -b ${branch} ${url} ${name} || true
+
+  pushd "${name}"
+  git remote set-url origin "${url}"
+  git fetch origin "${branch}"
+  git reset --hard "origin/${branch}"
+  popd
 }
 
 apply_patch() {
