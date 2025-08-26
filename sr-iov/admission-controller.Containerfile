@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.22 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.23 AS builder
 
 ADD --chown=default ./admission-controller .
 RUN make

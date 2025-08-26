@@ -9,31 +9,31 @@
 [submodule "sr-iov/infiniband-cni"]
 	path = sr-iov/infiniband-cni
 	url = https://github.com/openshift/ib-sriov-cni.git
-	branch = release-4.18
+	branch = release-4.19
 [submodule "sr-iov/rdma-cni"]
 	path = sr-iov/rdma-cni
 	url = https://github.com/openshift/rdma-cni.git
-	branch = release-4.18
+	branch = release-4.19
 [submodule "sr-iov/admission-controller"]
 	path = sr-iov/admission-controller
 	url = https://github.com/openshift/sriov-dp-admission-controller.git
-	branch = release-4.18
+	branch = release-4.19
 [submodule "sr-iov/device-plugin"]
 	path = sr-iov/device-plugin
 	url = https://github.com/openshift/sriov-network-device-plugin.git
-	branch = release-4.18
+	branch = release-4.19
 [submodule "sr-iov/metrics-exporter"]
 	path = sr-iov/metrics-exporter
 	url = https://github.com/openshift/sriov-network-metrics-exporter.git
-	branch = release-4.18
+	branch = release-4.19
 [submodule "sr-iov/operator"]
 	path = sr-iov/operator
 	url = https://github.com/openshift/sriov-network-operator.git
-	branch = release-4.18
+	branch = release-4.19
 [submodule "sr-iov/cni"]
 	path = sr-iov/cni
 	url = https://github.com/openshift/sriov-cni.git
-	branch = release-4.18
+	branch = release-4.19
 [submodule "cluster-logging/operator"]
 	path = cluster-logging/operator
 	url = https://github.com/openshift/cluster-logging-operator.git

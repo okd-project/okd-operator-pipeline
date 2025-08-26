@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.22 AS builder-ubi9
+FROM registry.access.redhat.com/ubi9/go-toolset:1.23 AS builder-ubi9
 
 COPY --chown=default ./rdma-cni .
 
@@ -6,7 +6,7 @@ RUN make clean && \
     GO_TAGS="" GO_BUILD_OPTS="CGO_ENABLED=1 GOOS=$(go env GOOS) GOARCH=$(go env GOARCH)" make build
 
 
-FROM registry.access.redhat.com/ubi8/go-toolset:1.22 AS builder-ubi8
+FROM registry.access.redhat.com/ubi8/go-toolset:1.23 AS builder-ubi8
 
 COPY --chown=default ./rdma-cni .
 

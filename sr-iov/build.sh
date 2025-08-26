@@ -18,9 +18,13 @@ IMG_KUBE_RBAC_PROXY=$(get_payload_component kube-rbac-proxy)
 
 BUNDLE_IMG="${REGISTRY}/operator-bundle:${OCP_DATE}"
 
-apply_patch operator release-${OCP_SHORT}
-apply_patch cni release-${OCP_SHORT}
-apply_patch infiniband-cni release-${OCP_SHORT}
+submodule_initialize admission-controller release-${OCP_SHORT}
+submodule_initialize cni release-${OCP_SHORT}
+submodule_initialize device-plugin release-${OCP_SHORT}
+submodule_initialize infiniband-cni release-${OCP_SHORT}
+submodule_initialize metrics-exporter release-${OCP_SHORT}
+submodule_initialize operator release-${OCP_SHORT}
+submodule_initialize rdma-cni release-${OCP_SHORT}
 
 # Build the images
 podman build -t "${IMG_OPERATOR}" -f operator.Containerfile ../
@@ -75,3 +79,10 @@ podman build -t "${BUNDLE_IMG}" -f bundle.Dockerfile .
 podman push "${BUNDLE_IMG}"
 popd
 
+submodule_reset admission-controller release-${OCP_SHORT}
+submodule_reset cni release-${OCP_SHORT}
+submodule_reset device-plugin release-${OCP_SHORT}
+submodule_reset infiniband-cni release-${OCP_SHORT}
+submodule_reset metrics-exporter release-${OCP_SHORT}
+submodule_reset operator release-${OCP_SHORT}
+submodule_reset rdma-cni release-${OCP_SHORT}

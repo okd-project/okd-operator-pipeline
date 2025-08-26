@@ -1,4 +1,4 @@
-From f872acdf1b7070c69df05b43b7dada2cb36934e0 Mon Sep 17 00:00:00 2001
+From 23b15dd690844d1947552df0f965aad10f473b09 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Sat, 10 May 2025 14:45:56 +0100
 Subject: [PATCH] OKDify
@@ -8,7 +8,7 @@ Subject: [PATCH] OKDify
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml b/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
-index 39923ae5f..88ab83ca0 100644
+index 416329c64..ddc9bdfe4 100644
 --- a/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
 @@ -9,7 +9,7 @@ metadata:
@@ -29,7 +29,7 @@ index 39923ae5f..88ab83ca0 100644
      target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
    labels:
      operatorframework.io/arch.amd64: supported
-@@ -96,10 +96,10 @@ spec:
+@@ -97,10 +97,10 @@ spec:
        name: sriovoperatorconfigs.sriovnetwork.openshift.io
        version: v1
    description: |
@@ -42,7 +42,7 @@ index 39923ae5f..88ab83ca0 100644
  
      ### Supported Features
      * Initialize the SR-IOV NICs on nodes.
-@@ -155,5 +155,5 @@ spec:
+@@ -156,5 +156,5 @@ spec:
    - email: support@redhat.com
      name: Red Hat
    provider:
@@ -50,5 +50,5 @@ index 39923ae5f..88ab83ca0 100644
 +    name: OKD Community
    version: 4.18.0
 -- 
-2.49.0
+2.50.1
 
