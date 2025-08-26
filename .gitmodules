@@ -169,19 +169,19 @@
 [submodule "acm/lighthouse"]
 	path = acm/lighthouse
 	url = https://github.com/submariner-io/lighthouse.git
-	branch = release-0.20
+	branch = release-0.21-
 [submodule "acm/submariner"]
 	path = acm/submariner
 	url = https://github.com/submariner-io/submariner.git
-	branch = release-0.20
+	branch = release-0.21
 [submodule "acm/subctl"]
 	path = acm/subctl
 	url = https://github.com/submariner-io/subctl.git
-	branch = release-0.20
+	branch = release-0.21
 [submodule "acm/submariner-operator"]
 	path = acm/submariner-operator
 	url = https://github.com/submariner-io/submariner-operator.git
-	branch = release-0.20
+	branch = release-0.21
 [submodule "acm/siteconfig"]
 	path = acm/siteconfig
 	url = https://github.com/stolostron/siteconfig.git
@@ -189,19 +189,19 @@
 [submodule "acm/shipyard"]
 	path = acm/shipyard
 	url = https://github.com/submariner-io/shipyard.git
-	branch = release-0.20
+	branch = release-0.21
 [submodule "acm/flightctl"]
 	path = acm/flightctl
-	url = https://github.com/flightctl/flightctl.git
+	url = git@github.com:flightctl/flightctl.git
 	branch = release-0.8
 [submodule "acm/search-indexer"]
 	path = acm/search-indexer
 	url = https://github.com/stolostron/search-indexer.git
-	branch = release-2.14
+	branch = release-2.15
 [submodule "acm/insights-metrics"]
 	path = acm/insights-metrics
-	url = https://github.com/stolostron/insights-metrics.git
-	branch = release-2.14
+	url = git@github.com:stolostron/insights-metrics.git
+	branch = release-2.15
 [submodule "acm/multicluster-observability-operator"]
 	path = acm/multicluster-observability-operator
 	url = https://github.com/stolostron/multicluster-observability-operator.git
@@ -220,22 +220,23 @@
 	branch = release-2.15
 [submodule "acm/memcached_exporter"]
 	path = acm/memcached_exporter
-	url = https://github.com/stolostron/memcached_exporter.git
+	url = git@github.com:stolostron/memcached_exporter.git
 	branch = release-2.15
 [submodule "acm/multicluster-observability-addon"]
 	path = acm/multicluster-observability-addon
-	url = https://github.com/stolostron/multicluster-observability-addon.git
+	url = git@github.com:stolostron/multicluster-observability-addon.git
+	branch = release-2.15
 [submodule "acm/kube-state-metrics"]
 	path = acm/kube-state-metrics
-	url = https://github.com/stolostron/kube-state-metrics.git
+	url = git@github.com:stolostron/kube-state-metrics.git
 	branch = release-2.15
 [submodule "acm/governance-policy-framework-addon"]
 	path = acm/governance-policy-framework-addon
-	url = https://github.com/stolostron/governance-policy-framework-addon.git
+	url = git@github.com:stolostron/governance-policy-framework-addon.git
 	branch = release-2.15
 [submodule "acm/grafana"]
 	path = acm/grafana
-	url = https://github.com/stolostron/grafana.git
+	url = git@github.com:stolostron/grafana.git
 	branch = release-2.15
 [submodule "acm/acm-cli"]
 	path = acm/acm-cli
@@ -243,51 +244,51 @@
 	branch = release-2.14
 [submodule "acm/multicloud-integrations"]
 	path = acm/multicloud-integrations
-	url = https://github.com/stolostron/multicloud-integrations.git
+	url = git@github.com:stolostron/multicloud-integrations.git
 	branch = release-2.15
 [submodule "acm/search-collector"]
 	path = acm/search-collector
-	url = https://github.com/stolostron/search-collector.git
+	url = git@github.com:stolostron/search-collector.git
 	branch = release-2.15
 [submodule "acm/console"]
 	path = acm/console
-	url = https://github.com/stolostron/console.git
+	url = git@github.com:stolostron/console.git
 	branch = release-2.15
 [submodule "acm/multiclusterhub-operator"]
 	path = acm/multiclusterhub-operator
-	url = https://github.com/stolostron/multiclusterhub-operator.git
+	url = git@github.com:stolostron/multiclusterhub-operator.git
 	branch = release-2.15
 [submodule "acm/insights-client"]
 	path = acm/insights-client
-	url = https://github.com/stolostron/insights-client.git
-	branch = release-2.14
+	url = git@github.com:stolostron/insights-client.git
+	branch = release-2.15
 [submodule "acm/search-v2-api"]
 	path = acm/search-v2-api
 	url = https://github.com/stolostron/search-v2-api.git
-	branch = release-2.14
+	branch = release-2.15
 [submodule "acm/volsync-addon-controller"]
 	path = acm/volsync-addon-controller
 	url = https://github.com/stolostron/volsync-addon-controller.git
 	branch = release-2.15
 [submodule "acm/cluster-backup-operator"]
 	path = acm/cluster-backup-operator
-	url = https://github.com/stolostron/cluster-backup-operator.git
+	url = git@github.com:stolostron/cluster-backup-operator.git
 	branch = release-2.15
 [submodule "acm/config-policy-controller"]
 	path = acm/config-policy-controller
-	url = https://github.com/stolostron/config-policy-controller.git
+	url = git@github.com:stolostron/config-policy-controller.git
 	branch = release-2.15
 [submodule "acm/klusterlet-addon-controller"]
 	path = acm/klusterlet-addon-controller
-	url = https://github.com/stolostron/klusterlet-addon-controller.git
+	url = git@github.com:stolostron/klusterlet-addon-controller.git
 	branch = release-2.15
 [submodule "acm/cluster-permission"]
 	path = acm/cluster-permission
-	url = https://github.com/stolostron/cluster-permission.git
+	url = git@github.com:stolostron/cluster-permission.git
 	branch = release-2.15
 [submodule "acm/multicloud-operators-application"]
 	path = acm/multicloud-operators-application
-	url = https://github.com/stolostron/multicloud-operators-application.git
+	url = git@github.com:stolostron/multicloud-operators-application.git
 	branch = release-2.15
 [submodule "acm/flightctl-ui"]
 	path = acm/flightctl-ui
@@ -295,7 +296,7 @@
 	branch = release-0.8
 [submodule "acm/search-v2-operator"]
 	path = acm/search-v2-operator
-	url = https://github.com/stolostron/search-v2-operator.git
+	url = git@github.com:stolostron/search-v2-operator.git
 	branch = release-2.15
 [submodule "acm/volsync"]
 	path = acm/volsync
@@ -395,15 +396,15 @@
 	branch = backplane-2.10
 [submodule "acm/governance-policy-addon-controller"]
 	path = acm/governance-policy-addon-controller
-	url = https://github.com/stolostron/governance-policy-addon-controller.git
+	url = git@github.com:stolostron/governance-policy-addon-controller.git
 	branch = release-2.15
 [submodule "acm/cert-policy-controller"]
 	path = acm/cert-policy-controller
-	url = https://github.com/stolostron/cert-policy-controller.git
+	url = git@github.com:stolostron/cert-policy-controller.git
 	branch = release-2.15
 [submodule "acm/governance-policy-propagator"]
 	path = acm/governance-policy-propagator
-	url = https://github.com/stolostron/governance-policy-propagator.git
+	url = git@github.com:stolostron/governance-policy-propagator.git
 	branch = release-2.15
 [submodule "acm/multicloud-operators-channel"]
 	path = acm/multicloud-operators-channel
@@ -411,11 +412,11 @@
 	branch = release-2.15
 [submodule "acm/multicloud-operators-subscription"]
 	path = acm/multicloud-operators-subscription
-	url = https://github.com/stolostron/multicloud-operators-subscription.git
+	url = git@github.com:stolostron/multicloud-operators-subscription.git
 	branch = release-2.15
 [submodule "acm/submariner-addon"]
 	path = acm/submariner-addon
-	url = https://github.com/stolostron/submariner-addon.git
+	url = git@github.com:stolostron/submariner-addon.git
 	branch = release-2.15
 [submodule "acm/thanos-receive-controller"]
 	path = acm/thanos-receive-controller
@@ -423,23 +424,23 @@
 	branch = release-2.15
 [submodule "acm/prometheus"]
 	path = acm/prometheus
-	url = https://github.com/stolostron/prometheus.git
+	url = git@github.com:stolostron/prometheus.git
 	branch = release-2.15
 [submodule "acm/prometheus-alertmanager"]
 	path = acm/prometheus-alertmanager
-	url = https://github.com/stolostron/prometheus-alertmanager.git
+	url = git@github.com:stolostron/prometheus-alertmanager.git
 	branch = release-2.15
 [submodule "acm/thanos"]
 	path = acm/thanos
-	url = https://github.com/stolostron/thanos.git
+	url = git@github.com:stolostron/thanos.git
 	branch = release-2.15
 [submodule "acm/must-gather"]
 	path = acm/must-gather
-	url = https://github.com/stolostron/must-gather.git
+	url = git@github.com:stolostron/must-gather.git
 	branch = release-2.15
 [submodule "acm/prometheus-operator"]
 	path = acm/prometheus-operator
-	url = https://github.com/stolostron/prometheus-operator.git
+	url = git@github.com:stolostron/prometheus-operator.git
 	branch = release-2.15
 [submodule "multicluster-engine/cluster-api-provider-agent"]
 	path = multicluster-engine/cluster-api-provider-agent

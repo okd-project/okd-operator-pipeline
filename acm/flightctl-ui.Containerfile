@@ -1,9 +1,9 @@
 FROM registry.access.redhat.com/ubi9/nodejs-20-minimal:latest AS ui-build
 
-ARG VERSION
+ARG CI_VERSION
 
 ENV COMPONENT_NAME=acm-flightctl-ui
-ENV COMPONENT_VERSION=$VERSION
+ENV COMPONENT_VERSION=$CI_VERSION
 ENV COMPONENT_TAG_EXTENSION=" "
 
 COPY flightctl-ui .
@@ -18,12 +18,13 @@ ENV NODE_OPTIONS='--max-old-space-size=8192'
 RUN npm ci --omit=optional  --unsafe-perm --ignore-scripts
 RUN npm run build
 
+
 FROM registry.access.redhat.com/ubi9/go-toolset:1.23 AS builder
 
-ARG VERSION
+ARG CI_VERSION
 
 ENV COMPONENT_NAME=acm-flightctl-ui
-ENV COMPONENT_VERSION=$VERSION
+ENV COMPONENT_VERSION=$CI_VERSION
 ENV COMPONENT_TAG_EXTENSION=" "
 ENV GO111MODULE=on
 ENV GOFLAGS=''

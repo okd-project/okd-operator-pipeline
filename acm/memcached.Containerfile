@@ -1,5 +1,6 @@
 FROM registry.access.redhat.com/ubi9:latest
 
+
 ENV NAME="ubi9/memcached"
 ENV VERSION="1.6"
 ENV SUMMARY="High-performance memory object caching system"
@@ -24,6 +25,8 @@ EXPOSE 11211
 RUN dnf install -y memcached && \
     install -D /usr/share/doc/memcached/COPYING /licenses/memcached && \
     dnf clean all
+
+COPY memcached /usr/bin/
 
 USER memcached
 

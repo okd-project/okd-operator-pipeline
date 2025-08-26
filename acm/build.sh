@@ -3,6 +3,10 @@
 MAJOR=2
 MINOR=15
 
+FLIGHTCTL_RELEASE=0.8
+SUBMARINER_RELEASE=0.21
+VOLSYNC_RELEASE=0.13
+
 NAMESPACE="acm"
 
 source ../common.sh
@@ -75,6 +79,52 @@ export IMG_CLI_ARTIFACTS="$(get_payload_component "cli-artifacts")"
 IMG_CLI="$(get_payload_component "cli")"
 
 IMG_BUNDLE="${REGISTRY}/bundle:${OCP_DATE}"
+
+submodule_initialize acm-cli release-${OCP_SHORT}
+submodule_initialize cert-policy-controller release-${OCP_SHORT}
+submodule_initialize cluster-backup-operator release-${OCP_SHORT}
+submodule_initialize cluster-permission release-${OCP_SHORT}
+submodule_initialize config-policy-controller release-${OCP_SHORT}
+submodule_initialize console release-${OCP_SHORT}
+submodule_initialize flightctl release-${FLIGHTCTL_RELEASE}
+submodule_initialize flightctl-ui release-${FLIGHTCTL_RELEASE}
+submodule_initialize governance-policy-addon-controller release-${OCP_SHORT}
+submodule_initialize governance-policy-framework-addon release-${OCP_SHORT}
+submodule_initialize governance-policy-propagator release-${OCP_SHORT}
+submodule_initialize grafana release-${OCP_SHORT}
+submodule_initialize insights-client release-${OCP_SHORT}
+submodule_initialize insights-metrics release-${OCP_SHORT}
+submodule_initialize klusterlet-addon-controller release-${OCP_SHORT}
+submodule_initialize kube-state-metrics release-${OCP_SHORT}
+submodule_initialize lighthouse release-${SUBMARINER_RELEASE}
+submodule_initialize memcached_exporter release-${OCP_SHORT}
+submodule_initialize multicloud-integrations release-${OCP_SHORT}
+submodule_initialize multicloud-operators-application release-${OCP_SHORT}
+submodule_initialize multicloud-operators-subscription release-${OCP_SHORT}
+submodule_initialize multicluster-observability-addon release-${OCP_SHORT}
+submodule_initialize multicluster-observability-operator release-${OCP_SHORT}
+submodule_initialize multiclusterhub-operator release-${OCP_SHORT}
+submodule_initialize must-gather release-${OCP_SHORT}
+submodule_initialize node-exporter release-${OCP_SHORT}
+submodule_initialize observatorium-operator release-${OCP_SHORT}
+submodule_initialize observatorium release-${OCP_SHORT}
+submodule_initialize prometheus release-${OCP_SHORT}
+submodule_initialize prometheus-alertmanager release-${OCP_SHORT}
+submodule_initialize prometheus-operator release-${OCP_SHORT}
+submodule_initialize search-collector release-${OCP_SHORT}
+submodule_initialize search-indexer release-${OCP_SHORT}
+submodule_initialize search-v2-api release-${OCP_SHORT}
+submodule_initialize search-v2-operator release-${OCP_SHORT}
+submodule_initialize shipyard release-${SUBMARINER_RELEASE}
+submodule_initialize siteconfig release-${OCP_SHORT}
+submodule_initialize subctl release-${SUBMARINER_RELEASE}
+submodule_initialize submariner release-${SUBMARINER_RELEASE}
+submodule_initialize submariner-addon release-${OCP_SHORT}
+submodule_initialize submariner-operator release-${SUBMARINER_RELEASE}
+submodule_initialize thanos release-${OCP_SHORT}
+submodule_initialize thanos-receive-controller release-${OCP_SHORT}
+submodule_initialize volsync release-${VOLSYNC_RELEASE}
+submodule_initialize volsync-addon-controller release-${OCP_SHORT}
 
 # Build the images
 podman build -t "${IMG_ACM_CLI}" -f acm-cli.Containerfile --build-arg "CI_VERSION=$OCP_DATE" ../
@@ -151,6 +201,9 @@ pushd multiclusterhub-operator
 
 yq e -i 'select(.kind == "Deployment").spec.template.spec.containers[0].env += env(ENV_OVERRIDES)' config/manager/manager.yaml
 
+# Change package from open-cluster-management to advanced-cluster-management
+BUNDLE_METADATA_OPTS="$BUNDLE_METADATA_OPTS --package advanced-cluster-management"
+rm -rf bundle
 make bundle "VERSION=$OCP_DATE" "BUNDLE_METADATA_OPTS=$BUNDLE_METADATA_OPTS" BUNDLE_IMG=$IMG_BUNDLE IMG=$IMG_MULTICLUSTERHUB_OPERATOR
 
 yq e -i '.spec.relatedImages += env(RELATED_IMAGES)' bundle/manifests/advanced-cluster-management.clusterserviceversion.yaml
@@ -159,3 +212,49 @@ podman build -t "${IMG_BUNDLE}" -f bundle.Dockerfile .
 podman push "${IMG_BUNDLE}"
 
 popd
+
+submodule_reset acm-cli release-${OCP_SHORT}
+submodule_reset cert-policy-controller release-${OCP_SHORT}
+submodule_reset cluster-backup-operator release-${OCP_SHORT}
+submodule_reset cluster-permission release-${OCP_SHORT}
+submodule_reset config-policy-controller release-${OCP_SHORT}
+submodule_reset console release-${OCP_SHORT}
+submodule_reset flightctl release-${FLIGHTCTL_RELEASE}
+submodule_reset flightctl-ui release-${FLIGHTCTL_RELEASE}
+submodule_reset governance-policy-addon-controller release-${OCP_SHORT}
+submodule_reset governance-policy-framework-addon release-${OCP_SHORT}
+submodule_reset governance-policy-propagator release-${OCP_SHORT}
+submodule_reset grafana release-${OCP_SHORT}
+submodule_reset insights-client release-${OCP_SHORT}
+submodule_reset insights-metrics release-${OCP_SHORT}
+submodule_reset klusterlet-addon-controller release-${OCP_SHORT}
+submodule_reset kube-state-metrics release-${OCP_SHORT}
+submodule_reset lighthouse release-${SUBMARINER_RELEASE}
+submodule_reset memcached_exporter release-${OCP_SHORT}
+submodule_reset multicloud-integrations release-${OCP_SHORT}
+submodule_reset multicloud-operators-application release-${OCP_SHORT}
+submodule_reset multicloud-operators-subscription release-${OCP_SHORT}
+submodule_reset multicluster-observability-addon release-${OCP_SHORT}
+submodule_reset multicluster-observability-operator release-${OCP_SHORT}
+submodule_reset multiclusterhub-operator release-${OCP_SHORT}
+submodule_reset must-gather release-${OCP_SHORT}
+submodule_reset node-exporter release-${OCP_SHORT}
+submodule_reset observatorium-operator release-${OCP_SHORT}
+submodule_reset observatorium release-${OCP_SHORT}
+submodule_reset prometheus release-${OCP_SHORT}
+submodule_reset prometheus-alertmanager release-${OCP_SHORT}
+submodule_reset prometheus-operator release-${OCP_SHORT}
+submodule_reset search-collector release-${OCP_SHORT}
+submodule_reset search-indexer release-${OCP_SHORT}
+submodule_reset search-v2-api release-${OCP_SHORT}
+submodule_reset search-v2-operator release-${OCP_SHORT}
+submodule_reset shipyard release-${SUBMARINER_RELEASE}
+submodule_reset siteconfig release-${OCP_SHORT}
+submodule_reset subctl release-${SUBMARINER_RELEASE}
+submodule_reset submariner release-${SUBMARINER_RELEASE}
+submodule_reset submariner-addon release-${OCP_SHORT}
+submodule_reset submariner-operator release-${SUBMARINER_RELEASE}
+submodule_reset thanos release-${OCP_SHORT}
+submodule_reset thanos-receive-controller release-${OCP_SHORT}
+submodule_reset volsync release-${VOLSYNC_RELEASE}
+submodule_reset volsync-addon-controller release-${OCP_SHORT}
