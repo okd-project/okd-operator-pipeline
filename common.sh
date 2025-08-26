@@ -33,17 +33,13 @@ submodule_exists() {
 
   # Check for directory
   if [ -d "${name}" ]; then
-    pushd "${name}"
-    GIT_DIR="$(git rev-parse --git-dir)"
-    CURRENT_DIR="$(pwd)"
-    popd
-    # Check if the current directory is equal to the git directory
-    if [ "${GIT_DIR}" = "${CURRENT_DIR}" ]; then
-      return 1
+    if [ -d "$name/.git" ] || [ -f "$name/.git" ]; then
+      echo 1
+      return 0
     fi
   fi
 
-  return 0
+  echo 0
 }
 
 submodule_reset() {
@@ -52,9 +48,9 @@ submodule_reset() {
 
   # Check if the submodule exists
   EXISTS=$(submodule_exists "${name}")
-  if [ "${EXISTS}" = true ]; then
-    git clean -fdx
-    git reset --hard origin/${branch}
+  if [ "${EXISTS}" = "1" ]; then
+    git -C "$name" clean -fdx
+    git -C "$name" reset --hard origin/${branch}
     git submodule deinit -f "${name}"
   fi
 }
@@ -80,7 +76,13 @@ submodule_update() {
   local -r branch="$2"
   local -r url="$3"
 
-  submodule_reset "${name}" "${branch}"
+
+  EXISTS=$(submodule_exists "${name}")
+  if [ "${EXISTS}" = "1" ]; then
+    git -C "$name" clean -fdx
+    git -C "$name" fetch origin "${branch}"
+    git -C "$name" reset --hard origin/${branch}
+  fi
 
   git submodule update --init --recursive "${name}"
 
