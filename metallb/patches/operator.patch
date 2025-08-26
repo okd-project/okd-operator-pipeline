@@ -1,4 +1,4 @@
-From 11fe03eed85328d3956760863e38d060c0a5e383 Mon Sep 17 00:00:00 2001
+From 63246cdb889c197808c1081f2f09940f6bb362e0 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Tue, 27 May 2025 11:44:26 +0100
 Subject: [PATCH] OKDify
@@ -65,5 +65,5 @@ index a29e74a8..2b9b5350 100644
    annotations:
      service.alpha.openshift.io/serving-cert-secret-name: metallb-operator-webhook-server-service-cert
 -- 
-2.49.0
+2.50.1
 

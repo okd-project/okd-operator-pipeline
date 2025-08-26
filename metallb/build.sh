@@ -12,7 +12,9 @@ IMG_KUBE_RBAC_PROXY=$(get_payload_component kube-rbac-proxy)
 
 IMG_BUNDLE="${REGISTRY}/operator-bundle:${OCP_DATE}"
 
-apply_patch operator release-${OCP_SHORT}
+submodule_initialize frr release-${OCP_SHORT}
+submodule_initialize metallb release-${OCP_SHORT}
+submodule_initialize operator release-${OCP_SHORT}
 
 # Non-standard modification to enable incoming BGPD connections
 if [ "${ACCEPT_INCOMING_BGP_CONNECTIONS:-false}" = "true" ]; then
@@ -62,3 +64,7 @@ sed -i 's/LABEL com.redhat.openshift.versions=.*$/LABEL com.redhat.openshift.ver
 podman build -t "${IMG_BUNDLE}" -f bundle.Dockerfile .
 podman push "${IMG_BUNDLE}"
 popd
+
+submodule_reset frr release-${OCP_SHORT}
+submodule_reset metallb release-${OCP_SHORT}
+submodule_reset operator release-${OCP_SHORT}
