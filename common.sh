@@ -51,7 +51,7 @@ submodule_reset() {
   if [ "${EXISTS}" = "1" ]; then
     git -C "$name" clean -fdx
     git -C "$name" reset --hard origin/${branch}
-    git submodule deinit -f "${name}"
+#    git submodule deinit -f "${name}"
   fi
 }
 
@@ -111,30 +111,6 @@ apply_patch() {
   # Apply patch to git repo
   git am -3 "../patches/${name}.patch"
   popd
-}
-
-export_image_digest() {
-    local varname="$1"
-    local url="$2"
-    local digest
-    local value=
-
-    if [ "$EMPTY_IS_VALID" = 1 ] ; then
-        [ -n "${!varname+set}" ] && return 0
-    else
-        [ -n "${!varname}" ] && return 0
-    fi
-
-    if [ -n "$url" ] ; then
-        digest="$(skopeo inspect "docker://$url" -f '{{.Name}}@{{.Digest}}')" || :
-        if [ -z "$digest" ] ; then
-            echo "Failure to detect \$$varname at $url. Set the variable"
-            return 1
-        fi
-        value="$digest"
-    fi
-
-    export "$varname=$value"
 }
 
 replace_csv_product() {
