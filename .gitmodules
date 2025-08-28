@@ -60,8 +60,8 @@
 	branch = v0.37.1-rh
 [submodule "ingress-node-firewall/operator"]
 	path = ingress-node-firewall/operator
-	url = https://github.com/openshift/ingress-node-firewall
-	branch = release-4.18
+	url = https://github.com/openshift/ingress-node-firewall.git
+	branch = release-4.19
 [submodule "cluster-logging/eventrouter"]
 	path = cluster-logging/eventrouter
 	url = https://github.com/openshift/eventrouter
