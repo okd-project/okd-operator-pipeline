@@ -458,3 +458,75 @@
 	path = multicluster-engine/cluster-api-provider-openshift-assisted
 	url = https://github.com/openshift-assisted/cluster-api-provider-openshift-assisted.git
 	branch = backplane-2.10
+[submodule "data-foundation/ceph-csi"]
+	path = data-foundation/ceph-csi
+	url = https://github.com/ceph/ceph-csi.git
+	branch = release-v3.15
+[submodule "data-foundation/ceph-csi-operator"]
+	path = data-foundation/ceph-csi-operator
+	url = https://github.com/red-hat-storage/ceph-csi-operator.git
+	branch = release-4.19
+[submodule "data-foundation/kubernetes-csi-addons"]
+	path = data-foundation/kubernetes-csi-addons
+	url = https://github.com/red-hat-storage/kubernetes-csi-addons.git
+	branch = release-4.19
+[submodule "data-foundation/noobaa-core"]
+	path = data-foundation/noobaa-core
+	url = https://github.com/red-hat-storage/noobaa-core.git
+	branch = release-4.19
+[submodule "data-foundation/noobaa-operator"]
+	path = data-foundation/noobaa-operator
+	url = https://github.com/red-hat-storage/noobaa-operator.git
+	branch = release-4.19
+[submodule "data-foundation/ocs-client-operator"]
+	path = data-foundation/ocs-client-operator
+	url = https://github.com/red-hat-storage/ocs-client-operator.git
+	branch = release-4.19
+[submodule "data-foundation/ocs-operator"]
+	path = data-foundation/ocs-operator
+	url = https://github.com/red-hat-storage/ocs-operator.git
+	branch = release-4.19
+[submodule "data-foundation/odf-cli"]
+	path = data-foundation/odf-cli
+	url = https://github.com/red-hat-storage/odf-cli.git
+	branch = release-4.19
+[submodule "data-foundation/odf-console"]
+	path = data-foundation/odf-console
+	url = https://github.com/red-hat-storage/odf-console.git
+	branch = release-4.19
+[submodule "data-foundation/odf-console-compatibility"]
+	path = data-foundation/odf-console-compatibility
+	url = https://github.com/red-hat-storage/odf-console.git
+	branch = release-4.19-compatibility
+[submodule "data-foundation/odf-multicluster-orchestrator"]
+	path = data-foundation/odf-multicluster-orchestrator
+	url = https://github.com/red-hat-storage/odf-multicluster-orchestrator.git
+	branch = release-4.19
+[submodule "data-foundation/odf-operator"]
+	path = data-foundation/odf-operator
+	url = https://github.com/red-hat-storage/odf-operator.git
+	branch = release-4.19
+[submodule "data-foundation/ramen"]
+	path = data-foundation/ramen
+	url = https://github.com/red-hat-storage/ramen.git
+	branch = release-4.19
+[submodule "data-foundation/recipe"]
+	path = data-foundation/recipe
+	url = https://github.com/red-hat-storage/recipe.git
+	branch = release-4.19
+[submodule "data-foundation/rook"]
+	path = data-foundation/rook
+	url = https://github.com/red-hat-storage/rook.git
+	branch = release-4.19
+[submodule "data-foundation/must-gather"]
+	path = data-foundation/must-gather
+	url = https://github.com/red-hat-storage/odf-must-gather.git
+	branch = release-4.19
+[submodule "data-foundation/cloudnative-pg"]
+	path = data-foundation/cloudnative-pg
+	url = https://github.com/red-hat-storage/cloudnative-pg.git
+	branch = rhodf-4.19
+[submodule "data-foundation/container-object-storage-interface-provisioner-sidecar"]
+	path = data-foundation/container-object-storage-interface-provisioner-sidecar
+	url = https://github.com/kubernetes-retired/container-object-storage-interface-provisioner-sidecar.git
+	branch = master

@@ -1,0 +1,192 @@
+From bc8e038de4cf2f4fb34d049aa4b9ecb9c3a65cbb Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Mon, 1 Sep 2025 23:38:28 +0100
+Subject: [PATCH] OKDify
+
+---
+ config/bundle/kustomization.yaml              |  1 +
+ config/bundle/okd.yaml                        | 37 ++++++++
+ .../odf-operator.clusterserviceversion.yaml   |  2 -
+ config/manifests/kustomization.yaml           |  3 +
+ .../odf-operator.clusterserviceversion.yaml   | 89 +++++++++++++++++++
+ 5 files changed, 130 insertions(+), 2 deletions(-)
+ create mode 100644 config/bundle/okd.yaml
+ create mode 100644 config/manifests/okd/odf-operator.clusterserviceversion.yaml
+
+diff --git a/config/bundle/kustomization.yaml b/config/bundle/kustomization.yaml
+index 9fd5d747..07db93d8 100644
+--- a/config/bundle/kustomization.yaml
++++ b/config/bundle/kustomization.yaml
+@@ -10,3 +10,4 @@ patches:
+   target:
+     kind: ClusterServiceVersion
+     name: odf-dependencies.v0.0.0
++- path: okd.yaml
+\ No newline at end of file
+diff --git a/config/bundle/okd.yaml b/config/bundle/okd.yaml
+new file mode 100644
+index 00000000..35944e5a
+--- /dev/null
++++ b/config/bundle/okd.yaml
+@@ -0,0 +1,37 @@
++apiVersion: operators.coreos.com/v1alpha1
++kind: ClusterServiceVersion
++metadata:
++  name: odf-dependencies.v0.0.0
++  namespace: placeholder
++spec:
++  provider:
++    name: OKD Community
++  icon:
++    - base64data: |
++        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
++      mediatype: image/png
+diff --git a/config/manifests/bases/odf-operator.clusterserviceversion.yaml b/config/manifests/bases/odf-operator.clusterserviceversion.yaml
+index 3ac90679..867448bb 100644
+--- a/config/manifests/bases/odf-operator.clusterserviceversion.yaml
++++ b/config/manifests/bases/odf-operator.clusterserviceversion.yaml
+@@ -13,8 +13,6 @@ metadata:
+     operatorframework.io/initialization-link: /odf/resource/odf.openshift.io~v1alpha1~StorageSystem/create/~new
+     operatorframework.io/suggested-namespace: openshift-storage
+     operators.openshift.io/infrastructure-features: '["disconnected"]'
+-    operators.openshift.io/valid-subscription: '["OpenShift Platform Plus","OpenShift
+-      Data Foundation Essentials","OpenShift Data Foundation Advanced"]'
+     operators.operatorframework.io/operator-type: standalone
+     repository: https://github.com/red-hat-storage/odf-operator
+     support: Red Hat
+diff --git a/config/manifests/kustomization.yaml b/config/manifests/kustomization.yaml
+index ea44df8e..0efe7e7b 100644
+--- a/config/manifests/kustomization.yaml
++++ b/config/manifests/kustomization.yaml
+@@ -26,3 +26,6 @@ resources:
+ #    # Update the indices in this path if adding or removing volumes in the manager's Deployment.
+ #    - op: remove
+ #      path: /spec/template/spec/volumes/0
++
++patches:
++  - path: okd/odf-operator.clusterserviceversion.yaml
+\ No newline at end of file
+diff --git a/config/manifests/okd/odf-operator.clusterserviceversion.yaml b/config/manifests/okd/odf-operator.clusterserviceversion.yaml
+new file mode 100644
+index 00000000..67ce5069
+--- /dev/null
++++ b/config/manifests/okd/odf-operator.clusterserviceversion.yaml
+@@ -0,0 +1,89 @@
++apiVersion: operators.coreos.com/v1alpha1
++kind: ClusterServiceVersion
++metadata:
++  annotations:
++    description: OKD Data Foundation provides a common control plane for storage solutions
++      on OpenShift Container Platform.
++    support: OKD Community
++  name: odf-operator.v0.0.0
++  namespace: placeholder
++spec:
++  displayName: OKD Data Foundation
++  description: |
++    **OKD Data Foundation** deploys three operators.
++
++    ### OKD Data Foundation
++    The OKD Data Foundation operator is the primary operator for
++    OKD Data Foundation. It serves to facilitate the other operators in
++    OKD Data Foundation by performing administrative tasks outside their
++    scope as well as watching and configuring their CustomResources.
++
++    ### Rook
++    [Rook][1] deploys and manages Ceph on OKD, which provides block,
++    file and object storage.
++
++    ### NooBaa operator
++    The NooBaa operator deploys and manages the [NooBaa][2] Multi-Cloud Gateway
++    on OKD, which provides object storage.
++
++    # Core Capabilities
++    * **Self-managing service:** No matter which supported storage technologies
++    you choose, OKD Data Foundation ensures that resources can be
++    deployed and managed automatically.
++
++    * **Hyper-scale or hyper-converged:** With OKD Data Foundation you
++    can either build dedicated storage clusters or hyper-converged clusters
++    where your apps run alongside storage.
++
++    * **File, Block, and Object provided by OKD Data Foundation:**
++    OKD Data Foundation integrates Ceph with multiple storage
++    presentations including object storage (compatible with S3), block storage,
++    and POSIX-compliant shared file system.
++
++    * **Your data, protected:** OKD Data Foundation efficiently
++    distributes and replicates your data across your cluster to minimize the
++    risk of data loss. With snapshots, cloning, and versioning, no more losing
++    sleep over your data.
++
++    * **Elastic storage in your datacenter:** Scale is now possible in your
++    datacenter. Get started with a few terabytes, and easily scale up.
++
++    * **Simplified data management:** Easily create hybrid and multi-cloud data
++    storage for your workloads, using a single namespace.
++
++    [1]: https://rook.io
++    [2]: https://www.noobaa.io
++  icon:
++  - base64data: |
++      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
++    mediatype: image/png
++  provider:
++    name: OKD Community
++  maintainers:
++    - email: maintainers@okd.io
++      name: OKD Community
+\ No newline at end of file
+-- 
+2.51.0
+

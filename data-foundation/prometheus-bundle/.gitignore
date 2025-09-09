@@ -1,0 +1,4 @@
+/bundle
+/config/manager/manager.yaml
+/config/manifests/bases/odf-prometheus-operator.clusterserviceversion.yaml
+/bundle.Dockerfile

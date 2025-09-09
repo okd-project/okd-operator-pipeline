@@ -1,0 +1,39 @@
+From 343274ad8abac86c03cb5bdd2d66d03e44ed1bfa Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Mon, 1 Sep 2025 12:45:11 +0100
+Subject: [PATCH] OKDify
+
+---
+ pkg/cli/cli.go | 9 ---------
+ 1 file changed, 9 deletions(-)
+
+diff --git a/pkg/cli/cli.go b/pkg/cli/cli.go
+index ae94c56..7a23952 100644
+--- a/pkg/cli/cli.go
++++ b/pkg/cli/cli.go
+@@ -14,7 +14,6 @@ import (
+ 	"github.com/noobaa/noobaa-operator/v5/pkg/cosi"
+ 	"github.com/noobaa/noobaa-operator/v5/pkg/crd"
+ 	"github.com/noobaa/noobaa-operator/v5/pkg/diagnostics"
+-	"github.com/noobaa/noobaa-operator/v5/pkg/install"
+ 	"github.com/noobaa/noobaa-operator/v5/pkg/namespacestore"
+ 	"github.com/noobaa/noobaa-operator/v5/pkg/noobaaaccount"
+ 	"github.com/noobaa/noobaa-operator/v5/pkg/obc"
+@@ -115,14 +114,6 @@ Load noobaa completion to bash:
+ 	completionCmd.Flags().String("alias", "", "Custom alias name to generate the completion for")
+ 
+ 	groups := templates.CommandGroups{{
+-		Message: "Install:",
+-		Commands: []*cobra.Command{
+-			install.CmdInstall(),
+-			install.CmdUpgrade(),
+-			install.CmdUninstall(),
+-			install.CmdStatus(),
+-		},
+-	}, {
+ 		Message: "Manage:",
+ 		Commands: []*cobra.Command{
+ 			backingstore.Cmd(),
+-- 
+2.51.0
+

@@ -1,0 +1,38 @@
+From 4775d795f5f926f2a29c0c066426dcc21ca25b10 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Tue, 2 Sep 2025 11:35:38 +0100
+Subject: [PATCH] OKDify
+
+---
+ go.mod | 2 +-
+ go.sum | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/go.mod b/go.mod
+index e12f79ce6..fbc5d8cc4 100644
+--- a/go.mod
++++ b/go.mod
+@@ -43,7 +43,7 @@ require (
+ 	k8s.io/utils v0.0.0-20241210054802-24370beab758
+ )
+ 
+-replace github.com/ceph/go-ceph => github.com/red-hat-storage/go-ceph v0.32.1-0.20250425091651-2164276cc9e5
++replace github.com/ceph/go-ceph => github.com/red-hat-storage/go-ceph v0.32.1-0.20250828052907-fea3eaac6529
+ 
+ require (
+ 	// sigs.k8s.io/controller-runtime wants this version, it gets replaced below
+diff --git a/go.sum b/go.sum
+index f6aa04b37..89e2e5f40 100644
+--- a/go.sum
++++ b/go.sum
+@@ -605,6 +605,7 @@ github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0leargg
+ github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
+ github.com/red-hat-storage/go-ceph v0.32.1-0.20250425091651-2164276cc9e5 h1:OZaxewnZ8Fu+taUkFl4Fl4VEMtDlVLDhShyPUObnNmk=
+ github.com/red-hat-storage/go-ceph v0.32.1-0.20250425091651-2164276cc9e5/go.mod h1:V++4AyPoTN50AtoHAZQ63lN0galqGLFE1b7aS0gO1Es=
++github.com/red-hat-storage/go-ceph v0.32.1-0.20250828052907-fea3eaac6529/go.mod h1:V++4AyPoTN50AtoHAZQ63lN0galqGLFE1b7aS0gO1Es=
+ github.com/redis/go-redis/v9 v9.7.0 h1:HhLSs+B6O021gwzl+locl0zEDnyNkxMtf/Z3NNBMa9E=
+ github.com/redis/go-redis/v9 v9.7.0/go.mod h1:f6zhXITC7JUJIlPEiBOTXxJgPLdZcA93GewI7inzyWw=
+ github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
+-- 
+2.51.0
+

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-operator
+spec:
+  selector:
+    matchLabels:
+      k8s-app: prometheus-operator
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/name: prometheus-operator
+        app.kubernetes.io/version: $VERSION
+        k8s-app: prometheus-operator
+    spec:
+      containers:
+      - args:
+        - -namespaces=$(NAMESPACES)
+        - --prometheus-config-reloader=$IMG_PROMETHEUS_CONFIG_RELOADER
+        - --prometheus-default-base-image=$IMG_PROMETHEUS
+        - --alertmanager-default-base-image=$IMG_PROMETHEUS_ALERTMANAGER
+        env:
+          - name: NAMESPACES
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['olm.targetNamespaces']
+        image: controller:latest
+        name: prometheus-operator
+        ports:
+          - containerPort: 8080
+            name: http
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      serviceAccountName: prometheus-operator

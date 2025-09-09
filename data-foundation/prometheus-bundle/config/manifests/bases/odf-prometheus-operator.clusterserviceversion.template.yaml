@@ -1,0 +1,93 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    capabilities: Deep Insights
+    categories: Monitoring
+    containerImage: $IMG_PROMETHEUS_OPERATOR
+    createdAt: "2024-03-01T23:43:00Z"
+    description: Manage the full lifecycle of configuring and managing Prometheus and Alertmanager servers.
+    features.operators.openshift.io/token-auth-gcp: "false"
+    features.operators.openshift.io/token-auth-azure: "false"
+    features.operators.openshift.io/token-auth-aws: "false"
+    features.operators.openshift.io/tls-profiles: "false"
+    features.operators.openshift.io/proxy-aware: "true"
+    features.operators.openshift.io/fips-compliant: "true"
+    features.operators.openshift.io/disconnected: "true"
+    repository: https://github.com/prometheus-operator/prometheus-operator
+    operators.operatorframework.io/operator-type: non-standalone
+    support: OKD Community
+  labels:
+    operatorframework.io/arch.amd64: supported
+    operatorframework.io/arch.ppc64le: supported
+    operatorframework.io/arch.s390x: supported
+  name: odf-prometheus-operator.v0.0.0
+  namespace: openshift-storage
+spec:
+  description: |
+    The Prometheus Operator for Kubernetes provides easy monitoring definitions for Kubernetes services and deployment and management of Prometheus instances.
+
+    Once installed, the Prometheus Operator provides the following features:
+
+    * **Create/Destroy**: Easily launch a Prometheus instance for your Kubernetes namespace, a specific application or team easily using the Operator.
+    * **Simple Configuration**: Configure the fundamentals of Prometheus like versions, persistence, retention policies, and replicas from a native Kubernetes resource.
+    * **Target Services via Labels**: Automatically generate monitoring target configurations based on familiar Kubernetes label queries; no need to learn a Prometheus specific configuration language.
+
+    ### Other Supported Features
+
+    **High availability**
+
+    Multiple instances are run across failure zones and data is replicated. This keeps your monitoring available during an outage, when you need it most.
+
+    **Updates via automated operations**
+
+    New Prometheus versions are deployed using a rolling update with no downtime, making it easy to stay up to date.
+
+    **Handles the dynamic nature of containers**
+
+    Alerting rules are attached to groups of containers instead of individual instances, which is ideal for the highly dynamic nature of container deployment.
+  displayName: Prometheus Operator
+  icon:
+    - base64data: PHN2ZyB3aWR0aD0iMjQ5MCIgaGVpZ2h0PSIyNTAwIiB2aWV3Qm94PSIwIDAgMjU2IDI1NyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+PHBhdGggZD0iTTEyOC4wMDEuNjY3QzU3LjMxMS42NjcgMCA1Ny45NzEgMCAxMjguNjY0YzAgNzAuNjkgNTcuMzExIDEyNy45OTggMTI4LjAwMSAxMjcuOTk4UzI1NiAxOTkuMzU0IDI1NiAxMjguNjY0QzI1NiA1Ny45NyAxOTguNjg5LjY2NyAxMjguMDAxLjY2N3ptMCAyMzkuNTZjLTIwLjExMiAwLTM2LjQxOS0xMy40MzUtMzYuNDE5LTMwLjAwNGg3Mi44MzhjMCAxNi41NjYtMTYuMzA2IDMwLjAwNC0zNi40MTkgMzAuMDA0em02MC4xNTMtMzkuOTRINjcuODQyVjE3OC40N2gxMjAuMzE0djIxLjgxNmgtLjAwMnptLS40MzItMzMuMDQ1SDY4LjE4NWMtLjM5OC0uNDU4LS44MDQtLjkxLTEuMTg4LTEuMzc1LTEyLjMxNS0xNC45NTQtMTUuMjE2LTIyLjc2LTE4LjAzMi0zMC43MTYtLjA0OC0uMjYyIDE0LjkzMyAzLjA2IDI1LjU1NiA1LjQ1IDAgMCA1LjQ2NiAxLjI2NSAxMy40NTggMi43MjItNy42NzMtOC45OTQtMTIuMjMtMjAuNDI4LTEyLjIzLTMyLjExNiAwLTI1LjY1OCAxOS42OC00OC4wNzkgMTIuNTgtNjYuMjAxIDYuOTEuNTYyIDE0LjMgMTQuNTgzIDE0LjggMzYuNTA1IDcuMzQ2LTEwLjE1MiAxMC40Mi0yOC42OSAxMC40Mi00MC4wNTYgMC0xMS43NjkgNy43NTUtMjUuNDQgMTUuNTEyLTI1LjkwNy02LjkxNSAxMS4zOTYgMS43OSAyMS4xNjUgOS41MyA0NS40IDIuOTAyIDkuMTAzIDIuNTMyIDI0LjQyMyA0Ljc3MiAzNC4xMzguNzQ0LTIwLjE3OCA0LjIxMy00OS42MiAxNy4wMTQtNTkuNzg0LTUuNjQ3IDEyLjguODM2IDI4LjgxOCA1LjI3IDM2LjUxOCA3LjE1NCAxMi40MjQgMTEuNDkgMjEuODM2IDExLjQ5IDM5LjYzOCAwIDExLjkzNi00LjQwNyAyMy4xNzMtMTEuODQgMzEuOTU4IDguNDUyLTEuNTg2IDE0LjI4OS0zLjAxNiAxNC4yODktMy4wMTZsMjcuNDUtNS4zNTVjLjAwMi0uMDAyLTMuOTg3IDE2LjQwMS0xOS4zMTQgMzIuMTk3eiIgZmlsbD0iI0RBNEUzMSIvPjwvc3ZnPg==
+      mediatype: image/svg+xml
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+    - supported: true
+      type: OwnNamespace
+    - supported: true
+      type: SingleNamespace
+    - supported: false
+      type: MultiNamespace
+    - supported: false
+      type: AllNamespaces
+  keywords:
+    - prometheus
+    - monitoring
+    - tsdb
+    - alerting
+    - observability
+  labels:
+    full_version: $VERSION
+    alm-owner-prometheus: prometheusoperator
+    alm-status-descriptors: ose-prometheus-operator.$VERSION
+  links:
+    - name: Prometheus
+      url: https://www.prometheus.io/
+    - name: Documentation
+      url: https://github.com/prometheus-operator/prometheus-operator/tree/master/Documentation
+    - name: Prometheus Operator
+      url: https://github.com/prometheus-operator/prometheus-operator
+  maintainers:
+    - email: maintainers@okd.io
+      name: OKD Community
+  maturity: beta
+  minKubeVersion: 1.16.0
+  provider:
+    name: OKD Community
+  selector:
+    matchLabels:
+      alm-owner-prometheus: prometheusoperator
+  version: 0.0.0
