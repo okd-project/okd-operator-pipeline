@@ -21,11 +21,15 @@ MINOR=${MINOR:-"$(echo "${OKD_VERSION}" | cut -d. -f2)"}
 OCP_SHORT="${MAJOR}.${MINOR}"
 DATE=${DATE:-"$(date +%Y-%m-%d-%H%M%S)"}
 OCP_DATE="${MAJOR}.${MINOR}.0-${DATE}"
+PREV_MINOR="${MAJOR}.$((MINOR - 1))"
+
+RELEASE_INFO="$(oc adm release info ${OKD_RELEASE} -o='json')"
 
 get_payload_component() {
   local -r component="$1"
 
-  oc adm release info --image-for="${component}" "${OKD_RELEASE}"
+  echo "$RELEASE_INFO" | jq -r --arg name "$component" \
+   '.. | objects | .spec?.tags? // empty | .[] | select(.name==$name) | .from.name'
 }
 
 submodule_exists() {
@@ -84,7 +88,7 @@ submodule_update() {
     git -C "$name" reset --hard origin/${branch}
   fi
 
-  git submodule update --init --recursive "${name}"
+  git submodule update --init --recursive "${name}" || true
 
   git submodule add -f -b ${branch} ${url} ${name} || true
 
@@ -137,7 +141,7 @@ set_csv_value() {
 function push_all_images() {
   for img in $(compgen -v IMG_); do
       # Ignore the bundle image
-      if [[ $img == IMG_BUNDLE ]]; then
+      if [[ $img == IMG_BUNDLE* ]]; then
           continue
       fi
       # Ignore if value does not start with "quay.io/okderators/"
@@ -159,7 +163,7 @@ function convert_all_images_to_digest() {
   
   for img in $(compgen -v IMG_); do
       # Ignore the bundle image
-      if [[ $img == IMG_BUNDLE ]]; then
+      if [[ $img == IMG_BUNDLE* ]]; then
           continue
       fi
       if [[ $img == IMG_* ]]; then
