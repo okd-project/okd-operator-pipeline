@@ -2,7 +2,7 @@
 
 NAMESPACE="cert-manager"
 MAJOR=1
-MINOR=15
+MINOR=18
 
 source ../common.sh
 
@@ -13,7 +13,9 @@ IMG_ISTIO_CSR="${REGISTRY}/istio-csr:${OCP_DATE}"
 
 IMG_BUNDLE="${REGISTRY}/operator-bundle:${OCP_DATE}"
 
-apply_patch operator cert-manager-${OCP_SHORT}
+submodule_initialize istio-csr main
+submodule_initialize cert-manager release-${OCP_SHORT}
+submodule_initialize operator cert-manager-${OCP_SHORT}
 
 # Build the images
 podman build -t "${IMG_OPERATOR}" -f operator.Containerfile .
@@ -48,4 +50,7 @@ podman push "${IMG_BUNDLE}"
 
 popd
 
+submodule_reset istio-csr main
+submodule_reset cert-manager release-${OCP_SHORT}
+submodule_reset operator cert-manager-${OCP_SHORT}
 
