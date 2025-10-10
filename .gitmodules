@@ -530,3 +530,15 @@
 	path = data-foundation/container-object-storage-interface-provisioner-sidecar
 	url = https://github.com/kubernetes-retired/container-object-storage-interface-provisioner-sidecar.git
 	branch = master
+[submodule "external-secrets/operator"]
+	path = external-secrets/operator
+	url = https://github.com/openshift/external-secrets-operator.git
+	branch = release-1.0
+[submodule "external-secrets/external-secrets"]
+	path = external-secrets/external-secrets
+	url = https://github.com/openshift/external-secrets.git
+	branch = release-0.19
+[submodule "external-secrets/bitwarden-sdk-server"]
+	path = external-secrets/bitwarden-sdk-server
+	url = https://github.com/openshift/external-secrets-bitwarden-sdk-server.git
+	branch = release-0.5.1

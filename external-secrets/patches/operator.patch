@@ -1,0 +1,74 @@
+From 48f7278f7532c1572d7a127694cd41afd0cec6bf Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Sun, 5 Oct 2025 16:18:22 +0100
+Subject: [PATCH] OKDify
+
+---
+ config/manifests/kustomization.yaml |  6 +++++
+ config/manifests/okd/patch.yaml     | 38 +++++++++++++++++++++++++++++
+ 2 files changed, 44 insertions(+)
+ create mode 100644 config/manifests/okd/patch.yaml
+
+diff --git a/config/manifests/kustomization.yaml b/config/manifests/kustomization.yaml
+index f7fdf63e..bee5dd65 100644
+--- a/config/manifests/kustomization.yaml
++++ b/config/manifests/kustomization.yaml
+@@ -26,3 +26,9 @@ resources:
+ #    # Update the indices in this path if adding or removing volumes in the manager's Deployment.
+ #    - op: remove
+ #      path: /spec/template/spec/volumes/0
++
++
++patches:
++  - target:
++      kind: ClusterServiceVersion
++    path: okd/patch.yaml
+\ No newline at end of file
+diff --git a/config/manifests/okd/patch.yaml b/config/manifests/okd/patch.yaml
+new file mode 100644
+index 00000000..f089be72
+--- /dev/null
++++ b/config/manifests/okd/patch.yaml
+@@ -0,0 +1,38 @@
++- op: replace
++  path: /metadata/annotations/operator.openshift.io~1uninstall-message
++  value: The external secrets operator for OKD
++    will be removed from external-secrets-operator namespace. If your Operator 
++    configured any off-cluster resources, these will continue to run and require
++    manual cleanup. All operands created by the operator will need to be manually
++    cleaned up. Please refer to https://docs.openshift.com/container-platform/latest/security/external_secrets_operator/external-secrets-operator-uninstall.html
++    for additional steps.
++- op: replace
++  path: /metadata/annotations/support
++  value: OKD Community
++- op: remove
++  path: /metadata/annotations/operators.openshift.io~1valid-subscription
++- op: replace
++  path: /spec/description
++  value: External Secrets Operator for OKD deploys and manages `external-secrets`
++    application in OKD clusters. `external-secrets` provides an uniformed interface to
++    fetch secrets stored in external providers like AWS Secrets Manager,
++    HashiCorp Vault, Google Secrets Manager, Azure Key Vault, IBM Cloud Secrets Manager
++    to name a few, stores them as secrets in OKD. It provides APIs to define
++    authentication and the details of the secret to fetch.
++- op: replace
++  path: /spec/displayName
++  value: External Secrets Operator for OKD
++- op: replace
++  path: /spec/icon
++  value:
++    - base64data: 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
++      mediatype: image/png
++- op: replace
++  path: /spec/maintainers
++  value:
++    - email: maintainers@okd.io
++      name: OKD Community
++- op: replace
++  path: /spec/provider
++  value:
++      name: OKD Community
+\ No newline at end of file
+-- 
+2.51.0
+
