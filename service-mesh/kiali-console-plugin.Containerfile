@@ -61,8 +61,7 @@ ARG OPENSHIFT_SERVICEMESH_PLUGIN_GIT_TAG \
     USER_UID=1000
 
 # Name must match the repository name
-LABEL com.redhat.component="kiali-ossmc-container" \
-      com.github.url="${OPENSHIFT_SERVICEMESH_PLUGIN_GIT_URL}" \
+LABEL       com.github.url="${OPENSHIFT_SERVICEMESH_PLUGIN_GIT_URL}" \
       com.github.commit="${OPENSHIFT_SERVICEMESH_PLUGIN_GIT_SHA}" \
       summary="OKD Service Mesh Console Container" \
       description="Microservices mesh observation plugin for OKD Console" \

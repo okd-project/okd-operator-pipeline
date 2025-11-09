@@ -1,0 +1,31 @@
+From e27b1f9d27cfbc05b5041c2e422ed16b7f72531f Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Fri, 24 Oct 2025 12:58:45 +0100
+Subject: [PATCH] OKDify
+
+---
+ src/deploy/NVA_build/setup_platform.sh | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/deploy/NVA_build/setup_platform.sh b/src/deploy/NVA_build/setup_platform.sh
+index 267497b76..25ff82b2c 100755
+--- a/src/deploy/NVA_build/setup_platform.sh
++++ b/src/deploy/NVA_build/setup_platform.sh
+@@ -18,12 +18,14 @@ function deploy_log {
+ }
+ 
+ function install_supervisor {
++: ' This is not needed for OKD
+     if [ ${ID} == "centos" ] || [ ${ID} == "fedora" ]
+     then
+         deploy_log install_supervisor start
+         pip3 install supervisor
+         deploy_log install_supervisor done
+     fi
++'
+ 
+     deploy_log "setup_supervisors start"
+     mkdir -p /log/supervisor
+-- 
+2.51.0
+

@@ -1,25 +1,26 @@
-From 43834a7b68a9ab1a6a1c9e7de45c6d9e094b5a29 Mon Sep 17 00:00:00 2001
+From b817eb507be9d66306b12e7b87391768d5639355 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
-Date: Fri, 6 Jun 2025 12:43:58 +0100
+Date: Tue, 4 Nov 2025 14:46:54 +0000
 Subject: [PATCH] OKDify
 
 ---
- images/entrypoint.sh | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ images/entrypoint.sh | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/images/entrypoint.sh b/images/entrypoint.sh
-index 0c3f28f..e1bd117 100755
+index e1bd117..27b95a7 100755
 --- a/images/entrypoint.sh
 +++ b/images/entrypoint.sh
-@@ -36,7 +36,7 @@ get_source_folder_for_rhel_version()
-                 rhelmajor="$(echo "$PLATFORM_ID" | sed -E 's/^platform:el([0-9]+)$/\1/')"
-             fi
+@@ -58,6 +58,9 @@ get_source_folder_for_rhel_version()
+         9)
+         sourcedir=/usr/bin/rhel9
          ;;
--        rhel) rhelmajor=$(echo "${VERSION_ID}" | cut -f 1 -d .)
-+        rhel|centos) rhelmajor=$(echo "${VERSION_ID}" | cut -f 1 -d .)
++        10)
++        sourcedir=/usr/bin/rhel9
++        ;;
+         *)
+         echo "ERROR: RHEL Major Version Unsupported, rhelmajor=${rhelmajor}"
          ;;
-         fedora)
-             if [ "${VARIANT_ID}" = "coreos" ]; then
 -- 
-2.49.0
+2.51.0
 

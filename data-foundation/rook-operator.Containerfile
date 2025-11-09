@@ -1,4 +1,4 @@
-ARG CEPH_VERSION
+ARG CEPH_IMG
 
 FROM registry.access.redhat.com/ubi9/go-toolset:1.23 as builder
 
@@ -11,12 +11,10 @@ RUN go version | tee -a ./go.version
 RUN GOOS=linux go build -compiler gc -tags ceph_preview -ldflags "-v -n -X github.com/rook/rook/pkg/version.Version=${CI_VERSION}" -a -v -x -o bin/rook ./cmd/rook
 
 # create rook container
-FROM quay.io/ceph/ceph:v${CEPH_VERSION}
+FROM $CEPH_IMG
 
 # Update the image to get the latest CVE updates (if possible)
-RUN dnf update -y || true \
-    && dnf install -y jq iproute \
-    && dnf clean all
+RUN microdnf install -y jq iproute
 
 USER 1000
 

@@ -1,33 +1,34 @@
-From 20499760635a6e506db4a8661e638058bd3502ab Mon Sep 17 00:00:00 2001
+From 2c9052fcabb725ab5497b7b124c12401a3cb3f24 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
-Date: Mon, 1 Sep 2025 22:58:42 +0100
+Date: Fri, 24 Oct 2025 15:33:45 +0100
 Subject: [PATCH] OKDify
 
 ---
- deploy/csv-templates/ocs-operator.csv.yaml.in | 28 +++++++++----------
- tools/csv-merger/csv-merger.go                | 24 ++++++++--------
- 2 files changed, 26 insertions(+), 26 deletions(-)
+ .../ocs-operator.clusterserviceversion.yaml   | 32 +++++++++----------
+ tools/csv-merger/csv-merger.go                | 24 +++++++-------
+ 2 files changed, 28 insertions(+), 28 deletions(-)
 
-diff --git a/deploy/csv-templates/ocs-operator.csv.yaml.in b/deploy/csv-templates/ocs-operator.csv.yaml.in
-index 5b3ba9ff4..52f41eedf 100644
---- a/deploy/csv-templates/ocs-operator.csv.yaml.in
-+++ b/deploy/csv-templates/ocs-operator.csv.yaml.in
-@@ -81,12 +81,12 @@ metadata:
-         }
-       ]
-     createdAt: "2025-07-01T11:59:29Z"
+diff --git a/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml b/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml
+index 70c761c45..be673ba72 100644
+--- a/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml
++++ b/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml
+@@ -3,12 +3,12 @@ kind: ClusterServiceVersion
+ metadata:
+   annotations:
+     alm-examples: '[]'
 -    description: Red Hat OpenShift Container Storage provides hyperconverged storage
+-      for applications within an OpenShift cluster.
 +    description: OKD Container Storage provides hyperconverged storage
-       for applications within an OpenShift cluster.
++      for applications within an OKD cluster.
      operators.operatorframework.io/builder: operator-sdk-v1.25.4
-     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
      repository: https://github.com/red-hat-storage/ocs-operator
 -    support: Red Hat
 +    support: OKD Community
-   name: ocs-operator.v4.19.0
+   name: ocs-operator.v0.0.0
    namespace: placeholder
  spec:
-@@ -129,32 +129,32 @@ spec:
+@@ -51,35 +51,35 @@ spec:
        name: storageconsumers.ocs.openshift.io
        version: v1alpha1
    description: |
@@ -67,9 +68,14 @@ index 5b3ba9ff4..52f41eedf 100644
 -  displayName: OpenShift Container Storage
 +  displayName: OKD Container Storage
    icon:
-   - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTQ1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2UwMDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlJlZEhhdC1Mb2dvLUhhdC1Db2xvcjwvdGl0bGU+PHBhdGggZD0iTTE1Ny43Nyw2Mi42MWExNCwxNCwwLDAsMSwuMzEsMy40MmMwLDE0Ljg4LTE4LjEsMTcuNDYtMzAuNjEsMTcuNDZDNzguODMsODMuNDksNDIuNTMsNTMuMjYsNDIuNTMsNDRhNi40Myw2LjQzLDAsMCwxLC4yMi0xLjk0bC0zLjY2LDkuMDZhMTguNDUsMTguNDUsMCwwLDAtMS41MSw3LjMzYzAsMTguMTEsNDEsNDUuNDgsODcuNzQsNDUuNDgsMjAuNjksMCwzNi40My03Ljc2LDM2LjQzLTIxLjc3LDAtMS4wOCwwLTEuOTQtMS43My0xMC4xM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMjcuNDcsODMuNDljMTIuNTEsMCwzMC42MS0yLjU4LDMwLjYxLTE3LjQ2YTE0LDE0LDAsMCwwLS4zMS0zLjQybC03LjQ1LTMyLjM2Yy0xLjcyLTcuMTItMy4yMy0xMC4zNS0xNS43My0xNi42QzEyNC44OSw4LjY5LDEwMy43Ni41LDk3LjUxLjUsOTEuNjkuNSw5MCw4LDgzLjA2LDhjLTYuNjgsMC0xMS42NC01LjYtMTcuODktNS42LTYsMC05LjkxLDQuMDktMTIuOTMsMTIuNSwwLDAtOC40MSwyMy43Mi05LjQ5LDI3LjE2QTYuNDMsNi40MywwLDAsMCw0Mi41Myw0NGMwLDkuMjIsMzYuMywzOS40NSw4NC45NCwzOS40NU0xNjAsNzIuMDdjMS43Myw4LjE5LDEuNzMsOS4wNSwxLjczLDEwLjEzLDAsMTQtMTUuNzQsMjEuNzctMzYuNDMsMjEuNzdDNzguNTQsMTA0LDM3LjU4LDc2LjYsMzcuNTgsNTguNDlhMTguNDUsMTguNDUsMCwwLDEsMS41MS03LjMzQzIyLjI3LDUyLC41LDU1LC41LDc0LjIyYzAsMzEuNDgsNzQuNTksNzAuMjgsMTMzLjY1LDcwLjI4LDQ1LjI4LDAsNTYuNy0yMC40OCw1Ni43LTM2LjY1LDAtMTIuNzItMTEtMjcuMTYtMzAuODMtMzUuNzgiLz48L3N2Zz4=
-     mediatype: image/svg+xml
-@@ -665,10 +665,10 @@ spec:
+-  - base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTQ1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2UwMDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlJlZEhhdC1Mb2dvLUhhdC1Db2xvcjwvdGl0bGU+PHBhdGggZD0iTTE1Ny43Nyw2Mi42MWExNCwxNCwwLDAsMSwuMzEsMy40MmMwLDE0Ljg4LTE4LjEsMTcuNDYtMzAuNjEsMTcuNDZDNzguODMsODMuNDksNDIuNTMsNTMuMjYsNDIuNTMsNDRhNi40Myw2LjQzLDAsMCwxLC4yMi0xLjk0bC0zLjY2LDkuMDZhMTguNDUsMTguNDUsMCwwLDAtMS41MSw3LjMzYzAsMTguMTEsNDEsNDUuNDgsODcuNzQsNDUuNDgsMjAuNjksMCwzNi40My03Ljc2LDM2LjQzLTIxLjc3LDAtMS4wOCwwLTEuOTQtMS43My0xMC4xM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMjcuNDcsODMuNDljMTIuNTEsMCwzMC42MS0yLjU4LDMwLjYxLTE3LjQ2YTE0LDE0LDAsMCwwLS4zMS0zLjQybC03LjQ1LTMyLjM2Yy0xLjcyLTcuMTItMy4yMy0xMC4zNS0xNS43My0xNi42QzEyNC44OSw4LjY5LDEwMy43Ni41LDk3LjUxLjUsOTEuNjkuNSw5MCw4LDgzLjA2LDhjLTYuNjgsMC0xMS42NC01LjYtMTcuODktNS42LTYsMC05LjkxLDQuMDktMTIuOTMsMTIuNSwwLDAtOC40MSwyMy43Mi05LjQ5LDI3LjE2QTYuNDMsNi40MywwLDAsMCw0Mi41Myw0NGMwLDkuMjIsMzYuMywzOS40NSw4NC45NCwzOS40NU0xNjAsNzIuMDdjMS43Myw4LjE5LDEuNzMsOS4wNSwxLjczLDEwLjEzLDAsMTQtMTUuNzQsMjEuNzctMzYuNDMsMjEuNzdDNzguNTQsMTA0LDM3LjU4LDc2LjYsMzcuNTgsNTguNDlhMTguNDUsMTguNDUsMCwwLDEsMS41MS03LjMzQzIyLjI3LDUyLC41LDU1LC41LDc0LjIyYzAsMzEuNDgsNzQuNTksNzAuMjgsMTMzLjY1LDcwLjI4LDQ1LjI4LDAsNTYuNy0yMC40OCw1Ni43LTM2LjY1LDAtMTIuNzItMTEtMjcuMTYtMzAuODMtMzUuNzgiLz48L3N2Zz4=
+-    mediatype: image/svg+xml
++  - base64data: iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAApVBMVEX////8x8b2cnHzQ0H5mpnyKyn7vr72aGf2ZGPyLSv7ysnS0tKTk5NdXV3wKyn3eXh4eHgmJiYAAAADAQD4goC3t7dLS0sICAjNLSz0QUD+7+/JyckuLi59fX3Dw8P5qKj0SEb5k5JfX1/3enk4ODjY2Nj5oJ/zRkSurq4KCgq5ubn+6emcnJxpaWmRkZGlpaXf39+fn59/f39AQEAgICBgYGC/v7+2+/7xAAACgklEQVR4nK1X12LqMAwVQ2UvA2UHKBtKG5KQ//+0K4di5GASwFcPbZT4HLQs2QBJksnmctlM4pJEyWMk+XfxHwQuFOjPx5sERSyVAcolLL6DrlRrdWzIpwbWa9XKi+hmS4g2YkcqHcS2EK3m8xzdTyGl18fBEGA4wH4vevHZfQo+iuDjiQNTxNl8PkOcgjMZRxSjdHxTLvxyoufFJY2LSHG+5JdmCryylPDVVV1vEDfrq7aSFMvEUGx3ZPyevzkcuLYnR3bbx/hv+oVjsolHWvKdhP9JxgP8PGbY0qffNDzALy0zelHZPYWPGHamSC51+92TJnwlebG8xzd5/FzPFzEJzq76fDTUw4jyp5Qwjr5QeGoBZTNek1S/e44PvNDlIk0KwuuKPVW1ju9S/SmF8CHcCdEGSqGa1HcWGaDq9ySEFjP2XvGuYiZUuAFnIVwwiCvELQpkAk8lpcBRSiDOJjyAL3z17OiJaLEUUAgeEJBpN2UsWpoHk1cJJtyHKveACPyTUXxOQD5UlVJr94ATPBa2rNeu/T19FOvYn75KMO1jvRhNnDxvfH8uuEbhMVioqZdBLDU6A8T1jSA9iGvEQadRQsxAFpHm13CGm1cINjijkVFGzEIOC/LNHPHaPp8gOCDO5f8C5uwJrF2wDqIxjaFRfGMa7QsJrEvZsJnSXdA3k/V2tm4oekvjnUsT3utiLU1rqh5r35pw02JNVWvrIe++TJLaujZY3IBPMSUhz+LdYLkbbb5htImE0aYPV89cRbd5Zxiu6ePdSx7v9gcM+yOO9SHL/phnf9C0P+raH7bB+rgP9hcOsL7ySLG8dF04rK59F7G7eMJ/uPpaX76fuv7/AxOrev+It8s6AAAAAElFTkSuQmCC
++    mediatype: image/png
+   install:
+     spec:
+       deployments: null
+@@ -104,8 +104,8 @@ spec:
    - name: Source Code
      url: https://github.com/red-hat-storage/ocs-operator
    maintainers:
@@ -80,9 +86,6 @@ index 5b3ba9ff4..52f41eedf 100644
    maturity: alpha
    minKubeVersion: 1.16.0
    provider:
--    name: Red Hat
-+    name: OKD Community
-   version: 4.19.0
 diff --git a/tools/csv-merger/csv-merger.go b/tools/csv-merger/csv-merger.go
 index 13858b03e..d9562a83c 100644
 --- a/tools/csv-merger/csv-merger.go

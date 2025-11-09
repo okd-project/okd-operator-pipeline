@@ -1,0 +1,95 @@
+From c10eab7bf6dddcfebf7511161985d7d2990926fc Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Fri, 24 Oct 2025 11:26:36 +0100
+Subject: [PATCH] OKDify
+
+---
+ Dockerfile | 20 +++++++++++---------
+ ceph.repo  | 23 +++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 9 deletions(-)
+ create mode 100644 ceph.repo
+
+diff --git a/Dockerfile b/Dockerfile
+index 4b6fd68..198fc4e 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,12 +1,12 @@
+ # CEPH DAEMON BASE IMAGE
+ 
+-FROM registry.redhat.io/ubi9/ubi-minimal:latest
++FROM quay.io/centos/centos:stream9-minimal
+ 
+ ENV I_AM_IN_A_CONTAINER 1
+ ENV DOWNSTREAM_VERSION="8.1.0"
+ 
+ # Who is the maintainer ?
+-LABEL maintainer="Guillaume Abrioux <gabrioux@redhat.com>"
++LABEL maintainer="OKD Community <maintainers@okd.io>"
+ 
+ # Is a ceph container ?
+ LABEL ceph="True"
+@@ -43,10 +43,12 @@ COPY ./licenses /licenses
+ # Install ceph and dependencies, and clean up
+ #======================================================
+ 
+-RUN rm -f /etc/yum.repos.d/ubi.repo
++COPY ./ceph.repo /etc/yum.repos.d/ceph.repo
++# Enable the CRB repo for CentOS Stream 9. This is in /etc/yum.repos.d/centos.repo. Only replace the [crb] section.
++RUN sed -i '/^\[crb\]/,/^$/ s/enabled=0/enabled=1/' /etc/yum.repos.d/centos.repo
+ 
+ # Editing /etc/redhat-storage-server release file
+-RUN echo "Red Hat Ceph Storage Server 8 (Container)" > /etc/redhat-storage-release
++RUN echo "OKD Ceph Storage Server 8 (Container)" > /etc/redhat-storage-release
+ 
+ EXPOSE 6789 6800 6801 6802 6803 6804 6805 80 5000
+ 
+@@ -56,11 +58,11 @@ LABEL version="8"
+ # Build specific labels
+ LABEL com.redhat.component="rhceph-container"
+ LABEL name="rhceph"
+-LABEL description="Red Hat Ceph Storage 8"
+-LABEL summary="Provides the latest Red Hat Ceph Storage 8 on RHEL 9 in a fully featured and supported base image."
+-LABEL io.k8s.display-name="Red Hat Ceph Storage 8 on RHEL 9"
+-LABEL io.openshift.tags="rhceph ceph"
+-LABEL io.k8s.description="Red Hat Ceph Storage 8"
++LABEL description="OKD Ceph Storage 8"
++LABEL summary="Provides the latest OKD Ceph Storage 8 on CentOS 9 in a fully featured and supported base image."
++LABEL io.k8s.display-name="OKD Ceph Storage 8 on CentOS 9"
++LABEL io.openshift.tags="okd ceph"
++LABEL io.k8s.description="OKD Ceph Storage 8"
+ 
+ COPY packages-*.txt .
+ 
+diff --git a/ceph.repo b/ceph.repo
+new file mode 100644
+index 0000000..3f5dcf5
+--- /dev/null
++++ b/ceph.repo
+@@ -0,0 +1,23 @@
++[centos-nfs-ganesha-6]
++name=CentOS-$stream - NFS-Ganesha 6
++metalink=https://mirrors.centos.org/metalink?repo=centos-storage-sig-nfsganesha-6-9-stream&arch=$basearch
++gpgcheck=0
++enabled=1
++skip_if_unavailable=False
++
++[epel]
++name=Extra Packages for Enterprise Linux $releasever - $basearch
++metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-$releasever&arch=$basearch&infra=$infra&content=$contentdir
++enabled=1
++gpgcheck=0
++skip_if_unavailable=False
++
++[okd-ceph-8-tools-for-centos-9-$basearch-rpms]
++name=okd-ceph-8-tools-for-centos-9-rpms
++baseurl=https://download.copr.fedorainfracloud.org/results/owenh/ceph/epel-9-$basearch/
++type=rpm-md
++skip_if_unavailable=False
++gpgcheck=0
++repo_gpgcheck=0
++enabled=1
++enabled_metadata=1
+\ No newline at end of file
+-- 
+2.51.0
+

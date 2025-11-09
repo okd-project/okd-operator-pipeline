@@ -1,10 +1,16 @@
 #!/bin/bash
 
 NAMESPACE="data-foundation"
+OLD_DATE="2025-10-24-154512"
+DATE="2025-10-24-154513"
 
 source ../common.sh
 
-export CEPH_VERSION="19.2.3"
+OLD_VERSION="${OCP_SHORT}.0-${OLD_DATE}"
+
+CEPH_RELEASE="8.1"
+export CEPH_VERSION="$CEPH_RELEASE.0-${DATE}"
+OLD_CEPH_VERSION="$CEPH_RELEASE.0-${OLD_DATE}"
 
 export IMG_OAUTH_PROXY="$(get_payload_component oauth-proxy)"
 export IMG_KUBE_RBAC_PROXY="$(get_payload_component kube-rbac-proxy)"
@@ -20,8 +26,8 @@ export IMG_PROMETHEUS="$(get_payload_component prometheus)"
 export IMG_PROMETHEUS_ALERTMANAGER="$(get_payload_component prometheus-alertmanager)"
 
 export IMG_NOOBAA_DB=quay.io/sclorg/postgresql-15-c9s:latest
-export IMG_CEPH=quay.io/ceph/ceph:v${CEPH_VERSION}
 
+export IMG_CEPH=${REGISTRY}/ceph:${CEPH_VERSION}
 export IMG_CEPH_CSI="${REGISTRY}/ceph-csi:${OCP_DATE}"
 export IMG_CEPH_CSI_OPERATOR="${REGISTRY}/ceph-csi-operator:${OCP_DATE}"
 export IMG_ODF_CLI="${REGISTRY}/odf-cli:${OCP_DATE}"
@@ -53,6 +59,7 @@ IMG_BUNDLE_ODR_RECIPE="${REGISTRY}/odr-recipe-bundle:${OCP_DATE}"
 IMG_BUNDLE_ODF_OPERATOR="${REGISTRY}/odf-operator-bundle:${OCP_DATE}"
 IMG_BUNDLE_ODF_DEPENDENCIES="${REGISTRY}/odf-dependencies-bundle:${OCP_DATE}"
 
+submodule_initialize ceph-container release-${CEPH_RELEASE}
 submodule_initialize ceph-csi release-v3.15
 submodule_initialize ceph-csi-operator release-${OCP_SHORT}
 submodule_initialize cloudnative-pg rhodf-${OCP_SHORT}
@@ -65,7 +72,7 @@ submodule_initialize ocs-client-operator release-${OCP_SHORT}
 submodule_initialize ocs-operator release-${OCP_SHORT}
 submodule_initialize odf-cli release-${OCP_SHORT}
 submodule_initialize odf-console release-${OCP_SHORT}
-submodule_initialize odf-console-compatibility release-${OCP_SHORT}-compatibility
+submodule_initialize odf-console-compatibility release-${OCP_SHORT}
 submodule_initialize odf-multicluster-orchestrator release-${OCP_SHORT}
 submodule_initialize odf-operator release-${OCP_SHORT}
 submodule_initialize ramen release-${OCP_SHORT}
@@ -75,25 +82,68 @@ submodule_initialize rook release-${OCP_SHORT}
 # Replace NooBaa version
 sed -i "s|Version = .*|Version = \"${OCP_DATE}\"|g" noobaa-operator/version/version.go
 
-podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg IMG_CLI=$IMG_CLI -t ${IMG_CLOUDNATIVE_PG_OPERATOR} -f cloudnative-pg-operator.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg CEPH_VERSION=${CEPH_VERSION} -t ${IMG_CEPH_CSI} -f ceph-csi.Containerfile ../
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_CEPH_CSI_OPERATOR} -f ceph-csi-operator.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_ODF_CLI} -f odf-cli.Containerfile ..
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_ODF_CONSOLE} -f odf-console.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_COSI_SIDECAR} -f cosi-sidecar.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_CSI_ADDONS_OPERATOR} -f csi-addons-operator.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_CSI_ADDONS_SIDECAR} -f csi-addons-sidecar.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_MCG_CORE} -f mcg-core.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_MCG_OPERATOR} -f mcg-operator.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_MULTICLUSTER_CONSOLE} -f multicluster-console.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_MULTICLUSTER_OPERATOR} -f multicluster-operator.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_OCS_CLIENT_CONSOLE} -f ocs-client-console.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_OCS_CLIENT_OPERATOR} -f ocs-client-operator.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg CEPH_VERSION=${CEPH_VERSION} -t ${IMG_OCS_METRICS_EXPORTER} -f ocs-metrics-exporter.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_OCS_OPERATOR} -f ocs-operator.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_ODR_OPERATOR} -f odr-operator.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_ODF_OPERATOR} -f odf-operator.Containerfile .
-podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg CEPH_VERSION=${CEPH_VERSION} -t ${IMG_ROOK_OPERATOR} -f rook-operator.Containerfile .
+#podman build -t ${IMG_CEPH} -f Dockerfile ceph-container
+#podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg IMG_CLI=${IMG_CLI} -t ${IMG_CLOUDNATIVE_PG_OPERATOR} -f cloudnative-pg-operator.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg CEPH_IMG=${IMG_CEPH} -t ${IMG_CEPH_CSI} -f ceph-csi.Containerfile ../
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_CEPH_CSI_OPERATOR} -f ceph-csi-operator.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_ODF_CLI} -f odf-cli.Containerfile ..
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_ODF_CONSOLE} -f odf-console.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_COSI_SIDECAR} -f cosi-sidecar.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_CSI_ADDONS_OPERATOR} -f csi-addons-operator.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_CSI_ADDONS_SIDECAR} -f csi-addons-sidecar.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg IMG_CLI=${IMG_CLI} -t ${IMG_MCG_CORE} -f mcg-core.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_MCG_OPERATOR} -f mcg-operator.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_MULTICLUSTER_CONSOLE} -f multicluster-console.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_MULTICLUSTER_OPERATOR} -f multicluster-operator.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_OCS_CLIENT_CONSOLE} -f ocs-client-console.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_OCS_CLIENT_OPERATOR} -f ocs-client-operator.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg CEPH_IMG=${IMG_CEPH} -t ${IMG_OCS_METRICS_EXPORTER} -f ocs-metrics-exporter.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_OCS_OPERATOR} -f ocs-operator.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_ODR_OPERATOR} -f odr-operator.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_ODF_OPERATOR} -f odf-operator.Containerfile .
+#podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg CEPH_IMG=${IMG_CEPH} -t ${IMG_ROOK_OPERATOR} -f rook-operator.Containerfile .
+
+OLD_IMG_CEPH=${REGISTRY}/ceph:${OLD_CEPH_VERSION}
+OLD_IMG_CEPH_CSI="${REGISTRY}/ceph-csi:${OLD_VERSION}"
+OLD_IMG_CEPH_CSI_OPERATOR="${REGISTRY}/ceph-csi-operator:${OLD_VERSION}"
+OLD_IMG_ODF_CLI="${REGISTRY}/odf-cli:${OLD_VERSION}"
+OLD_IMG_ODF_CONSOLE="${REGISTRY}/odf-console:${OLD_VERSION}"
+OLD_IMG_COSI_SIDECAR="${REGISTRY}/cosi-sidecar:${OLD_VERSION}"
+OLD_IMG_CSI_ADDONS_OPERATOR="${REGISTRY}/csi-addons-operator:${OLD_VERSION}"
+OLD_IMG_CSI_ADDONS_SIDECAR="${REGISTRY}/csi-addons-sidecar:${OLD_VERSION}"
+OLD_IMG_MCG_CORE="${REGISTRY}/mcg-core:${OLD_VERSION}"
+OLD_IMG_MCG_OPERATOR="${REGISTRY}/mcg-operator:${OLD_VERSION}"
+OLD_IMG_MULTICLUSTER_CONSOLE="${REGISTRY}/multicluster-console:${OLD_VERSION}"
+OLD_IMG_MULTICLUSTER_OPERATOR="${REGISTRY}/multicluster-operator:${OLD_VERSION}"
+OLD_IMG_OCS_CLIENT_CONSOLE="${REGISTRY}/ocs-client-console:${OLD_VERSION}"
+OLD_IMG_OCS_CLIENT_OPERATOR="${REGISTRY}/ocs-client-operator:${OLD_VERSION}"
+OLD_IMG_OCS_METRICS_EXPORTER="${REGISTRY}/ocs-metrics-exporter:${OLD_VERSION}"
+OLD_IMG_OCS_OPERATOR="${REGISTRY}/ocs-operator:${OLD_VERSION}"
+OLD_IMG_ODR_OPERATOR="${REGISTRY}/odr-operator:${OLD_VERSION}"
+OLD_IMG_ODF_OPERATOR="${REGISTRY}/odf-operator:${OLD_VERSION}"
+OLD_IMG_ROOK_OPERATOR="${REGISTRY}/rook-operator:${OLD_VERSION}"
+OLD_IMG_CLOUDNATIVE_PG_OPERATOR="${REGISTRY}/cloudnative-pg-operator:${OLD_VERSION}"
+
+podman tag ${OLD_IMG_CEPH} ${IMG_CEPH}
+podman tag ${OLD_IMG_CEPH_CSI} ${IMG_CEPH_CSI}
+podman tag ${OLD_IMG_CEPH_CSI_OPERATOR} ${IMG_CEPH_CSI_OPERATOR}
+podman tag ${OLD_IMG_ODF_CLI} ${IMG_ODF_CLI}
+podman tag ${OLD_IMG_ODF_CONSOLE} ${IMG_ODF_CONSOLE}
+podman tag ${OLD_IMG_COSI_SIDECAR} ${IMG_COSI_SIDECAR}
+podman tag ${OLD_IMG_CSI_ADDONS_OPERATOR} ${IMG_CSI_ADDONS_OPERATOR}
+podman tag ${OLD_IMG_CSI_ADDONS_SIDECAR} ${IMG_CSI_ADDONS_SIDECAR}
+podman tag ${OLD_IMG_MCG_CORE} ${IMG_MCG_CORE}
+podman tag ${OLD_IMG_MCG_OPERATOR} ${IMG_MCG_OPERATOR}
+podman tag ${OLD_IMG_MULTICLUSTER_CONSOLE} ${IMG_MULTICLUSTER_CONSOLE}
+podman tag ${OLD_IMG_MULTICLUSTER_OPERATOR} ${IMG_MULTICLUSTER_OPERATOR}
+podman tag ${OLD_IMG_OCS_CLIENT_CONSOLE} ${IMG_OCS_CLIENT_CONSOLE}
+podman tag ${OLD_IMG_OCS_CLIENT_OPERATOR} ${IMG_OCS_CLIENT_OPERATOR}
+podman tag ${OLD_IMG_OCS_METRICS_EXPORTER} ${IMG_OCS_METRICS_EXPORTER}
+podman tag ${OLD_IMG_OCS_OPERATOR} ${IMG_OCS_OPERATOR}
+podman tag ${OLD_IMG_ODR_OPERATOR} ${IMG_ODR_OPERATOR}
+podman tag ${OLD_IMG_ODF_OPERATOR} ${IMG_ODF_OPERATOR}
+podman tag ${OLD_IMG_ROOK_OPERATOR} ${IMG_ROOK_OPERATOR}
+podman tag ${OLD_IMG_CLOUDNATIVE_PG_OPERATOR} ${IMG_CLOUDNATIVE_PG_OPERATOR}
 
 push_all_images
 
@@ -151,7 +201,7 @@ make bundle IMAGE_BUILD_CMD=podman BUNDLE_IMG=${IMG_BUNDLE_OCS_CLIENT_OPERATOR} 
  CSI_ADDONS_PACKAGE_VERSION=${OCP_DATE} CSI_IMG_PROVISIONER=${IMG_CSI_PROVISIONER} CSI_IMG_ATTACHER=${IMG_CSI_ATTACHER} \
  CSI_IMG_RESIZER=${IMG_CSI_RESIZER} CSI_IMG_SNAPSHOTTER=${IMG_CSI_SNAPSHOTTER} \
  CSI_IMG_REGISTRAR=${IMG_CSI_NODE_DRIVER_REGISTRAR} CSI_IMG_ADDONS=${IMG_CSI_ADDONS_SIDECAR} \
- CSI_IMG_CEPH_CSI=${IMG_CEPH_CSI} "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}"
+ CSI_IMG_CEPH_CSI=${IMG_CEPH_CSI} "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" CSI_OCP_VERSIONS="v${OCP_SHORT}"
 podman build -t ${IMG_BUNDLE_OCS_CLIENT_OPERATOR} -f bundle.Dockerfile .
 podman push ${IMG_BUNDLE_OCS_CLIENT_OPERATOR}
 popd
@@ -201,6 +251,7 @@ podman push ${IMG_BUNDLE_ODF_OPERATOR}
 podman push ${IMG_BUNDLE_ODF_DEPENDENCIES}
 popd
 
+submodule_reset ceph-container release-${CEPH_RELEASE}
 submodule_reset ceph-csi release-${OCP_SHORT}
 submodule_reset ceph-csi-operator release-${OCP_SHORT}
 submodule_reset container-object-storage-interface-provisioner-sidecar master
@@ -212,7 +263,7 @@ submodule_reset ocs-client-operator release-${OCP_SHORT}
 submodule_reset ocs-operator release-${OCP_SHORT}
 submodule_reset odf-cli release-${OCP_SHORT}
 submodule_reset odf-console release-${OCP_SHORT}
-submodule_reset odf-console-compatibility release-${OCP_SHORT}-compatibility
+submodule_reset odf-console-compatibility release-${OCP_SHORT}
 submodule_reset odf-multicluster-orchestrator release-${OCP_SHORT}
 submodule_reset odf-operator release-${OCP_SHORT}
 submodule_reset ramen release-${OCP_SHORT}

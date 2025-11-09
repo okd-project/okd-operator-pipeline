@@ -1,5 +1,5 @@
 # Build stage 1---> Build cli
-FROM registry.access.redhat.com/ubi9/go-toolset:1.23 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
 
 # Override GOFLAGS
 ENV GOFLAGS=''

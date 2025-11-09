@@ -3,6 +3,6 @@ resources:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
-- digest: sha256:c0a5824637e970c2053adcba0d568356d6bad675efff719f472661d6fcb495f5
+- digest: sha256:d2ed4c0cb8aa214b5c1471071f0baa8474b20f02ea4ee2a52c240e181ec446e5
   name: controller
   newName: quay.io/okd/scos-content

@@ -1,4 +1,4 @@
-ARG CEPH_VERSION
+ARG CEPH_IMG
 
 FROM registry.access.redhat.com/ubi9/go-toolset:1.23 as builder
 
@@ -15,11 +15,7 @@ RUN GOOS=linux go build -a -ldflags "-X github.com/red-hat-storage/ocs-operator/
 
 # Build stage 2
 
-FROM quay.io/ceph/ceph:v${CEPH_VERSION}
-
-# Update the image to get the latest CVE updates (if possible)
-RUN dnf update --disablerepo 'rhceph-*' -y || true \
-    && dnf clean all
+FROM $CEPH_IMG
 
 ENV MEBIN=/usr/local/bin/metrics-exporter
 

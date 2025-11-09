@@ -4,6 +4,11 @@
 #
 # This Target will build the node_modules.
 ##############################################################
+ARG IMG_CLI
+FROM $IMG_CLI as oc_builder
+
+RUN oc version
+
 FROM quay.io/centos/centos:stream9 as noobaa_builder
 
 RUN dnf group install -y "Development Tools" && \
@@ -52,6 +57,7 @@ COPY ./noobaa-core .
 COPY --from=noobaa_builder /opt/app-root/src/node_modules/ ./node_modules/
 COPY --from=noobaa_builder /noobaa_init_files/ /noobaa_init_files/
 COPY --from=noobaa_builder /opt/app-root/src/build/Release/ ./build/Release/
+COPY config-local.js .
 
 RUN node -e "let pkg=require('./package.json'); delete pkg.devDependencies; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
 
@@ -65,6 +71,7 @@ RUN tar \
     package.json \
     platform_restrictions.json \
     config.js \
+    config-local.js \
     .nvmrc \
     src/ \
     build/Release/ \
@@ -84,14 +91,10 @@ ENV BG_NODE_OPTIONS ''
 ENV HOSTED_AGENTS_NODE_OPTIONS ''
 ENV ENDPOINT_NODE_OPTIONS ''
 
-RUN dnf update -y && \
-    dnf clean all
-
 RUN dnf module enable -y nodejs:22 && \
     dnf install -y dnf-plugins-core && \
     dnf config-manager --set-enabled crb && \
     dnf install epel-release -y && \
-    dnf copr enable owenh/micro-okd centos-stream-9-x86_64 -y && \
     dnf install -y \
     bash \
     lsof \
@@ -107,14 +110,14 @@ RUN dnf module enable -y nodejs:22 && \
     nodejs \
     npm \
     boost \
-    openshift-clients \
     supervisor \
     jemalloc \
     cronie && \
     dnf clean all
 
 RUN ln -sf $(which node) /usr/local/bin/node && \
-    ln -sf $(which npm) /usr/local/bin/npm
+    ln -sf $(which npm) /usr/local/bin/npm && \
+    ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
 RUN mkdir -p /data/ && \
     mkdir -p /log
@@ -141,6 +144,10 @@ RUN cd /root/node_modules && \
     tar -xzf /tmp/noobaa-NVA.tar.gz && \
     chgrp -R 0 /root/node_modules && \
     chmod -R 775 /root/node_modules
+
+# Copy oc binary and create kubectl symlink
+COPY --from=oc_builder /usr/bin/oc /usr/bin/oc
+RUN ln -s /usr/bin/oc /usr/bin/kubectl
 
 ###############
 # PORTS SETUP #

@@ -1,12 +1,12 @@
-ARG CEPH_VERSION
+ARG CEPH_IMG
 
-FROM quay.io/ceph/daemon-base:latest-squid as builder
+FROM $CEPH_IMG as builder
 
 ARG CI_VERSION
 
 ENV IMPORT_PATH=github.com/ceph/ceph-csi
 
-RUN dnf install -y librados-devel librbd-devel libcephfs-devel go git
+RUN microdnf install -y librados-devel librbd-devel libcephfs-devel go git
 
 WORKDIR /src/
 
@@ -22,7 +22,7 @@ RUN CGO_ENABLED=1 GO111MODULE=on GOOS=linux go build -mod=mod -tags=squid,ceph_p
 
 
 # Build stage 2
-FROM quay.io/ceph/ceph:v${CEPH_VERSION}
+FROM $CEPH_IMG
 
 ENV CSIBIN=/usr/local/bin/cephcsi
 

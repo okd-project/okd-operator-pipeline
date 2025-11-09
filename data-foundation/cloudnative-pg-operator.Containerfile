@@ -1,6 +1,6 @@
 ARG IMG_CLI
 
-FROM registry.access.redhat.com/ubi9/go-toolset:1.23 as builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as builder
 
 ARG CI_VERSION
 
@@ -22,8 +22,9 @@ RUN GOOS=linux go build -a -o kubectl-cnpg -ldflags "-X github.com/cloudnative-p
 
 # Build stage 2
 FROM $IMG_CLI
+ARG TARGETARCH
 
-ENV OPBIN=/operator/manager
+ENV OPBIN=/operator/manager_$TARGETARCH
 
 COPY --from=builder /opt/app-root/src/manager "$OPBIN"
 COPY --from=builder /opt/app-root/src/kubectl-cnpg "/usr/bin/kubectl-cnpg"
