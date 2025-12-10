@@ -71,7 +71,7 @@ yq e -i ".metadata.annotations.containerImage = \"${IMG_OPERATOR}\"" ./config/ma
 
 make -f Makefile.bundle bundle IMAGE_BUILDER=podman IMAGE_REPO="${REGISTRY}" CONFIG_DAEMON_IMAGE_TAG="${IMG_NETWORK_CONFIG_DAEMON}" \
  WEBHOOK_IMAGE_TAG="${IMG_NETWORK_WEBHOOK}" VERSION="${OCP_DATE}" IMG="${IMG_OPERATOR}" BUNDLE_IMG="${BUNDLE_IMG}" \
- IMAGE_TAG="${IMG_OPERATOR}"
+ IMAGE_TAG="${IMG_OPERATOR}" BUNDLE_METADATA_OPTS="${BUNDLE_METADATA_OPTS}"
 yq e -i '.spec.labels.olm-status-descriptors = env(VERSION)' bundle/manifests/sriov-network-operator.clusterserviceversion.yaml
 
 # Build and push the bundle image
