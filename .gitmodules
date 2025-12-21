@@ -594,3 +594,11 @@
 	path = oadp/restic
 	url = https://github.com/openshift/restic.git
 	branch = oadp-1.5
+[submodule "pf-status-relay/operator"]
+	path = pf-status-relay/operator
+	url = https://github.com/openshift/pf-status-relay-operator.git
+	branch = release-4.20
+[submodule "pf-status-relay/relay"]
+	path = pf-status-relay/relay
+	url = https://github.com/openshift/pf-status-relay.git
+	branch = release-4.20
