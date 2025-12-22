@@ -1,0 +1,31 @@
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: "Path to the operator build scripts"
+        type: string
+        required: true
+
+jobs:
+  deploy-operator:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Install Podman
+      uses: redhat-actions/podman-install@main
+
+    - name: Log in to quay.io
+      uses: redhat-actions/podman-login@v1
+      with:
+        username: ${{ env.REGISTRY_USER }}
+        password: ${{ env.REGISTRY_PASSWORD }}
+        registry: ${{ vars.IMAGE_REGISTRY }}
+
+    - name: Build and push image
+      # language=bash
+      run: |
+        pushd ${{ inputs.path }}
+        bash ./build.sh
+        popd

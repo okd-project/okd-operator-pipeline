@@ -1,0 +1,46 @@
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: "Path to the operator build scripts"
+        type: string
+        required: true
+      name:
+        description: "Name of the operator"
+        type: string
+        required: true
+
+jobs:
+  deploy-operator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Podman
+        uses: redhat-actions/podman-install@main
+
+      # Run update.sh script and push submodule changes to current branch
+      - name: Update operator
+        # language=bash
+        run: |
+          pushd ${{ inputs.path }}
+          ./update.sh
+          popd
+
+      - name: Commit changes
+        id: commit
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: github-actions
+          author_email: github-actions@github.com
+          message: "[${{ inputs.name }}] Automatic update"
+          add: "${{ inputs.path }}"
+
+      - name: Check if committed
+        run: |
+          if [ "${{ steps.commit.outputs.committed }}" == "true" ]; then
+            echo "Changes committed successfully"
+          else
+            echo "No changes to commit"
+          fi
