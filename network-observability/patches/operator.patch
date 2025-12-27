@@ -1,0 +1,102 @@
+From e058b65153387c77146030f2fa8ec9c5549dbe28 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Sat, 27 Dec 2025 14:55:28 +0000
+Subject: [PATCH] OKDify
+
+---
+ Makefile                                      |  8 +++----
+ ...observ-operator.clusterserviceversion.yaml | 22 +++++--------------
+ config/descriptions/ocp.md                    |  6 ++---
+ 3 files changed, 12 insertions(+), 24 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 3e9433f6..854eca58 100644
+--- a/Makefile
++++ b/Makefile
+@@ -372,10 +372,10 @@ uninstall: kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube
+ 
+ set-manager-images: kustomize ## Update image references
+ 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMAGE}
+-	$(SED) -i -r '/RELATED_IMAGE_EBPF_AGENT$$/{ n; s~value:.+$$~value: quay.io/netobserv/netobserv-ebpf-agent:$(BPF_VERSION)~}' ./config/manager/manager.yaml
+-	$(SED) -i -r '/RELATED_IMAGE_FLOWLOGS_PIPELINE$$/{ n; s~value:.+$$~value: quay.io/netobserv/flowlogs-pipeline:$(FLP_VERSION)~}' ./config/manager/manager.yaml
+-	$(SED) -i -r '/RELATED_IMAGE_CONSOLE_PLUGIN$$/{ n; s~value:.+$$~value: quay.io/netobserv/network-observability-console-plugin:$(PLG_VERSION)~}' ./config/manager/manager.yaml
+-	$(SED) -i -r '/RELATED_IMAGE_CONSOLE_PLUGIN_COMPAT$$/{ n; s~value:.+$$~value: quay.io/netobserv/network-observability-console-plugin:$(PLG_VERSION)-pf4~}' ./config/manager/manager.yaml
++	$(SED) -i -r '/RELATED_IMAGE_EBPF_AGENT$$/{ n; s~value:.+$$~value: $(BPF_IMG)~}' ./config/manager/manager.yaml
++	$(SED) -i -r '/RELATED_IMAGE_FLOWLOGS_PIPELINE$$/{ n; s~value:.+$$~value: $(FLP_IMG)~}' ./config/manager/manager.yaml
++	$(SED) -i -r '/RELATED_IMAGE_CONSOLE_PLUGIN$$/{ n; s~value:.+$$~value: $(PLG_IMG)~}' ./config/manager/manager.yaml
++	$(SED) -i -r '/RELATED_IMAGE_CONSOLE_PLUGIN_COMPAT$$/{ n; s~value:.+$$~value: $(PLG_COMPAT_IMG)~}' ./config/manager/manager.yaml
+ 
+ deploy: BPF_VERSION=main
+ deploy: FLP_VERSION=main
+diff --git a/config/csv/bases/netobserv-operator.clusterserviceversion.yaml b/config/csv/bases/netobserv-operator.clusterserviceversion.yaml
+index 080a2400..328d8c13 100644
+--- a/config/csv/bases/netobserv-operator.clusterserviceversion.yaml
++++ b/config/csv/bases/netobserv-operator.clusterserviceversion.yaml
+@@ -9,7 +9,7 @@ metadata:
+     containerImage: ':container-image:'
+     createdAt: ''
+     description: Network flows collector and monitoring solution
+-    support: NetObserv team
++    support: OKD Community
+     operatorframework.io/suggested-namespace: openshift-netobserv-operator
+     operatorframework.io/initialization-resource: '{"apiVersion":"flows.netobserv.io/v1beta2",
+       "kind":"FlowCollector","metadata":{"name":"cluster"},"spec": {}}'
+@@ -332,23 +332,11 @@ spec:
+   - name: Discussion board
+     url: https://github.com/netobserv/network-observability-operator/discussions
+   maintainers:
+-  - email: jpinsonn@redhat.com
+-    name: Julien Pinsonneau
+-  - email: jtakvori@redhat.com
+-    name: Joel Takvorian
+-  - email: lberetta@redhat.com
+-    name: Leandro Beretta
+-  - email: ljira@redhat.com
+-    name: Luis Jira
+-  - email: mmahmoud@redhat.com
+-    name: Mohamed S. Mahmoud
+-  - email: ocazade@redhat.com
+-    name: Olivier Cazade
+-  - email: stlee@redhat.com
+-    name: Steven Lee
++  - email: maintainers@okd.io
++    name: OKD Community
+   maturity: alpha
+   minKubeVersion: 1.23.0
+   provider:
+-    name: Red Hat
+-    url: https://www.redhat.com
++    name: OKD Community
++    url: https://okd.io
+   version: 0.0.0
+diff --git a/config/descriptions/ocp.md b/config/descriptions/ocp.md
+index 20b9b4c3..2b9afab5 100644
+--- a/config/descriptions/ocp.md
++++ b/config/descriptions/ocp.md
+@@ -1,4 +1,4 @@
+-Network Observability is an OpenShift operator that deploys a monitoring pipeline consisting in:
++Network Observability is an OKD operator that deploys a monitoring pipeline consisting in:
+ - an eBPF agent, that generates network flows from captured packets
+ - flowlogs-pipeline, a component that collects, enriches and exports these flows
+ - a Console plugin for flows visualization with powerful filtering options, a topology representation and more
+@@ -15,7 +15,7 @@ Flow data is then available in multiple ways, each optional:
+ 
+ [Loki](https://grafana.com/oss/loki/), from GrafanaLabs, can optionally be used as the backend to store all collected flows. The Network Observability operator does not install Loki directly, however we provide some guidance to help you there.
+ 
+-- For a production or production-like environment usage, refer to [the operator documentation](https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/network_observability/installing-network-observability-operators).
++- For a production or production-like environment usage, refer to [the operator documentation](https://docs.okd.io/latest/observability/network_observability/installing-operators.html).
+ 
+ - For a quick try that is not suitable for production and not scalable (it deploys a single pod, configures a 10GB storage PVC, with 24 hours of retention), you can simply run the following commands:
+ 
+@@ -30,7 +30,7 @@ In that case, you can still get the Prometheus metrics or export raw flows to a
+ 
+ ### Kafka
+ 
+-[Apache Kafka](https://kafka.apache.org/) can optionally be used for a more resilient and scalable architecture. You can use for example [Strimzi](https://strimzi.io/), an operator-based distribution of Kafka for Kubernetes and OpenShift.
++[Apache Kafka](https://kafka.apache.org/) can optionally be used for a more resilient and scalable architecture. You can use for example [Strimzi](https://strimzi.io/), an operator-based distribution of Kafka for Kubernetes and OKD.
+ 
+ ### Grafana
+ 
+-- 
+2.52.0
+

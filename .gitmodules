@@ -602,3 +602,27 @@
 	path = pf-status-relay/relay
 	url = https://github.com/openshift/pf-status-relay.git
 	branch = release-4.20
+[submodule "network-observability/operator"]
+	path = network-observability/operator
+	url = https://github.com/netobserv/network-observability-operator.git
+	branch = release-1.10
+[submodule "network-observability/console-plugin"]
+	path = network-observability/console-plugin
+	url = https://github.com/netobserv/network-observability-console-plugin.git
+	branch = release-1.10
+[submodule "network-observability/flowlogs-pipeline"]
+	path = network-observability/flowlogs-pipeline
+	url = https://github.com/netobserv/flowlogs-pipeline.git
+	branch = release-1.10
+[submodule "network-observability/cli"]
+	path = network-observability/cli
+	url = https://github.com/netobserv/network-observability-cli.git
+	branch = release-1.10
+[submodule "network-observability/ebpf-agent"]
+	path = network-observability/ebpf-agent
+	url = https://github.com/netobserv/netobserv-ebpf-agent.git
+	branch = release-1.10
+[submodule "network-observability/console-plugin-compat"]
+	path = network-observability/console-plugin-compat
+	url = https://github.com/netobserv/network-observability-console-plugin.git
+	branch = release-1.10-pf4

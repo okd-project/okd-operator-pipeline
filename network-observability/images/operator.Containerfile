@@ -1,0 +1,45 @@
+ARG BUILDVERSION
+ARG BUILDVERSION_Y
+
+# Build the manager binary
+FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as builder
+ARG BUILDVERSION
+
+WORKDIR /opt/app-root
+
+# Copy the go manifests and source
+COPY go.mod go.mod
+COPY go.sum go.sum
+COPY vendor/ vendor/
+COPY main.go main.go
+COPY api/ api/
+COPY internal/ internal/
+COPY config/ config/
+
+# Build
+ENV GOEXPERIMENT strictfipsruntime
+RUN GOOS=linux GO111MODULE=on go build -tags strictfipsruntime -ldflags "-X 'main.buildVersion=${BUILDVERSION}' -X 'main.buildDate=`date +%Y-%m-%d\ %H:%M`'" -mod vendor -a -o manager main.go
+
+# Create final image from minimal + built binary
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+ARG BUILDVERSION
+ARG BUILDVERSION_Y
+
+WORKDIR /
+COPY --from=builder /opt/app-root/manager .
+COPY LICENSE /licenses/
+USER 65532:65532
+
+ENTRYPOINT ["/manager"]
+
+LABEL distribution-scope="public"
+LABEL url="https://github.com/okd-project/okderators-catalog-index"
+LABEL vendor="OKD Community"
+LABEL release=$BUILDVERSION
+LABEL io.k8s.display-name="Network Observability Operator"
+LABEL io.k8s.description="Network Observability Operator"
+LABEL summary="Network Observability Operator"
+LABEL maintainer="maintainers@okd.io"
+LABEL io.openshift.tags="network-observability-operator"
+LABEL description="NetObserv Operator is a Kubernetes / OKD operator for network observability."
+LABEL version=$BUILDVERSION
