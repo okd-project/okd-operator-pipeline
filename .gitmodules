@@ -626,3 +626,11 @@
 	path = network-observability/console-plugin-compat
 	url = https://github.com/netobserv/network-observability-console-plugin.git
 	branch = release-1.10-pf4
+[submodule "nmstate/operator"]
+	path = nmstate/operator
+	url = https://github.com/openshift/kubernetes-nmstate.git
+	branch = release-4.20
+[submodule "nmstate/console-plugin"]
+	path = nmstate/console-plugin
+	url = https://github.com/openshift/nmstate-console-plugin.git
+	branch = release-4.20

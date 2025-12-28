@@ -1,0 +1,3 @@
+#!/bin/bash
+
+NAMESPACE="nmstate"
