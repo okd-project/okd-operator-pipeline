@@ -170,7 +170,7 @@ function convert_all_images_to_digest() {
           # Run skopeo inspect in background and save result to a temp file
           (
               # Convert to image digest URL
-              digest_img=$(skopeo inspect "docker://${!img}" --format '{{.Name}}@{{.Digest}}')
+              digest_img=$(skopeo inspect --no-tags "docker://${!img}" --format '{{.Name}}@{{.Digest}}')
               if [[ -n $digest_img ]]; then
                   echo "export $img=\"$digest_img\"" > "$tmp_dir/$img"
               fi
