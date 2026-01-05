@@ -634,3 +634,15 @@
 	path = nmstate/console-plugin
 	url = https://github.com/openshift/nmstate-console-plugin.git
 	branch = release-4.20
+[submodule "web-terminal/operator"]
+	path = web-terminal/operator
+	url = https://github.com/redhat-developer/web-terminal-operator.git
+	branch = wto-1.15
+[submodule "web-terminal/tooling"]
+	path = web-terminal/tooling
+	url = https://github.com/redhat-developer/web-terminal-tooling.git
+	branch = main
+[submodule "web-terminal/exec"]
+	path = web-terminal/exec
+	url = https://github.com/redhat-developer/web-terminal-exec.git
+	branch = main
