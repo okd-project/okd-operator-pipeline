@@ -580,7 +580,7 @@
 	branch = oadp-1.5
 [submodule "oadp/kubevirt-plugin"]
 	path = oadp/kubevirt-plugin
-	url = https://github.com/kubevirt/kubevirt-velero-plugin.git
+	url = https://github.com/migtools/kubevirt-velero-plugin.git
 	branch = release-v0.8
 [submodule "oadp/aws-legacy-plugin"]
 	path = oadp/aws-legacy-plugin

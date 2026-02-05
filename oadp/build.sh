@@ -1,7 +1,5 @@
 #!/bin/bash
 
-NAMESPACE="oadp"
-
 source version.sh
 source ../common.sh
 
@@ -17,6 +15,7 @@ export IMG_HYPERSHIFT_PLUGIN="${REGISTRY}/hypershift-plugin:${OCP_DATE}"
 export IMG_AWS_LEGACY_PLUGIN="${REGISTRY}/aws-legacy-plugin:${OCP_DATE}"
 export IMG_KUBEVIRT_PLUGIN="${REGISTRY}/kubevirt-plugin:${OCP_DATE}"
 IMG_BUNDLE="${REGISTRY}/bundle:${OCP_DATE}"
+IMG_CLI="$(get_payload_component "cli")"
 
 submodule_initialize operator oadp-${OCP_SHORT}
 submodule_initialize velero oadp-${OCP_SHORT}
@@ -39,4 +38,49 @@ podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_NON_ADMIN -f non-admin.C
 podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_HYPERSHIFT_PLUGIN -f hypershift-plugin.Containerfile .
 podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_AWS_LEGACY_PLUGIN -f aws-legacy-plugin.Containerfile .
 podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_KUBEVIRT_PLUGIN -f kubevirt-plugin.Containerfile .
-podman build --build-arg VELERO_IMG=$IMG_VELERO -t $IMG_MUST_GATHER -f must-gather.Containerfile .
+podman build --build-arg VELERO_IMG=$IMG_VELERO -t $IMG_MUST_GATHER --build-arg IMG_CLI=$IMG_CLI -f must-gather.Containerfile .
+
+push_all_images
+
+pushd operator
+
+yq e -i "with((select(.kind == \"Deployment\") | .spec.template.spec.containers[0]) ;
+ .env |= map(select(.name == \"RELATED_IMAGE_VELERO\").value = \"${IMG_VELERO}\") |
+ .env |= map(select(.name == \"RELATED_IMAGE_VELERO_PLUGIN_FOR_AWS\").value = \"${IMG_AWS_PLUGIN}\") |
+ .env |= map(select(.name == \"RELATED_IMAGE_VELERO_PLUGIN_FOR_MICROSOFT_AZURE\").value = \"${IMG_AZURE_PLUGIN}\") |
+ .env |= map(select(.name == \"RELATED_IMAGE_VELERO_PLUGIN_FOR_GCP\").value = \"${IMG_GCP_PLUGIN}\") |
+ .env |= map(select(.name == \"RELATED_IMAGE_OPENSHIFT_VELERO_PLUGIN\").value = \"${IMG_OPENSHIFT_PLUGIN}\") |
+ .env |= map(select(.name == \"RELATED_IMAGE_NON_ADMIN_CONTROLLER\").value = \"${IMG_NON_ADMIN}\") |
+ .env |= map(select(.name == \"RELATED_IMAGE_HYPERSHIFT_VELERO_PLUGIN\").value = \"${IMG_HYPERSHIFT_PLUGIN}\") |
+ .env |= map(select(.name == \"RELATED_IMAGE_VELERO_PLUGIN_FOR_LEGACY_AWS\").value = \"${IMG_AWS_LEGACY_PLUGIN}\") |
+ .env |= map(select(.name == \"RELATED_IMAGE_KUBEVIRT_VELERO_PLUGIN\").value = \"${IMG_KUBEVIRT_PLUGIN}\") |
+ .env |= map(select(.name == \"RELATED_IMAGE_MUSTGATHER\").value = \"${IMG_MUST_GATHER}\")
+)" ./config/manager/manager.yaml
+
+# Replace CSV icon
+BASE64_ICON=$(base64 -w0 ../../icon.png)
+yq e -i ".spec.icon[0].base64data = \"${BASE64_ICON}\"" ./config/manifests/bases/oadp-operator.clusterserviceversion.yaml
+yq e -i ".metadata.annotations.[\"operators.openshift.io/must-gather-image\"] = \"${IMG_MUST_GATHER}\"" ./config/manifests/bases/oadp-operator.clusterserviceversion.yaml
+yq e -i ".metadata.annotations.containerImage = \"${IMG_OPERATOR}\"" ./config/manifests/bases/oadp-operator.clusterserviceversion.yaml
+
+make bundle DEFAULT_VERSION=${OCP_DATE} \
+       VERSION=${OCP_DATE} \
+       IMG=${IMG_OPERATOR} \
+       BUNDLE_METADATA_OPTS="${BUNDLE_METADATA_OPTS}" \
+       BUNDLE_IMG=${IMG_BUNDLE}
+
+podman build -t $IMG_BUNDLE -f bundle.Dockerfile .
+podman push $IMG_BUNDLE
+
+popd
+
+submodule_reset operator oadp-${OCP_SHORT}
+submodule_reset velero oadp-${OCP_SHORT}
+submodule_reset aws-plugin oadp-${OCP_SHORT}
+submodule_reset microsoft-azure-plugin oadp-${OCP_SHORT}
+submodule_reset openshift-plugin oadp-${OCP_SHORT}
+submodule_reset hypershift-plugin oadp-${OCP_SHORT}
+submodule_reset non-admin oadp-${OCP_SHORT}
+submodule_reset gcp-plugin oadp-${OCP_SHORT}
+submodule_reset aws-legacy-plugin oadp-${OCP_SHORT}
+submodule_reset kubevirt-plugin release-v0.8

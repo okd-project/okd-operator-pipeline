@@ -7,7 +7,7 @@ ENV GOEXPERIMENT strictfipsruntime
 RUN CGO_ENABLED=1 GOOS=linux go build -tags "$BUILDTAGS" -mod=mod -a -o manager cmd/main.go
 
 
-FROM registry.access.redhat.io/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 RUN microdnf -y update && microdnf clean all
 COPY --from=builder /opt/app-root/src/manager /manager

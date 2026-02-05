@@ -1,8 +1,6 @@
 #!/bin/bash
 
-NAMESPACE="oadp"
-
-source ../version.sh
+source version.sh
 source ../common.sh
 
 BRANCH="oadp-${OCP_SHORT}"
@@ -17,6 +15,6 @@ submodule_update hypershift-plugin ${BRANCH} https://github.com/openshift/hypers
 submodule_update aws-plugin ${BRANCH} https://github.com/openshift/velero-plugin-for-aws.git
 submodule_update aws-legacy-plugin ${BRANCH} https://github.com/openshift/velero-plugin-for-legacy-aws.git
 submodule_update gcp-plugin ${BRANCH} https://github.com/openshift/velero-plugin-for-gcp.git
-submodule_update kubevirt-plugin ${KUBEVIRT_BRANCH} https://github.com/kubevirt/kubevirt-velero-plugin.git
+submodule_update kubevirt-plugin ${KUBEVIRT_BRANCH} https://github.com/migtools/kubevirt-velero-plugin.git
 submodule_update kopia ${BRANCH} https://github.com/migtools/kopia.git
 submodule_update restic ${BRANCH} https://github.com/openshift/restic.git

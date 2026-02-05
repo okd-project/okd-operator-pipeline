@@ -1,0 +1,78 @@
+From daaa8c26b10d252e0e9f5b42d9ac231fe8b6608c Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Thu, 5 Feb 2026 15:00:43 +0000
+Subject: [PATCH] OKDify
+
+---
+ .../oadp-operator.clusterserviceversion.yaml  | 22 +++++++++----------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
+
+diff --git a/config/manifests/bases/oadp-operator.clusterserviceversion.yaml b/config/manifests/bases/oadp-operator.clusterserviceversion.yaml
+index 9819406c..4a420b15 100644
+--- a/config/manifests/bases/oadp-operator.clusterserviceversion.yaml
++++ b/config/manifests/bases/oadp-operator.clusterserviceversion.yaml
+@@ -4,12 +4,12 @@ metadata:
+   annotations:
+     capabilities: Seamless Upgrades
+     categories: |
+-      Cloud Provider,Developer Tools,Modernization & Migration,OpenShift Optional,Storage
++      Cloud Provider,Developer Tools,Modernization & Migration,OKD Optional,Storage
+     certified: "false"
+     containerImage: quay.io/konveyor/oadp-operator:oadp-1.5
+     createdAt: "2025-09-03T00:37:40Z"
+-    description: OADP (OpenShift API for Data Protection) operator sets up and installs
+-      Data Protection Applications on the OpenShift platform.
++    description: OADP (OKD API for Data Protection) operator sets up and installs
++      Data Protection Applications on OKD.
+     features.operators.openshift.io/cnf: "false"
+     features.operators.openshift.io/cni: "false"
+     features.operators.openshift.io/csi: "false"
+@@ -24,10 +24,8 @@ metadata:
+     operatorframework.io/suggested-namespace: openshift-adp
+     operators.openshift.io/infrastructure-features: '["Disconnected"]'
+     operators.openshift.io/must-gather-image: quay.io/konveyor/oadp-must-gather:oadp-1.5
+-    operators.openshift.io/valid-subscription: '["OpenShift Kubernetes Engine", "OpenShift
+-      Container Platform", "OpenShift Platform Plus"]'
+     repository: https://github.com/openshift/oadp-operator
+-    support: Red Hat
++    support: OKD Community
+   labels:
+     operatorframework.io/arch.amd64: supported
+     operatorframework.io/arch.arm64: supported
+@@ -434,8 +432,8 @@ spec:
+       name: dataprotectiontests.oadp.openshift.io
+       version: v1alpha1
+   description: |
+-    **OpenShift API for Data Protection (OADP)** operator sets up and installs
+-    Velero on the OpenShift platform, allowing users to backup and restore
++    **OKD API for Data Protection (OADP)** operator sets up and installs
++    Velero on OKD, allowing users to backup and restore
+     applications.
+ 
+     Backup and restore Kubernetes resources and internal images, at the
+@@ -454,7 +452,7 @@ spec:
+ 
+     * [Frequently Asked Questions][faq-doc]
+ 
+-    [install-doc]: https://docs.openshift.com/container-platform/latest/backup_and_restore/application_backup_and_restore/installing/about-installing-oadp.html
++    [install-doc]: https://docs.okd.io/latest/backup_and_restore/application_backup_and_restore/installing/about-installing-oadp.html
+     [rosa-sts-doc]: https://mobb.ninja/docs/misc/oadp/rosa-sts/
+     [faq-doc]: https://access.redhat.com/articles/5456281
+   displayName: OADP Operator
+@@ -511,10 +509,10 @@ spec:
+   - name: OADP Operator
+     url: https://github.com/openshift/oadp-operator
+   maintainers:
+-  - email: oadp-maintainers@redhat.com
+-    name: OADP Operator maintainers
++  - email: maintainers@okd.io
++    name: OKD Community
+   maturity: stable
+   provider:
+-    name: Red Hat
++    name: OKD Community
+   replaces: oadp-operator.v1.5.2
+   version: 1.5.3
+-- 
+2.52.0
+

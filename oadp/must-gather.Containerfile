@@ -1,3 +1,5 @@
+ARG IMG_CLI
+
 FROM $IMG_CLI AS ose-cli
 
 FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
@@ -60,8 +62,7 @@ COPY --from=builder $BUILD_DIR/velero/bin/velero /usr/bin/velero
 COPY --from=builder $BUILD_DIR/restic/bin/restic /usr/bin/restic
 COPY --from=ose-cli /usr/bin/oc /usr/bin/oc
 COPY --from=builder $BUILD_DIR/kopia/kopia /usr/bin/kopia
-COPY --from=builder $BUILD_DIR/mustgather/gather /usr/bin/gather
-COPY --from=builder $BUILD_DIR/mustgather/deprecated/gather_* /usr/bin/
+COPY --from=builder $BUILD_DIR/operator/gather /usr/bin/gather
 
 ENTRYPOINT /usr/bin/gather
 
