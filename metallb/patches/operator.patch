@@ -1,4 +1,4 @@
-From 63246cdb889c197808c1081f2f09940f6bb362e0 Mon Sep 17 00:00:00 2001
+From be3bd169d691fb57bbfd5b9f565dc400412acc1e Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Tue, 27 May 2025 11:44:26 +0100
 Subject: [PATCH] OKDify
@@ -10,7 +10,7 @@ Subject: [PATCH] OKDify
  3 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 33ccbf3e..6bb5184c 100755
+index f4bae434..c56bb7cb 100755
 --- a/Makefile
 +++ b/Makefile
 @@ -154,7 +154,7 @@ bundle: operator-sdk manifests  ## Generate bundle manifests and metadata, then
@@ -23,13 +23,13 @@ index 33ccbf3e..6bb5184c 100755
  
  bundle-release: kustomize bundle bump_versions  ## Generate the bundle manifests for a PR
 diff --git a/manifests/ocpcsv/bases/metallb-operator.clusterserviceversion.yaml b/manifests/ocpcsv/bases/metallb-operator.clusterserviceversion.yaml
-index 794d2608..2d8c9681 100644
+index bd066adf..5832f586 100644
 --- a/manifests/ocpcsv/bases/metallb-operator.clusterserviceversion.yaml
 +++ b/manifests/ocpcsv/bases/metallb-operator.clusterserviceversion.yaml
 @@ -8,13 +8,13 @@ metadata:
-     containerImage: quay.io/openshift/origin-metallb-operator:4.18
+     containerImage: quay.io/openshift/origin-metallb-operator:4.19
      createdAt: "2021-06-28 00:00:00"
-     olm.skipRange: ">=4.8.0 <4.18.0"
+     olm.skipRange: ">=4.8.0 <4.19.0"
 -    description: An operator for deploying MetalLB on a kubernetes cluster.
 +    description: An operator for deploying MetalLB on an OKD cluster.
      operators.operatorframework.io/builder: operator-sdk-v1.8.0+git
@@ -48,7 +48,7 @@ index 794d2608..2d8c9681 100644
    provider:
 -    name: Community
 +    name: OKD Community
-   version: 4.18.0
+   version: 4.19.0
    labels:
      olm-owner-enterprise-app: metallb-operator
 diff --git a/manifests/ocpcsv/webhookservicecainjection_patch.yaml b/manifests/ocpcsv/webhookservicecainjection_patch.yaml
@@ -65,5 +65,5 @@ index a29e74a8..2b9b5350 100644
    annotations:
      service.alpha.openshift.io/serving-cert-secret-name: metallb-operator-webhook-server-service-cert
 -- 
-2.50.1
+2.52.0
 
