@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DATE="2026-02-06-112514"
-
 source version.sh
 source ../common.sh
 
