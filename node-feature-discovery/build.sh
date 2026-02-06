@@ -1,10 +1,9 @@
 #!/bin/bash
 
-NAMESPACE="node-feature-discovery"
+DATE="2026-02-06-112514"
 
+source version.sh
 source ../common.sh
-
-REGISTRY="${BASE_REGISTRY}/node-feature-discovery"
 
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_NFD="${REGISTRY}/daemon:${OCP_DATE}"

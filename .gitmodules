@@ -122,11 +122,11 @@
 [submodule "node-feature-discovery/nfd"]
 	path = node-feature-discovery/nfd
 	url = https://github.com/openshift/node-feature-discovery.git
-	branch = release-4.19
+	branch = release-4.20
 [submodule "node-feature-discovery/operator"]
 	path = node-feature-discovery/operator
 	url = https://github.com/openshift/cluster-nfd-operator.git
-	branch = release-4.19
+	branch = release-4.20
 [submodule "cluster-observability/operator"]
 	path = cluster-observability/operator
 	url = https://github.com/rhobs/observability-operator
