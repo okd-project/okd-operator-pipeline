@@ -5,7 +5,7 @@
 [submodule "local-storage/operator"]
 	path = local-storage/operator
 	url = https://github.com/openshift/local-storage-operator.git
-	branch = release-4.19
+	branch = release-4.20
 [submodule "sr-iov/infiniband-cni"]
 	path = sr-iov/infiniband-cni
 	url = https://github.com/openshift/ib-sriov-cni.git
@@ -61,7 +61,7 @@
 [submodule "ingress-node-firewall/operator"]
 	path = ingress-node-firewall/operator
 	url = https://github.com/openshift/ingress-node-firewall.git
-	branch = release-4.19
+	branch = release-4.20
 [submodule "cluster-logging/eventrouter"]
 	path = cluster-logging/eventrouter
 	url = https://github.com/openshift/eventrouter
@@ -646,3 +646,7 @@
 	path = web-terminal/exec
 	url = https://github.com/redhat-developer/web-terminal-exec.git
 	branch = main
+[submodule "data-foundation/external-snapshotter"]
+	path = data-foundation/external-snapshotter
+	url = https://github.com/red-hat-storage/external-snapshotter.git
+	branch = release-4.20

@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM registry.access.redhat.com/ubi9/go-toolset:1.23 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
 
 COPY --chown=default .git/modules/ingress-node-firewall/ .git/modules/ingress-node-firewall/
 
