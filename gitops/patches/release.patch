@@ -1,0 +1,336 @@
+From 77858696576ccf8721a5cd80a7fa6d5b813cbfda Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Sat, 7 Feb 2026 15:14:41 +0000
+Subject: [PATCH] OKDify
+
+---
+ clis/argocd-agentctl/Dockerfile            |  6 +++---
+ clis/argocd/Dockerfile                     | 12 ++++++------
+ containers/argo-rollouts/Dockerfile        |  6 +++---
+ containers/argocd-agent/Dockerfile         |  4 ++--
+ containers/argocd-extensions/Dockerfile    |  4 ++--
+ containers/argocd-image-updater/Dockerfile |  4 ++--
+ containers/argocd-rhel9/Dockerfile         |  2 +-
+ containers/argocd/Dockerfile               |  8 ++++----
+ containers/console-plugin/Dockerfile       |  2 +-
+ containers/dex/Dockerfile                  |  4 ++--
+ containers/gitops-operator/Dockerfile      |  6 +++---
+ containers/gitops/Dockerfile               |  4 ++--
+ 12 files changed, 31 insertions(+), 31 deletions(-)
+
+diff --git a/clis/argocd-agentctl/Dockerfile b/clis/argocd-agentctl/Dockerfile
+index 3d0a5bb..e2f71a1 100644
+--- a/clis/argocd-agentctl/Dockerfile
++++ b/clis/argocd-agentctl/Dockerfile
+@@ -17,14 +17,14 @@
+ ####################################################################################################
+ # Argo CD Agentctl Build stage which performs the actual build of Argocd-agentctl binaries
+ ####################################################################################################
+-FROM registry.redhat.io/rhel8/go-toolset:1.25 AS builder
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+ 
+ USER root
+ 
+ COPY sources/argocd-agent /src/argocd-agentctl
+ WORKDIR /src/argocd-agentctl
+ 
+-ENV GOFLAGS="-mod=mod" 
++ENV GOFLAGS="-mod=mod"
+ 
+ RUN go mod download
+ RUN make cli-all
+@@ -40,7 +40,7 @@ RUN cd dist && \
+ ####################################################################################################
+ # Package the binaries into the image using UBI (Universal Base Image)
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/ubi
++FROM registry.access.redhat.com/ubi9/ubi
+ 
+ # This directory is checked by the ecosystem-cert-preflight-checks task in Konflux
+ COPY LICENSE /licenses/
+diff --git a/clis/argocd/Dockerfile b/clis/argocd/Dockerfile
+index 7eec483..6d4fd9b 100644
+--- a/clis/argocd/Dockerfile
++++ b/clis/argocd/Dockerfile
+@@ -17,7 +17,7 @@
+ ####################################################################################################
+ # Builder stage which performs the build of Argocd-cli binaries
+ ####################################################################################################
+-FROM registry.redhat.io/rhel8/go-toolset:1.25 AS builder
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+ 
+ USER root
+ 
+@@ -31,7 +31,7 @@ ARG CI_VERSION
+ ENV PACKAGE="github.com/argoproj/argo-cd/v3/common" \
+     GIT_TREE_STATE="clean"
+ 
+-ENV GOFLAGS="-mod=mod" 
++ENV GOFLAGS="-mod=mod"
+ 
+ ENV EXTRA_BUILD_INFO="{Vendor Information: Red Hat OpenShift GitOps version: $CI_VERSION}"
+ 
+@@ -42,7 +42,7 @@ RUN make GIT_TAG="v$(cat VERSION)" BIN_NAME=argocd-linux-amd64 GOOS=linux GOARCH
+     make GIT_TAG="v$(cat VERSION)" BIN_NAME=argocd-linux-s390x GOOS=linux GOARCH=s390x argocd-all    && \
+     make GIT_TAG="v$(cat VERSION)" BIN_NAME=argocd-windows-amd64.exe GOOS=windows GOARCH=amd64 argocd-all   && \
+     make GIT_TAG="v$(cat VERSION)" BIN_NAME=argocd-darwin-amd64 GOOS=darwin GOARCH=amd64 argocd-all          && \
+-    make GIT_TAG="v$(cat VERSION)" BIN_NAME=argocd-darwin-arm64 GOOS=darwin GOARCH=arm64 argocd-all  
++    make GIT_TAG="v$(cat VERSION)" BIN_NAME=argocd-darwin-arm64 GOOS=darwin GOARCH=arm64 argocd-all
+ 
+ # Make binaries executable and package them
+ RUN cd dist && \
+@@ -52,12 +52,12 @@ RUN cd dist && \
+     chmod +x argocd-linux-s390x && tar -czvf argocd-linux-s390x.tar.gz argocd-linux-s390x && \
+     chmod +x argocd-darwin-amd64 && tar -czvf argocd-darwin-amd64.tar.gz argocd-darwin-amd64 && \
+     chmod +x argocd-darwin-arm64  && tar -czvf argocd-darwin-arm64.tar.gz argocd-darwin-arm64 && \
+-    tar -czvf argocd-windows-amd64.tar.gz argocd-windows-amd64.exe     
++    tar -czvf argocd-windows-amd64.tar.gz argocd-windows-amd64.exe
+ 
+ ####################################################################################################
+ # Package the binaries into the image using UBI (Universal Base Image)
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/ubi
++FROM registry.access.redhat.com/ubi9/ubi
+ 
+ # This directory is checked by the ecosystem-cert-preflight-checks task in Konflux
+ COPY LICENSE /licenses/
+@@ -82,4 +82,4 @@ LABEL name="Argo CD CLI binaries" \
+     summary="Argo CD CLI binaries" \
+     description="Argo CD CLI binaries for various platforms, including Darwin and Linux." \
+     com.redhat.component="openshift-gitops-argocd-cli-container" \
+-    io.k8s.description="Red Hat Openshift GitOps Argo CD CLI"
+\ No newline at end of file
++    io.k8s.description="OKD GitOps Argo CD CLI"
+\ No newline at end of file
+diff --git a/containers/argo-rollouts/Dockerfile b/containers/argo-rollouts/Dockerfile
+index 1a2f439..ad5ff79 100644
+--- a/containers/argo-rollouts/Dockerfile
++++ b/containers/argo-rollouts/Dockerfile
+@@ -18,7 +18,7 @@
+ # Argo Rollouts Openshift Routes Plugin Build stage which performs the actual build of Argo Rollouts binaries
+ ####################################################################################################
+ 
+-FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_8_1.24 as rollouts-plugin-trafficrouter-openshift-build
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as rollouts-plugin-trafficrouter-openshift-build
+ USER root
+ 
+ COPY sources/rollouts-plugin-trafficrouter-openshift/ /go/src/github.com/argoproj/rollouts-plugin-trafficrouter-openshift
+@@ -35,7 +35,7 @@ RUN CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime go build -v -tags strictfipsrun
+ # Argo Rollouts Build stage which performs the actual build of Argo Rollouts binaries
+ ####################################################################################################
+ 
+-FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_8_1.24 AS argo-rollouts-build
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS argo-rollouts-build
+ USER root
+ 
+ COPY sources/argo-rollouts/ /go/src/github.com/argoproj/argo-rollouts
+@@ -72,7 +72,7 @@ RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 \
+ ####################################################################################################
+ # Argo Rollouts Base - used as the base for both the release and dev argo rollouts images
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/ubi-minimal AS argo-rollouts-base
++FROM registry.access.redhat.com/ubi9/ubi-minimal AS argo-rollouts-base
+ 
+ USER root
+ RUN microdnf install shadow-utils  -y
+diff --git a/containers/argocd-agent/Dockerfile b/containers/argocd-agent/Dockerfile
+index f25b55b..c65b879 100644
+--- a/containers/argocd-agent/Dockerfile
++++ b/containers/argocd-agent/Dockerfile
+@@ -14,7 +14,7 @@
+ #
+ # ------------------------------------------------------------------------
+ 
+-FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_8_1.24  AS builder
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24  AS builder
+ USER root
+ 
+ ENV LANG=en_US.utf8
+@@ -26,7 +26,7 @@ COPY sources/argocd-agent /app/argocd-agent
+ WORKDIR /app/argocd-agent
+ RUN CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime go build -tags strictfipsruntime -mod=mod -o dist/argocd-agent ./cmd/argocd-agent
+ 
+-FROM registry.access.redhat.com/ubi8/ubi-minimal
++FROM registry.access.redhat.com/ubi9/ubi-minimal
+ 
+ COPY --from=builder /app/argocd-agent/dist/argocd-agent /bin/argocd-agent
+ ENTRYPOINT ["./bin/argocd-agent"]
+diff --git a/containers/argocd-extensions/Dockerfile b/containers/argocd-extensions/Dockerfile
+index bcad4e3..93a496d 100644
+--- a/containers/argocd-extensions/Dockerfile
++++ b/containers/argocd-extensions/Dockerfile
+@@ -17,7 +17,7 @@
+ ####################################################################################################
+ # Rollouts Extensions UI stage
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/ubi-minimal as rollout-extensions
++FROM registry.access.redhat.com/ubi9/ubi-minimal as rollout-extensions
+ 
+ USER root
+ 
+@@ -36,7 +36,7 @@ RUN tar cvf dist/extension.tar resources
+ ####################################################################################################
+ # Final Image
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/ubi-minimal
++FROM registry.access.redhat.com/ubi9/ubi-minimal
+ 
+ ARG USER=ext-installer
+ ENV HOME=/home/$USER
+diff --git a/containers/argocd-image-updater/Dockerfile b/containers/argocd-image-updater/Dockerfile
+index ba7b90c..c6cf241 100644
+--- a/containers/argocd-image-updater/Dockerfile
++++ b/containers/argocd-image-updater/Dockerfile
+@@ -15,7 +15,7 @@
+ # ------------------------------------------------------------------------
+ 
+ # Build the manager binary
+-FROM registry.redhat.io/rhel8/go-toolset:1.24.6 AS builder
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+ USER root
+ 
+ ARG CI_ARGOCD_IMAGE_UPDATER_VERSION
+@@ -32,7 +32,7 @@ RUN CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime \
+     -o dist/argocd-image-updater ./cmd
+ 
+ # Final image
+-FROM registry.access.redhat.com/ubi8/ubi-minimal
++FROM registry.access.redhat.com/ubi9/ubi-minimal
+ 
+ USER root
+ RUN microdnf install -y shadow-utils ca-certificates git openssh-clients gpg tar && \
+diff --git a/containers/argocd-rhel9/Dockerfile b/containers/argocd-rhel9/Dockerfile
+index 9ca4355..75e6323 100644
+--- a/containers/argocd-rhel9/Dockerfile
++++ b/containers/argocd-rhel9/Dockerfile
+@@ -45,7 +45,7 @@ RUN NODE_ONLINE_ENV='offline' NODE_ENV='production' $YARN build
+ # Argo CD Build stage which performs the actual build of Argo CD binaries
+ ####################################################################################################
+ # TODO: switch to registry.redhat.io once the image is available
+-FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_9_1.24 as argocd-build
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as argocd-build
+ USER root
+ 
+ COPY sources/argo-cd /go/src/github.com/argoproj/argo-cd
+diff --git a/containers/argocd/Dockerfile b/containers/argocd/Dockerfile
+index 52543d3..017d5b1 100644
+--- a/containers/argocd/Dockerfile
++++ b/containers/argocd/Dockerfile
+@@ -17,7 +17,7 @@
+ ####################################################################################################
+ # Argo CD UI stage
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/nodejs-20 AS argocd-ui
++FROM registry.access.redhat.com/ubi9/nodejs-20 AS argocd-ui
+ 
+ USER root
+ 
+@@ -45,7 +45,7 @@ RUN NODE_ONLINE_ENV='offline' NODE_ENV='production' $YARN build
+ # Argo CD Build stage which performs the actual build of Argo CD binaries
+ ####################################################################################################
+ # TODO: switch to registry.redhat.io once the image is available
+-FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_8_1.24 as argocd-build
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as argocd-build
+ USER root
+ 
+ COPY sources/argo-cd /go/src/github.com/argoproj/argo-cd
+@@ -113,7 +113,7 @@ RUN cmake . && make tini
+ # build connect-proxy
+ COPY sources/ssh-connect /go/src/github.com/argoproj/ssh-connect
+ WORKDIR /go/src/github.com/argoproj/ssh-connect
+-RUN sed -i 's/SOCKLEN_T/socklen_t/g' connect.c 
++RUN sed -i 's/SOCKLEN_T/socklen_t/g' connect.c
+ RUN gcc -v connect.c -o connect-proxy
+ 
+ # build git-lfs
+@@ -131,7 +131,7 @@ RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 \
+ ####################################################################################################
+ # Argo CD Base - used as the base for both the release and dev argocd images
+ ####################################################################################################
+-FROM registry.access.redhat.com/ubi8/ubi-minimal AS argocd-base
++FROM registry.access.redhat.com/ubi9/ubi-minimal AS argocd-base
+ 
+ USER root
+ RUN microdnf install shadow-utils -y
+diff --git a/containers/console-plugin/Dockerfile b/containers/console-plugin/Dockerfile
+index ae90cfa..97b847d 100644
+--- a/containers/console-plugin/Dockerfile
++++ b/containers/console-plugin/Dockerfile
+@@ -33,7 +33,7 @@ RUN $YARN build
+     
+ ####################################################################################################
+     
+-FROM registry.redhat.io/rhel8/httpd-24
++FROM registry.access.redhat.com/ubi9/httpd-24
+ USER root
+ RUN chown -R 1001:0 /opt/app-root/src
+ USER 1001
+diff --git a/containers/dex/Dockerfile b/containers/dex/Dockerfile
+index 08a0823..75dc9ca 100644
+--- a/containers/dex/Dockerfile
++++ b/containers/dex/Dockerfile
+@@ -15,7 +15,7 @@
+ # ------------------------------------------------------------------------
+ 
+ # --- start build stage #1
+-FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_8_1.24 as builder
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as builder
+ USER root
+ 
+ COPY sources/dex /app/dex
+@@ -27,7 +27,7 @@ ENV GOFLAGS=""
+ RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 GOOS=linux go build -mod=mod -o /tmp/dex -ldflags "-w -X main.version=$CI_DEX_VERSION -X main.commit=$CI_DEX_COMMIT" -tags strictfipsruntime ./cmd/dex
+ 
+ # --- start build stage #2
+-FROM registry.access.redhat.com/ubi8/ubi-minimal
++FROM registry.access.redhat.com/ubi9/ubi-minimal
+ # Dex connectors, such as GitHub and Google logins require root certificates.
+ # Proper installations should manage those certificates, but it's a bad user
+ # experience when this doesn't work out of the box.
+diff --git a/containers/gitops-operator/Dockerfile b/containers/gitops-operator/Dockerfile
+index 4dad661..f17ac98 100644
+--- a/containers/gitops-operator/Dockerfile
++++ b/containers/gitops-operator/Dockerfile
+@@ -15,7 +15,7 @@
+ # --
+ 
+ # TODO: switch to registry.redhat.io once the image is available
+-FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_8_1.24  AS builder
++FROM registry.access.redhat.com/ubi9/go-toolset:1.24  AS builder
+ USER root
+ 
+ # Copy source code
+@@ -29,8 +29,8 @@ ENV GOEXPERIMENT=strictfipsruntime
+ ENV GOOS=linux
+ RUN go mod download
+ RUN go build -tags strictfipsruntime -o bin/manager ./cmd/main.go
+-    
+-FROM registry.access.redhat.com/ubi8/ubi-minimal
++
++FROM registry.access.redhat.com/ubi9/ubi-minimal
+ 
+ ENV LANG=en_US.utf8
+ 
+diff --git a/containers/gitops/Dockerfile b/containers/gitops/Dockerfile
+index 70ac918..8554289 100644
+--- a/containers/gitops/Dockerfile
++++ b/containers/gitops/Dockerfile
+@@ -1,5 +1,5 @@
+ # Build Stage
+-FROM  brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_8_1.24 AS builder
++FROM  registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+ USER root
+ 
+ COPY sources/gitops-backend /workspace
+@@ -10,7 +10,7 @@ RUN GOEXPERIMENT=strictfipsruntime CGO_ENABLED=1 GOOS=linux go build -a -mod=rea
+   -ldflags "-X github.com/redhat-developer/gitops-backend/pkg/health.GitRevision=$CI_GITOPS_BACKEND_COMMIT" -tags strictfipsruntime ./cmd/backend-http
+ 
+ # Final Stage
+-FROM registry.access.redhat.com/ubi8/ubi-minimal
++FROM registry.access.redhat.com/ubi9/ubi-minimal
+ WORKDIR /
+ COPY --from=builder /workspace/backend-http .
+ EXPOSE 8080
+-- 
+2.52.0
+

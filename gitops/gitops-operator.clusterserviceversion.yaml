@@ -1,0 +1,7 @@
+metadata:
+  annotations:
+    support: OKD Community
+spec:
+  displayName: OKD GitOps (ArgoCD)
+  provider:
+    name: OKD Community

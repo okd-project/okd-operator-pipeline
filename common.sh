@@ -55,6 +55,8 @@ submodule_reset() {
   if [ "${EXISTS}" = "1" ]; then
     git -C "$name" clean -fdx
     git -C "$name" reset --hard origin/${branch}
+    # Reset all nested submodules
+    git -C "${name}" submodule foreach --recursive 'git clean -fdx; git reset --hard'
 #    git submodule deinit -f "${name}"
   fi
 }
