@@ -23,3 +23,4 @@ submodule_update odf-operator release-${OCP_SHORT} https://github.com/red-hat-st
 submodule_update ramen release-${OCP_SHORT} https://github.com/red-hat-storage/ramen.git
 submodule_update recipe release-${OCP_SHORT} https://github.com/red-hat-storage/recipe.git
 submodule_update rook release-${OCP_SHORT} https://github.com/red-hat-storage/rook.git
+submodule_update external-snapshotter release-${OCP_SHORT} https://github.com/red-hat-storage/external-snapshotter.git

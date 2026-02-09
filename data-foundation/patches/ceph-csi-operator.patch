@@ -1,0 +1,30 @@
+From afc276c5ddd322c88a6fb8de1952ad3fd7686a8e Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Sun, 8 Feb 2026 16:51:18 +0000
+Subject: [PATCH] OKDify
+
+---
+ .../bases/cephcsi-operator.clusterserviceversion.yaml       | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/config/manifests/bases/cephcsi-operator.clusterserviceversion.yaml b/config/manifests/bases/cephcsi-operator.clusterserviceversion.yaml
+index 2a1443e0..6ad87751 100644
+--- a/config/manifests/bases/cephcsi-operator.clusterserviceversion.yaml
++++ b/config/manifests/bases/cephcsi-operator.clusterserviceversion.yaml
+@@ -35,10 +35,10 @@ spec:
+   - name: Github Repo
+     url: https://github.com/ceph/ceph-csi-operator
+   maintainers:
+-  - email: ceph-csi-team@redhat.com
+-    name: CephCSI Community
++  - email: maintainers@okd.io
++    name: OKD Community
+   maturity: alpha
+   provider:
+-    name: CephCSI Community
++    name: OKD Community
+   version: 0.1.1
+   replaces: ""
+-- 
+2.52.0
+

@@ -1,0 +1,30 @@
+From f2ee74c279c26ac28bb49b738ee3f17751a418be Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Sun, 8 Feb 2026 16:48:40 +0000
+Subject: [PATCH] OKDify
+
+---
+ config/manifests/bases/clusterserviceversion.yaml.in | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/config/manifests/bases/clusterserviceversion.yaml.in b/config/manifests/bases/clusterserviceversion.yaml.in
+index c6cfaaae..abb2b517 100644
+--- a/config/manifests/bases/clusterserviceversion.yaml.in
++++ b/config/manifests/bases/clusterserviceversion.yaml.in
+@@ -98,10 +98,10 @@ spec:
+   - name: CSI Addons
+     url: https://csi-addons.github.io
+   maintainers:
+-  - email: csi-addons@redhat.com
+-    name: CSI Addons Community
++  - email: maintainers@okd.io
++    name: OKD Community
+   maturity: alpha
+   provider:
+-    name: CSI Addons Community
++    name: OKD Community
+   version: 0.1.1
+   replaces: @REPLACES@
+-- 
+2.52.0
+

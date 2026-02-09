@@ -1,0 +1,65 @@
+From cd051b5956da8a907a1dff8b214f48642751ee4d Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Sun, 8 Feb 2026 14:36:43 +0000
+Subject: [PATCH] OKDify
+
+---
+ Makefile.Downstream.mk                               | 12 +++++++++---
+ config/manifests/bases/clusterserviceversion.yaml.in |  5 ++---
+ 2 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/Makefile.Downstream.mk b/Makefile.Downstream.mk
+index 5b0c162d6..0008a9983 100644
+--- a/Makefile.Downstream.mk
++++ b/Makefile.Downstream.mk
+@@ -3,6 +3,8 @@ REGISTRY_NAME ?= quay.io/ocs-dev
+ IMAGE_TAG ?= latest
+ IMAGE_NAME ?= snapshot-controller
+ 
++IMG ?= $(REGISTRY_NAME)/$(IMAGE_NAME):$(IMAGE_TAG)
++
+ BUNDLE_IMAGE_NAME ?= $(IMAGE_NAME)-bundle
+ 
+ BUNDLE_IMG ?= $(REGISTRY_NAME)/$(BUNDLE_IMAGE_NAME):$(IMAGE_TAG)
+@@ -36,6 +38,10 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
+ CHANNELS ?= $(DEFAULT_CHANNEL)
+ BUNDLE_CHANNELS := --channels=$(CHANNELS)
+ 
++BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
++
++BUNDLE_GEN_FLAGS := -q --overwrite --manifests --metadata --package $(PACKAGE_NAME) --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)
++
+ # CONTAINER_TOOL defines the container tool to be used for building images.
+ # Be aware that the target commands are only tested with Docker which is
+ # scaffolded by default. However, you might want to replace it to use other
+@@ -62,10 +68,10 @@ $(KUSTOMIZE): $(LOCALBIN)
+ .PHONY: bundle
+ bundle: kustomize operator-sdk
+ 	rm -rf bundle
+-	sed 's/@PACKAGE_NAME@/$(PACKAGE_NAME)/g;s/@SKIP_RANGE@/"$(SKIP_RANGE)"/g;s/@REPLACES@/"$(REPLACES)"/g;s/@BUNDLE_VERSION@/$(BUNDLE_VERSION)/g' \
++	sed 's/@PACKAGE_NAME@/$(PACKAGE_NAME)/g;s/@SKIP_RANGE@/"$(SKIP_RANGE)"/g;s/@BUNDLE_VERSION@/$(BUNDLE_VERSION)/g' \
+ 	< config/manifests/bases/clusterserviceversion.yaml.in > config/manifests/bases/$(PACKAGE_NAME).clusterserviceversion.yaml
+-	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle \
+-		--overwrite --manifests --metadata --package $(PACKAGE_NAME) --version $(BUNDLE_VERSION)
++	cd config/manager && $(KUSTOMIZE) edit set image "quay.io/ocs-dev/snapshot-controller:latest=$(IMG)"
++	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
+ 	hack/update-csv-timestamp.sh
+ 
+ .PHONY: bundle-build
+diff --git a/config/manifests/bases/clusterserviceversion.yaml.in b/config/manifests/bases/clusterserviceversion.yaml.in
+index e6309cd87..962d38a89 100644
+--- a/config/manifests/bases/clusterserviceversion.yaml.in
++++ b/config/manifests/bases/clusterserviceversion.yaml.in
+@@ -48,7 +48,6 @@ spec:
+     url: https://github.com/red-hat-storage/external-snapshotter
+   maturity: GA
+   provider:
+-    name: Red Hat Storage
+-    url: https://github.com/red-hat-storage
++    name: OKD Community
++    url: https://okd.io
+   version: @BUNDLE_VERSION@
+-  replaces: @REPLACES@
+-- 
+2.52.0
+

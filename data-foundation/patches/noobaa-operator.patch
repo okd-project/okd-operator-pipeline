@@ -1,12 +1,26 @@
-From 343274ad8abac86c03cb5bdd2d66d03e44ed1bfa Mon Sep 17 00:00:00 2001
+From 2dd98590ce285aa0e766f5ef0713b0d6ca33dc1c Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Mon, 1 Sep 2025 12:45:11 +0100
 Subject: [PATCH] OKDify
 
 ---
- pkg/cli/cli.go | 9 ---------
- 1 file changed, 9 deletions(-)
+ deploy/olm/noobaa-operator.clusterserviceversion.yaml | 2 +-
+ pkg/cli/cli.go                                        | 9 ---------
+ 2 files changed, 1 insertion(+), 10 deletions(-)
 
+diff --git a/deploy/olm/noobaa-operator.clusterserviceversion.yaml b/deploy/olm/noobaa-operator.clusterserviceversion.yaml
+index 3fffb48..1f64a25 100644
+--- a/deploy/olm/noobaa-operator.clusterserviceversion.yaml
++++ b/deploy/olm/noobaa-operator.clusterserviceversion.yaml
+@@ -20,7 +20,7 @@ spec:
+   minKubeVersion: 1.16.0
+   maturity: alpha
+   provider:
+-    name: NooBaa
++    name: OKD Community
+   links:
+   - name: Github
+     url: https://github.com/noobaa/noobaa-core
 diff --git a/pkg/cli/cli.go b/pkg/cli/cli.go
 index ae94c56..7a23952 100644
 --- a/pkg/cli/cli.go
@@ -35,5 +49,5 @@ index ae94c56..7a23952 100644
  		Commands: []*cobra.Command{
  			backingstore.Cmd(),
 -- 
-2.51.0
+2.52.0
 

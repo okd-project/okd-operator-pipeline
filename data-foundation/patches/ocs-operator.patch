@@ -1,15 +1,15 @@
-From 2c9052fcabb725ab5497b7b124c12401a3cb3f24 Mon Sep 17 00:00:00 2001
+From 5e34689f1386966b3d4f873c7935fe04e4618015 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Fri, 24 Oct 2025 15:33:45 +0100
 Subject: [PATCH] OKDify
 
 ---
- .../ocs-operator.clusterserviceversion.yaml   | 32 +++++++++----------
- tools/csv-merger/csv-merger.go                | 24 +++++++-------
- 2 files changed, 28 insertions(+), 28 deletions(-)
+ .../ocs-operator.clusterserviceversion.yaml   | 34 +++++++++----------
+ tools/csv-merger/csv-merger.go                | 24 ++++++-------
+ 2 files changed, 29 insertions(+), 29 deletions(-)
 
 diff --git a/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml b/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml
-index 70c761c45..be673ba72 100644
+index 7afab0517..e9c6a2b96 100644
 --- a/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml
 +++ b/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml
 @@ -3,12 +3,12 @@ kind: ClusterServiceVersion
@@ -20,7 +20,7 @@ index 70c761c45..be673ba72 100644
 -      for applications within an OpenShift cluster.
 +    description: OKD Container Storage provides hyperconverged storage
 +      for applications within an OKD cluster.
-     operators.operatorframework.io/builder: operator-sdk-v1.25.4
+     operators.operatorframework.io/builder: operator-sdk-v1.30.0
      operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
      repository: https://github.com/red-hat-storage/ocs-operator
 -    support: Red Hat
@@ -75,7 +75,7 @@ index 70c761c45..be673ba72 100644
    install:
      spec:
        deployments: null
-@@ -104,8 +104,8 @@ spec:
+@@ -104,10 +104,10 @@ spec:
    - name: Source Code
      url: https://github.com/red-hat-storage/ocs-operator
    maintainers:
@@ -86,8 +86,11 @@ index 70c761c45..be673ba72 100644
    maturity: alpha
    minKubeVersion: 1.16.0
    provider:
+-    name: Red Hat
++    name: OKD Community
+   version: 0.0.0
 diff --git a/tools/csv-merger/csv-merger.go b/tools/csv-merger/csv-merger.go
-index 13858b03e..d9562a83c 100644
+index da5cba9ae..12789f946 100644
 --- a/tools/csv-merger/csv-merger.go
 +++ b/tools/csv-merger/csv-merger.go
 @@ -1,6 +1,7 @@
@@ -98,7 +101,7 @@ index 13858b03e..d9562a83c 100644
  	"encoding/json"
  	"flag"
  	"fmt"
-@@ -565,19 +566,18 @@ func copyCrds(ocsCSV *csvv1.ClusterServiceVersion) {
+@@ -576,19 +577,18 @@ func copyCrds(ocsCSV *csvv1.ClusterServiceVersion) {
  		}
  
  		fmt.Printf("reading CRD file %s\n", crdFile)
@@ -130,5 +133,5 @@ index 13858b03e..d9562a83c 100644
  			}
  
 -- 
-2.51.0
+2.52.0
 

@@ -1,33 +1,65 @@
-From bc8e038de4cf2f4fb34d049aa4b9ecb9c3a65cbb Mon Sep 17 00:00:00 2001
+From ffa7109dd68e84675b85286695d130abce247355 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Mon, 1 Sep 2025 23:38:28 +0100
 Subject: [PATCH] OKDify
 
 ---
- config/bundle/kustomization.yaml              |  1 +
- config/bundle/okd.yaml                        | 37 ++++++++
+ Makefile                                      |  8 +-
+ .../odf-dependencies/kustomization.yaml       |  5 +-
+ config/bundles/odf-dependencies/okd.yaml      | 37 ++++++++
  .../odf-operator.clusterserviceversion.yaml   |  2 -
  config/manifests/kustomization.yaml           |  3 +
  .../odf-operator.clusterserviceversion.yaml   | 89 +++++++++++++++++++
- 5 files changed, 130 insertions(+), 2 deletions(-)
- create mode 100644 config/bundle/okd.yaml
+ controllers/subscription_controller.go        |  2 +-
+ 7 files changed, 133 insertions(+), 13 deletions(-)
+ create mode 100644 config/bundles/odf-dependencies/okd.yaml
  create mode 100644 config/manifests/okd/odf-operator.clusterserviceversion.yaml
 
-diff --git a/config/bundle/kustomization.yaml b/config/bundle/kustomization.yaml
-index 9fd5d747..07db93d8 100644
---- a/config/bundle/kustomization.yaml
-+++ b/config/bundle/kustomization.yaml
-@@ -10,3 +10,4 @@ patches:
-   target:
-     kind: ClusterServiceVersion
-     name: odf-dependencies.v0.0.0
+diff --git a/Makefile b/Makefile
+index 6217e105..c6f5bc02 100644
+--- a/Makefile
++++ b/Makefile
+@@ -132,9 +132,7 @@ bundle-dependencies: ## Generate dependencies bundle manifests and metadata, the
+ 	@echo "$$DEPS_YAML" > bundle/$(PKG_NAME)/metadata/dependencies.yaml
+ 	cd config/bundles/$(PKG_NAME) && $(KUSTOMIZE) edit add annotation --force \
+ 		'olm.skipRange':"$(SKIP_RANGE)" \
+-		'olm.properties':'[{"type": "olm.maxOpenShiftVersion", "value": "$(MAX_OCP_VERSION)"}]' && \
+-		$(KUSTOMIZE) edit add patch --name $(PKG_NAME).v0.0.0 --kind ClusterServiceVersion \
+-		--patch '[{"op": "replace", "path": "/spec/replaces", "value": "$(REPLACES)"}]'
++		'olm.properties':'[{"type": "olm.maxOpenShiftVersion", "value": "$(MAX_OCP_VERSION)"}]'
+ 	$(KUSTOMIZE) build config/bundles/$(PKG_NAME) | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS) \
+ 		--output-dir bundle/$(PKG_NAME) --package $(PKG_NAME)
+ 	$(OPERATOR_SDK) bundle validate bundle/$(PKG_NAME)
+@@ -161,9 +159,7 @@ bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metada
+ 	cd config/console && $(KUSTOMIZE) edit set image odf-console=$(ODF_CONSOLE_IMG)
+ 	cd config/manifests/bases && $(KUSTOMIZE) edit add annotation --force \
+ 		'olm.skipRange':"$(SKIP_RANGE)" \
+-		'olm.properties':'[{"type": "olm.maxOpenShiftVersion", "value": "$(MAX_OCP_VERSION)"}]' && \
+-		$(KUSTOMIZE) edit add patch --name odf-operator.v0.0.0 --kind ClusterServiceVersion \
+-		--patch '[{"op": "replace", "path": "/spec/replaces", "value": "$(REPLACES)"}]'
++		'olm.properties':'[{"type": "olm.maxOpenShiftVersion", "value": "$(MAX_OCP_VERSION)"}]'
+ 	rm -rf bundle/odf-operator/manifests
+ 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS) \
+ 		--output-dir bundle/odf-operator
+diff --git a/config/bundles/odf-dependencies/kustomization.yaml b/config/bundles/odf-dependencies/kustomization.yaml
+index 948b74a9..a6b90701 100644
+--- a/config/bundles/odf-dependencies/kustomization.yaml
++++ b/config/bundles/odf-dependencies/kustomization.yaml
+@@ -6,7 +6,4 @@ commonAnnotations:
+   olm.properties: '[{"type": "olm.maxOpenShiftVersion", "value": "4.21"}]'
+   olm.skipRange: ""
+ patches:
+-- patch: '[{"op": "replace", "path": "/spec/replaces", "value": ""}]'
+-  target:
+-    kind: ClusterServiceVersion
+-    name: odf-dependencies.v0.0.0
 +- path: okd.yaml
 \ No newline at end of file
-diff --git a/config/bundle/okd.yaml b/config/bundle/okd.yaml
+diff --git a/config/bundles/odf-dependencies/okd.yaml b/config/bundles/odf-dependencies/okd.yaml
 new file mode 100644
 index 00000000..35944e5a
 --- /dev/null
-+++ b/config/bundle/okd.yaml
++++ b/config/bundles/odf-dependencies/okd.yaml
 @@ -0,0 +1,37 @@
 +apiVersion: operators.coreos.com/v1alpha1
 +kind: ClusterServiceVersion
@@ -187,6 +219,19 @@ index 00000000..67ce5069
 +    - email: maintainers@okd.io
 +      name: OKD Community
 \ No newline at end of file
+diff --git a/controllers/subscription_controller.go b/controllers/subscription_controller.go
+index 11ac7177..5d8d236e 100644
+--- a/controllers/subscription_controller.go
++++ b/controllers/subscription_controller.go
+@@ -46,7 +46,7 @@ import (
+ type providerType string
+ 
+ const (
+-	providerNameRedHat providerType = "Red Hat"
++	providerNameRedHat providerType = "OKD Community"
+ 	providerNameIBM    providerType = "IBM"
+ )
+ 
 -- 
-2.51.0
+2.52.0
 
