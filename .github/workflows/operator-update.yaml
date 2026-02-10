@@ -5,10 +5,6 @@ on:
         description: "Path to the operator build scripts"
         type: string
         required: true
-      name:
-        description: "Name of the operator"
-        type: string
-        required: true
 
 jobs:
   deploy-operator:
@@ -34,7 +30,7 @@ jobs:
         with:
           author_name: github-actions
           author_email: github-actions@github.com
-          message: "[${{ inputs.name }}] Automatic update"
+          message: "[${{ inputs.path }}] Automatic update"
           add: "${{ inputs.path }}"
 
       - name: Check if committed

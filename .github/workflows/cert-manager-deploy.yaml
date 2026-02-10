@@ -1,0 +1,13 @@
+on:
+  push:
+    branches:
+      - release-main
+      - "4.20"
+    paths:
+      - 'cert-manager/**'
+
+jobs:
+  deploy:
+    uses: .github/workflows/operator-deploy.yaml
+    with:
+      path: 'cert-manager'

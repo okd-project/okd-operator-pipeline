@@ -1,0 +1,16 @@
+on:
+  push:
+    branches:
+      - release-main
+      - "4.20"
+    paths:
+      - 'cert-manager/**'
+#  schedule:
+#     # Every week on Monday
+#    - cron: '0 0 * * 1'
+
+jobs:
+  update:
+    uses: .github/workflows/operator-update.yaml
+    with:
+      path: 'cert-manager'
