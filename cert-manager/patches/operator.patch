@@ -1,4 +1,4 @@
-From 5c740667b28b9a8930d2d11327c42aed5ebfcfeb Mon Sep 17 00:00:00 2001
+From 64a1caa1547aa448dc84bc9dd5ddb5b3eb9b9525 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Fri, 30 May 2025 14:09:06 +0100
 Subject: [PATCH] OKDify
@@ -8,13 +8,13 @@ Subject: [PATCH] OKDify
  1 file changed, 10 insertions(+), 12 deletions(-)
 
 diff --git a/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml b/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml
-index 604f7b3b..dcd24527 100644
+index 5b705214..6cc72dff 100644
 --- a/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml
-@@ -19,8 +19,8 @@ metadata:
+@@ -19,19 +19,17 @@ metadata:
      features.operators.openshift.io/token-auth-azure: "true"
      features.operators.openshift.io/token-auth-gcp: "true"
-     olm.skipRange: '>=1.15.0 <1.15.1'
+     olm.skipRange: '>=1.17.0 <1.18.0'
 -    operator.openshift.io/uninstall-message: The cert-manager Operator for Red Hat
 -      OpenShift will be removed from cert-manager-operator namespace. If your Operator
 +    operator.openshift.io/uninstall-message: The cert-manager Operator for OKD
@@ -22,10 +22,9 @@ index 604f7b3b..dcd24527 100644
        configured any off-cluster resources, these will continue to run and require
        manual cleanup. All operands created by the operator will need to be manually
        cleaned up. Please refer to https://docs.openshift.com/container-platform/latest/security/cert_manager_operator/cert-manager-operator-uninstall.html
-@@ -28,11 +28,9 @@ metadata:
+       for additional steps.
      operatorframework.io/cluster-monitoring: "true"
      operatorframework.io/suggested-namespace: cert-manager-operator
-     operators.openshift.io/infrastructure-features: '["proxy-aware"]'
 -    operators.openshift.io/valid-subscription: '["OpenShift Kubernetes Engine", "OpenShift
 -      Container Platform", "OpenShift Platform Plus"]'
      operators.operatorframework.io/project_layout: unknown
@@ -35,14 +34,14 @@ index 604f7b3b..dcd24527 100644
    labels:
      operatorframework.io/arch.amd64: supported
      operatorframework.io/arch.arm64: supported
-@@ -69,11 +67,11 @@ spec:
+@@ -68,11 +66,11 @@ spec:
        name: certmanagers.operator.openshift.io
        version: v1alpha1
    description: |
--    The cert-manager Operator for Red Hat OpenShift provides seamless support for [cert-manager v1.15.5](https://github.com/cert-manager/cert-manager/tree/v1.15.2), which automates certificate management.
+-    The cert-manager Operator for Red Hat OpenShift provides seamless support for [cert-manager v1.18.2](https://github.com/cert-manager/cert-manager/tree/v1.18.2), which automates certificate management.
 -    For more information, see the [cert-manager Operator for Red Hat OpenShift documentation](https://docs.openshift.com/container-platform/latest/security/cert_manager_operator/index.html).
 -  displayName: cert-manager Operator for Red Hat OpenShift
-+    The cert-manager Operator for OKD provides seamless support for [cert-manager v1.15.5](https://github.com/cert-manager/cert-manager/tree/v1.15.2), which automates certificate management.
++    The cert-manager Operator for OKD provides seamless support for [cert-manager v1.18.2](https://github.com/cert-manager/cert-manager/tree/v1.18.2), which automates certificate management.
 +    For more information, see the [cert-manager Operator for OKD documentation](https://docs.openshift.com/container-platform/latest/security/cert_manager_operator/index.html).
 +  displayName: cert-manager Operator for OKD
    icon:
@@ -51,7 +50,7 @@ index 604f7b3b..dcd24527 100644
      mediatype: image/png
    install:
      spec:
-@@ -99,11 +97,11 @@ spec:
+@@ -98,11 +96,11 @@ spec:
    - name: Documentation
      url: https://github.com/openshift/cert-manager-operator/blob/master/README.md
    maintainers:
@@ -60,12 +59,12 @@ index 604f7b3b..dcd24527 100644
 +  - email: maintainers@okd.io
 +    name: OKD Community
    maturity: stable
-   minKubeVersion: 1.25.0
+   minKubeVersion: 1.27.0
    provider:
 -    name: Red Hat
 +    name: OKD Community
-   replaces: cert-manager-operator.v1.15.0
-   version: 1.15.1
+   replaces: cert-manager-operator.v1.17.0
+   version: 1.18.0
 -- 
-2.49.0
+2.52.0
 
