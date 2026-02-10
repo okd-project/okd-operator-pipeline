@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DATE="2026-02-07-151505"
-
 source version.sh
 source ../common.sh
 
@@ -45,48 +43,48 @@ CI_DEX_COMMIT="$(git -C sources/dex rev-parse HEAD)"
 CI_GITOPS_BACKEND_COMMIT="$(git -C sources/gitops-backend rev-parse HEAD)"
 
 # CLI images
-#podman build -t "${IMG_CLI}" -f clis/argocd/Dockerfile \
-#  --build-arg CI_ARGO_CD_VERSION="${CI_ARGO_CD_VERSION}" --build-arg CI_ARGO_CD_COMMIT="${CI_ARGO_CD_COMMIT}" \
-#  --build-arg CI_VERSION="${OCP_DATE}" .
-#podman build -t "${IMG_AGENTCTL}" -f clis/argocd-agentctl/Dockerfile .
+podman build -t "${IMG_CLI}" -f clis/argocd/Dockerfile \
+  --build-arg CI_ARGO_CD_VERSION="${CI_ARGO_CD_VERSION}" --build-arg CI_ARGO_CD_COMMIT="${CI_ARGO_CD_COMMIT}" \
+  --build-arg CI_VERSION="${OCP_DATE}" .
+podman build -t "${IMG_AGENTCTL}" -f clis/argocd-agentctl/Dockerfile .
 
 
 # Build the images
-#podman build -t "${IMG_ROLLOUTS}" -f containers/argo-rollouts/Dockerfile \
-#  --build-arg CI_ARGO_ROLLOUTS_VERSION="${CI_ARGO_ROLLOUTS_VERSION}" \
-#  --build-arg CI_ARGO_ROLLOUTS_COMMIT="${CI_ARGO_ROLLOUTS_COMMIT}" --build-arg CI_GIT_LFS_COMMIT="${CI_GIT_LFS_COMMIT}" .
-#podman build -t ${IMG_AGENT} -f containers/argocd-agent/Dockerfile .
-#podman build -t ${IMG_EXTENSIONS} -f containers/argocd-extensions/Dockerfile .
-#podman build -t ${IMG_IMAGE_UPDATER} -f containers/argocd-image-updater/Dockerfile \
-#  --build-arg CI_ARGOCD_IMAGE_UPDATER_VERSION="${CI_ARGOCD_IMAGE_UPDATER_VERSION}" \
-#  --build-arg CI_ARGOCD_IMAGE_UPDATER_COMMIT="${CI_ARGOCD_IMAGE_UPDATER_COMMIT}" .
-#podman build -t ${IMG_ARGOCD} -f containers/argocd-rhel9/Dockerfile \
-#  --build-arg CI_ARGO_CD_VERSION="${CI_ARGO_CD_VERSION}" --build-arg CI_ARGO_CD_COMMIT="${CI_ARGO_CD_COMMIT}" \
-#  --build-arg CI_GIT_LFS_COMMIT="${CI_GIT_LFS_COMMIT}" --build-arg ARGO_VERSION="${CI_ARGO_CD_VERSION}" \
-#  --build-arg CI_VERSION="${OCP_DATE}" --build-arg BUILD_ALL_CLIS=false \
-#  --build-arg CI_KUSTOMIZE_VERSION="${CI_KUSTOMIZE_VERSION}" --build-arg CI_HELM_VERSION="${CI_HELM_VERSION}" \
-#  --build-arg CI_HELM_COMMIT="${CI_HELM_COMMIT}" --build-arg CI_GIT_LFS_COMMIT="${CI_GIT_LFS_COMMIT}" .
-#podman build -t ${IMG_CONSOLE_PLUGIN} -f containers/console-plugin/Dockerfile .
-#podman build -t ${IMG_DEX} -f containers/dex/Dockerfile \
-#  --build-arg CI_DEX_VERSION="${CI_DEX_VERSION}" --build-arg CI_DEX_COMMIT="${CI_DEX_COMMIT}" .
-#podman build -t ${IMG_BACKEND} -f containers/gitops/Dockerfile \
-#  --build-arg CI_GITOPS_BACKEND_COMMIT="${CI_GITOPS_BACKEND_COMMIT}" .
-#podman build -t ${IMG_OPERATOR} -f containers/gitops-operator/Dockerfile .
-#podman build -t ${IMG_MUST_GATHER} --from "$(get_payload_component "must-gather")" -f containers/must-gather/Dockerfile .
+podman build -t "${IMG_ROLLOUTS}" -f containers/argo-rollouts/Dockerfile \
+  --build-arg CI_ARGO_ROLLOUTS_VERSION="${CI_ARGO_ROLLOUTS_VERSION}" \
+  --build-arg CI_ARGO_ROLLOUTS_COMMIT="${CI_ARGO_ROLLOUTS_COMMIT}" --build-arg CI_GIT_LFS_COMMIT="${CI_GIT_LFS_COMMIT}" .
+podman build -t ${IMG_AGENT} -f containers/argocd-agent/Dockerfile .
+podman build -t ${IMG_EXTENSIONS} -f containers/argocd-extensions/Dockerfile .
+podman build -t ${IMG_IMAGE_UPDATER} -f containers/argocd-image-updater/Dockerfile \
+  --build-arg CI_ARGOCD_IMAGE_UPDATER_VERSION="${CI_ARGOCD_IMAGE_UPDATER_VERSION}" \
+  --build-arg CI_ARGOCD_IMAGE_UPDATER_COMMIT="${CI_ARGOCD_IMAGE_UPDATER_COMMIT}" .
+podman build -t ${IMG_ARGOCD} -f containers/argocd-rhel9/Dockerfile \
+  --build-arg CI_ARGO_CD_VERSION="${CI_ARGO_CD_VERSION}" --build-arg CI_ARGO_CD_COMMIT="${CI_ARGO_CD_COMMIT}" \
+  --build-arg CI_GIT_LFS_COMMIT="${CI_GIT_LFS_COMMIT}" --build-arg ARGO_VERSION="${CI_ARGO_CD_VERSION}" \
+  --build-arg CI_VERSION="${OCP_DATE}" --build-arg BUILD_ALL_CLIS=false \
+  --build-arg CI_KUSTOMIZE_VERSION="${CI_KUSTOMIZE_VERSION}" --build-arg CI_HELM_VERSION="${CI_HELM_VERSION}" \
+  --build-arg CI_HELM_COMMIT="${CI_HELM_COMMIT}" --build-arg CI_GIT_LFS_COMMIT="${CI_GIT_LFS_COMMIT}" .
+podman build -t ${IMG_CONSOLE_PLUGIN} -f containers/console-plugin/Dockerfile .
+podman build -t ${IMG_DEX} -f containers/dex/Dockerfile \
+  --build-arg CI_DEX_VERSION="${CI_DEX_VERSION}" --build-arg CI_DEX_COMMIT="${CI_DEX_COMMIT}" .
+podman build -t ${IMG_BACKEND} -f containers/gitops/Dockerfile \
+  --build-arg CI_GITOPS_BACKEND_COMMIT="${CI_GITOPS_BACKEND_COMMIT}" .
+podman build -t ${IMG_OPERATOR} -f containers/gitops-operator/Dockerfile .
+podman build -t ${IMG_MUST_GATHER} --from "$(get_payload_component "must-gather")" -f containers/must-gather/Dockerfile .
 
-# Push the images
-#podman push ${IMG_CLI}
-#podman push ${IMG_AGENTCTL}
-#podman push ${IMG_ROLLOUTS}
-#podman push ${IMG_AGENT}
-#podman push ${IMG_EXTENSIONS}
-#podman push ${IMG_IMAGE_UPDATER}
-#podman push ${IMG_ARGOCD}
-#podman push ${IMG_CONSOLE_PLUGIN}
-#podman push ${IMG_DEX}
-#podman push ${IMG_BACKEND}
-#podman push ${IMG_OPERATOR}
-#podman push ${IMG_MUST_GATHER}
+ Push the images
+podman push ${IMG_CLI}
+podman push ${IMG_AGENTCTL}
+podman push ${IMG_ROLLOUTS}
+podman push ${IMG_AGENT}
+podman push ${IMG_EXTENSIONS}
+podman push ${IMG_IMAGE_UPDATER}
+podman push ${IMG_ARGOCD}
+podman push ${IMG_CONSOLE_PLUGIN}
+podman push ${IMG_DEX}
+podman push ${IMG_BACKEND}
+podman push ${IMG_OPERATOR}
+podman push ${IMG_MUST_GATHER}
 
 # Envsubst env-override.yaml
 export ENV_OVERRIDES="$(envsubst < $DIR/env-override.yaml)"
