@@ -1,4 +1,4 @@
-From cc47969fb24208c4501597a4cd46ce475580ed88 Mon Sep 17 00:00:00 2001
+From 55372c53747e36e7e473b9d1bdaf87e0f2b487c8 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Sat, 10 May 2025 14:45:56 +0100
 Subject: [PATCH] OKDify
@@ -8,11 +8,11 @@ Subject: [PATCH] OKDify
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml b/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
-index 416329c64..ddc9bdfe4 100644
+index 47ab3ef4d..73a323225 100644
 --- a/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
 @@ -9,7 +9,7 @@ metadata:
-     containerImage: quay.io/openshift/origin-sriov-network-operator:4.18
+     containerImage: quay.io/openshift/origin-sriov-network-operator:4.20
      createdAt: 2019/04/30
      description: An operator for configuring SR-IOV components and initializing SRIOV
 -      network devices in Openshift cluster.
@@ -20,7 +20,7 @@ index 416329c64..ddc9bdfe4 100644
      features.operators.openshift.io/cnf: "false"
      features.operators.openshift.io/cni: "true"
      features.operators.openshift.io/csi: "false"
-@@ -51,7 +51,7 @@ metadata:
+@@ -54,7 +54,7 @@ metadata:
        }
      operators.operatorframework.io/internal-objects: '["sriovnetworknodestates.sriovnetwork.openshift.io"]'
      repository: https://github.com/k8snetworkplumbingwg/sriov-network-operator
@@ -29,7 +29,7 @@ index 416329c64..ddc9bdfe4 100644
      target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
    labels:
      operatorframework.io/arch.amd64: supported
-@@ -97,10 +97,10 @@ spec:
+@@ -100,10 +100,10 @@ spec:
        name: sriovoperatorconfigs.sriovnetwork.openshift.io
        version: v1
    description: |
@@ -42,13 +42,13 @@ index 416329c64..ddc9bdfe4 100644
  
      ### Supported Features
      * Initialize the SR-IOV NICs on nodes.
-@@ -156,5 +156,5 @@ spec:
+@@ -159,5 +159,5 @@ spec:
    - email: support@redhat.com
      name: Red Hat
    provider:
 -    name: Red Hat
 +    name: OKD Community
-   version: 4.18.0
+   version: 4.20.0
 -- 
-2.51.0
+2.51.1
 
