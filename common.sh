@@ -101,44 +101,6 @@ submodule_update() {
   popd
 }
 
-apply_patch() {
-  local -r name="$1"
-  local -r branch="$2"
-
-  # Check if the submodule is already initialized
-  if [ ! -d "${name}" ]; then
-    git submodule update --init --recursive "${name}"
-  fi
-
-  pushd "${name}"
-  # Reset any previous patches
-  git clean -fdx
-  git reset --hard origin/${branch}
-  # Apply patch to git repo
-  git am -3 "../patches/${name}.patch"
-  popd
-}
-
-replace_csv_product() {
-  local csv_file="$1"
-  local path="$2"
-
-  # YQ get the value from the yaml
-  local value=$(yq e "$path" "$csv_file")
-  # Look for instances of OpenShift and replace with OKD, OCP => OKD, and Red Hat to nothing
-  value=$(echo "$value" | sed -e 's/OpenShift/OKD/g' -e 's/OCP/OKD/g' -e 's/Red Hat//g')
-  # YQ set the value back to the yaml
-  yq e -i "$path = \"$value\"" "$csv_file"
-}
-
-set_csv_value() {
-  local csv_file="$1"
-  local path="$2"
-  local value="$3"
-
-  # YQ set the value back to the yaml
-  yq e -i "$path = \"$value\"" "$csv_file"
-}
 
 function push_all_images() {
   for img in $(compgen -v IMG_); do
