@@ -11,40 +11,58 @@ export IMG_KUBE_RBAC_PROXY=$(get_payload_component kube-rbac-proxy)
 
 IMG_BUNDLE="${REGISTRY}/operator-bundle:${OCP_DATE}"
 
-submodule_initialize operator release-${OCP_SHORT}
+init() {
+    submodule_initialize operator release-${OCP_SHORT}
+}
 
-podman build -t $IMG_OPERATOR -f operator.Containerfile .
-podman build -t $IMG_DISKMAKER -f diskmaker.Containerfile .
-podman build -t $IMG_MUST_GATHER -f mustgather.Containerfile .
+deinit() {
+    submodule_reset operator release-${OCP_SHORT}
+}
 
-push_all_images
+update() {
+    submodule_update operator release-${OCP_SHORT} https://github.com/openshift/local-storage-operator.git
+}
 
-convert_all_images_to_digest
+build_containers() {
+    podman build -t $IMG_OPERATOR -f operator.Containerfile .
+    podman build -t $IMG_DISKMAKER -f diskmaker.Containerfile .
+    podman build -t $IMG_MUST_GATHER -f mustgather.Containerfile .
+}
 
-pushd operator
+push_containers() {
+    push_all_images
+    convert_all_images_to_digest
+}
 
-export VERSION=$OCP_DATE
-export ICON="$(base64 -w 0 ../icon.png)"
+build_bundle() {
+    pushd operator
 
-# Patch
-yq e -i ".metadata.name = \"local-storage-operator.v${OCP_DATE}\"" ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.spec.version = env(VERSION)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.metadata.annotations.containerImage = env(IMG_OPERATOR)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.metadata.annotations.support = "OKD Community"' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.spec.description = "Operator that configures local storage volumes for use in OKD. OKD 4.2 and above are the only supported OKD versions."' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.spec.icon[0].base64data = env(ICON)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.spec.icon[0].mediatype = "image/png"' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.spec.provider.name = "OKD Community"' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i ".spec.labels.alm-status-descriptors = \"local-storage-operator.v${OCP_DATE}\"" ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].image = env(IMG_OPERATOR)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].env |= map(select(.name == "KUBE_RBAC_PROXY_IMAGE").value = env(IMG_KUBE_RBAC_PROXY))' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].env |= map(select(.name == "DISKMAKER_IMAGE").value = env(IMG_DISKMAKER))' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
-yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].env |= map(select(.name == "MUSTGATHER_IMAGE").value = env(IMG_MUST_GATHER))' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    export VERSION=$OCP_DATE
+    export ICON="$(base64 -w 0 ../icon.png)"
 
-pushd config
-podman build -t $IMG_BUNDLE -f bundle.Dockerfile .
-podman push $IMG_BUNDLE
-popd
-popd
+    # Patch
+    yq e -i ".metadata.name = \"local-storage-operator.v${OCP_DATE}\"" ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.spec.version = env(VERSION)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.metadata.annotations.containerImage = env(IMG_OPERATOR)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.metadata.annotations.support = "OKD Community"' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.spec.description = "Operator that configures local storage volumes for use in OKD. OKD 4.2 and above are the only supported OKD versions."' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.spec.icon[0].base64data = env(ICON)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.spec.icon[0].mediatype = "image/png"' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.spec.provider.name = "OKD Community"' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i ".spec.labels.alm-status-descriptors = \"local-storage-operator.v${OCP_DATE}\"" ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].image = env(IMG_OPERATOR)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].env |= map(select(.name == "KUBE_RBAC_PROXY_IMAGE").value = env(IMG_KUBE_RBAC_PROXY))' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].env |= map(select(.name == "DISKMAKER_IMAGE").value = env(IMG_DISKMAKER))' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].env |= map(select(.name == "MUSTGATHER_IMAGE").value = env(IMG_MUST_GATHER))' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
 
-submodule_reset operator release-${OCP_SHORT}
+    pushd config
+    podman build -t $IMG_BUNDLE -f bundle.Dockerfile .
+    podman push $IMG_BUNDLE
+    popd
+    popd
+}
+
+## Main execution
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

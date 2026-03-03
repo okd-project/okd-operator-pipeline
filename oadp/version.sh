@@ -1,8 +1,0 @@
-#!/bin/bash
-
-NAMESPACE="oadp"
-
-MAJOR="1"
-MINOR="5"
-
-KUBEVIRT_PLUGIN_RELEASE="0.8"

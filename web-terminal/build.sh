@@ -1,60 +1,85 @@
 #!/bin/bash
 
-source version.sh
+# Configuration and variable setup
+NAMESPACE="web-terminal"
+MAJOR=1
+MINOR=15
 
 source ../common.sh
 
+# Image definitions
 export IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_EXEC="${REGISTRY}/exec:${OCP_DATE}"
 IMG_TOOLING="${REGISTRY}/tooling:${OCP_DATE}"
 
 IMG_BUNDLE="${REGISTRY}/bundle:${OCP_DATE}"
 
-submodule_initialize operator wto-${OCP_SHORT}
-submodule_initialize exec main
-submodule_initialize tooling main
+## Functions
 
-podman build -t "${IMG_OPERATOR}" -f operator/build/dockerfiles/controller.Dockerfile operator
-podman build -t "${IMG_EXEC}" -f exec/build/Dockerfile exec
+init() {
+    submodule_initialize operator wto-${OCP_SHORT}
+    submodule_initialize exec main
+    submodule_initialize tooling main
+}
 
-pushd tooling
-source ./etc/get-tooling-versions.sh
-./get-sources.sh
-podman build -t "${IMG_TOOLING}" -f Dockerfile .
-popd
+deinit() {
+    submodule_reset operator wto-${OCP_SHORT}
+    submodule_reset exec main
+    submodule_reset tooling main
+}
 
-push_all_images
+update() {
+    submodule_update operator wto-${OCP_SHORT} https://github.com/redhat-developer/web-terminal-operator.git
+    submodule_update tooling main https://github.com/redhat-developer/web-terminal-tooling.git
+    submodule_update exec main https://github.com/redhat-developer/web-terminal-exec.git
+}
 
-# Build operator bundle image
+build_containers() {
+    podman build -t "${IMG_OPERATOR}" -f operator/build/dockerfiles/controller.Dockerfile operator
+    podman build -t "${IMG_EXEC}" -f exec/build/Dockerfile exec
 
-convert_all_images_to_digest
+    pushd tooling
+    source ./etc/get-tooling-versions.sh
+    ./get-sources.sh
+    podman build -t "${IMG_TOOLING}" -f Dockerfile .
+    popd
+}
 
-pushd operator
+push_containers() {
+    push_all_images
+}
 
-yq e -i ".metadata.annotations.containerImage = \"${IMG_OPERATOR}\" |
-  .spec.install.spec.deployments[0].spec.template.spec.containers[0].image = \"${IMG_OPERATOR}\" |
-  .spec.install.spec.deployments[0].spec.template.spec.containers[0].env |=
-    map(select(.name == \"RELATED_IMAGE_web_terminal_exec\").value = \"${IMG_EXEC}\") |
-  .spec.install.spec.deployments[0].spec.template.spec.containers[0].env |=
-    map(select(.name == \"RELATED_IMAGE_web_terminal_tooling\").value = \"${IMG_TOOLING}\") |
-  .metadata.name = \"web-terminal.v${OCP_DATE}\" |
-  .spec.version = \"${OCP_DATE}\" |
-  del(.spec.replaces)" \
-  ./manifests/web-terminal.clusterserviceversion.yaml
+build_bundle() {
+    convert_all_images_to_digest
 
-# Fix the bundle annotation labels
-yq e -i ".annotations *= {
-  \"operators.operatorframework.io.bundle.channel.default.v1\": \"alpha\",
-  \"operators.operatorframework.io.bundle.channels.v1\": \"alpha\"
-}" ./metadata/annotations.yaml
+    pushd operator
 
-podman build --label "operators.operatorframework.io.bundle.channels.v1=${CHANNEL}" \
-             --label "operators.operatorframework.io.bundle.channel.default.v1=${DEFAULT_CHANNEL}" \
-             -f build/dockerfiles/Dockerfile -t "${IMG_BUNDLE}" .
-podman push "${IMG_BUNDLE}"
+    yq e -i ".metadata.annotations.containerImage = \"${IMG_OPERATOR}\" |
+      .spec.install.spec.deployments[0].spec.template.spec.containers[0].image = \"${IMG_OPERATOR}\" |
+      .spec.install.spec.deployments[0].spec.template.spec.containers[0].env |=
+        map(select(.name == \"RELATED_IMAGE_web_terminal_exec\").value = \"${IMG_EXEC}\") |
+      .spec.install.spec.deployments[0].spec.template.spec.containers[0].env |=
+        map(select(.name == \"RELATED_IMAGE_web_terminal_tooling\").value = \"${IMG_TOOLING}\") |
+      .metadata.name = \"web-terminal.v${OCP_DATE}\" |
+      .spec.version = \"${OCP_DATE}\" |
+      del(.spec.replaces)" \
+      ./manifests/web-terminal.clusterserviceversion.yaml
 
-popd
+    # Fix the bundle annotation labels
+    yq e -i ".annotations *= {
+      \"operators.operatorframework.io.bundle.channel.default.v1\": \"alpha\",
+      \"operators.operatorframework.io.bundle.channels.v1\": \"alpha\"
+    }" ./metadata/annotations.yaml
 
-submodule_reset operator wto-${OCP_SHORT}
-submodule_reset exec main
-submodule_reset tooling main
+    podman build --label "operators.operatorframework.io.bundle.channels.v1=${CHANNEL}" \
+                 --label "operators.operatorframework.io.bundle.channel.default.v1=${DEFAULT_CHANNEL}" \
+                 -f build/dockerfiles/Dockerfile -t "${IMG_BUNDLE}" .
+    podman push "${IMG_BUNDLE}"
+
+    popd
+}
+
+## Main execution
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

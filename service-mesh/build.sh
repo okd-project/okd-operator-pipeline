@@ -18,25 +18,71 @@ IMG_ISTIO_MUST_GATHER=${REGISTRY}/istio-must-gather:${OCP_DATE}
 
 IMG_BUNDLE=${REGISTRY}/operator-bundle:${OCP_DATE}
 
-## Build container images
-podman build -t ${IMG_OPERATOR} -f operator.Containerfile .
-podman build -t ${IMG_KIALI_OPERATOR} -f kiali-operator.Containerfile .
-podman build -t ${IMG_KIALI} -f kiali.Containerfile .
-podman build -t ${IMG_KIALI_CONSOLE_PLUGIN} -f kiali-console-plugin.Containerfile .
-podman build -t ${IMG_ISTIO_PROXYV2} --build-arg SHORT_VERSION=3.0 --build-arg VERSION=${OCP_DATE} -f istio-proxyv2.Containerfile ../
-podman build -t ${IMG_ISTIO_PILOT} -f istio-pilot.Containerfile .
-podman build -t ${IMG_ISTIO_CNI} -f istio-cni.Containerfile .
-podman build -t ${IMG_ISTIO_ZTUNNEL} -f istio-ztunnel.Containerfile .
-podman build -t ${IMG_ISTIO_MUST_GATHER} -f istio-must-gather.Containerfile .
+## Functions
 
-push_all_images
+init() {
+    submodule_initialize istio release-1.24
+    submodule_initialize istio-must-gather master
+    submodule_initialize kiali v2.4
+    submodule_initialize kiali-console-plugin v2.4
+    submodule_initialize kiali-operator v2.4
+    submodule_initialize operator release-3.0
+    submodule_initialize proxy release-1.24
+    submodule_initialize ztunnel release-1.24
+}
 
-# Build operator bundle image
-pushd operator
+deinit() {
+    submodule_reset istio release-1.24
+    submodule_reset istio-must-gather master
+    submodule_reset kiali v2.4
+    submodule_reset kiali-console-plugin v2.4
+    submodule_reset kiali-operator v2.4
+    submodule_reset operator release-3.0
+    submodule_reset proxy release-1.24
+    submodule_reset ztunnel release-1.24
+}
 
-make bundle VERSION=${OCP_DATE} VERSIONS_YAML_FILE=versions.ossm.yaml BUILD_WITH_CONTAINER=0 "BUNDLE_METADATA_OPTS=$BUNDLE_METADATA_OPTS" IMAGE=$IMG_OPERATOR OPERATOR_NAME=servicemeshoperator3
-#
-podman build -t ${IMG_BUNDLE} -f bundle.Dockerfile .
-podman push ${IMG_BUNDLE}
+update() {
+    submodule_update istio release-1.24 https://github.com/openshift-service-mesh/istio.git
+    submodule_update istio-must-gather master https://github.com/openshift-service-mesh/istio-must-gather.git
+    submodule_update kiali v2.4 https://github.com/kiali/kiali.git
+    submodule_update kiali-console-plugin v2.4 https://github.com/kiali/openshift-servicemesh-plugin
+    submodule_update kiali-operator v2.4 https://github.com/kiali/kiali-operator
+    submodule_update operator release-3.0 https://github.com/openshift-service-mesh/sail-operator
+    submodule_update proxy release-1.24 https://github.com/openshift-service-mesh/proxy.git
+    submodule_update ztunnel release-1.24 https://github.com/openshift-service-mesh/ztunnel.git
+}
 
-popd
+build_containers() {
+    ## Build all container images
+    podman build -t ${IMG_OPERATOR} -f operator.Containerfile .
+    podman build -t ${IMG_KIALI_OPERATOR} -f kiali-operator.Containerfile .
+    podman build -t ${IMG_KIALI} -f kiali.Containerfile .
+    podman build -t ${IMG_KIALI_CONSOLE_PLUGIN} -f kiali-console-plugin.Containerfile .
+    podman build -t ${IMG_ISTIO_PROXYV2} --build-arg SHORT_VERSION=3.0 --build-arg VERSION=${OCP_DATE} -f istio-proxyv2.Containerfile ../
+    podman build -t ${IMG_ISTIO_PILOT} -f istio-pilot.Containerfile .
+    podman build -t ${IMG_ISTIO_CNI} -f istio-cni.Containerfile .
+    podman build -t ${IMG_ISTIO_ZTUNNEL} -f istio-ztunnel.Containerfile .
+    podman build -t ${IMG_ISTIO_MUST_GATHER} -f istio-must-gather.Containerfile .
+}
+
+push_containers() {
+    push_all_images
+}
+
+build_bundle() {
+    # Build operator bundle image
+    pushd operator
+
+    make bundle VERSION=${OCP_DATE} VERSIONS_YAML_FILE=versions.ossm.yaml BUILD_WITH_CONTAINER=0 "BUNDLE_METADATA_OPTS=$BUNDLE_METADATA_OPTS" IMAGE=$IMG_OPERATOR OPERATOR_NAME=servicemeshoperator3
+
+    podman build -t ${IMG_BUNDLE} -f bundle.Dockerfile .
+    podman push ${IMG_BUNDLE}
+
+    popd
+}
+
+## Main execution
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

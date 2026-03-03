@@ -1,0 +1,34 @@
+From 3338f4b78810ad2b7eb55a5ca26bd41a901479a6 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Sun, 14 Dec 2025 15:27:29 +0000
+Subject: [PATCH] OKDify
+
+---
+ .../pf-status-relay-operator.clusterserviceversion.yaml   | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/config/manifests/bases/pf-status-relay-operator.clusterserviceversion.yaml b/config/manifests/bases/pf-status-relay-operator.clusterserviceversion.yaml
+index 0e4deb2..79bf8cc 100644
+--- a/config/manifests/bases/pf-status-relay-operator.clusterserviceversion.yaml
++++ b/config/manifests/bases/pf-status-relay-operator.clusterserviceversion.yaml
+@@ -46,13 +46,13 @@ spec:
+   - sriov
+   - lacp
+   links:
+-  - name: Pf Status Relay Operator
++  - name: PF Status Relay Operator
+     url: https://pf-status-relay-operator.domain
+   maintainers:
+-  - email: marguerr@redhat.com
+-    name: Marcelo Guerrero
++  - email: maintainers@okd.io
++    name: OKD Community
+   maturity: alpha
+   minKubeVersion: 1.30.0
+   provider:
+-    name: openshift
++    name: OKD Community
+   version: 0.0.0
+-- 
+2.52.0
+

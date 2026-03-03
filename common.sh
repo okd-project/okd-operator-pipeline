@@ -53,11 +53,35 @@ submodule_reset() {
   # Check if the submodule exists
   EXISTS=$(submodule_exists "${name}")
   if [ "${EXISTS}" = "1" ]; then
-    git -C "$name" clean -fdx
-    git -C "$name" reset --hard origin/${branch}
-    # Reset all nested submodules
-    git -C "${name}" submodule foreach --recursive 'git clean -fdx; git reset --hard'
-#    git submodule deinit -f "${name}"
+    local recorded_hash
+    dir_name=$(basename "$(pwd)")
+    recorded_hash=$(git rev-parse HEAD:"${dir_name}/${name}" 2>/dev/null || echo "")
+
+    if [ -z "$recorded_hash" ]; then
+      echo "Error: Could not find recorded commit for ${name}. Ensure submodule is registered."
+      return 1
+    fi
+
+    # Clean untracked files and directories (removes any patch artifacts)
+    git -C "${name}" clean -fdx
+
+    # Explicitly discard all local changes in the working tree (reverts applied patches)
+    git -C "${name}" checkout -- .
+
+    # Reset top-level submodule to the exact recorded commit (discards any remaining changes)
+    git -C "${name}" checkout -f "$recorded_hash"
+    git -C "${name}" reset --hard "$recorded_hash"
+
+    # Recursively handle nested submodules with the same steps
+    git -C "${name}" submodule foreach --recursive '
+      git clean -fdx;
+      git checkout -- .;
+      local nested_hash=$(git rev-parse HEAD:"$path" 2>/dev/null || echo "");
+      if [ -n "$nested_hash" ]; then
+        git checkout -f "$nested_hash";
+        git reset --hard "$nested_hash";
+      fi
+    '
   fi
 }
 
@@ -124,7 +148,7 @@ function convert_all_images_to_digest() {
   # Create a temporary directory to store results
   local tmp_dir=$(mktemp -d)
   local pids=()
-  
+
   for img in $(compgen -v IMG_); do
       # Ignore the bundle image
       if [[ $img == IMG_BUNDLE* ]]; then
@@ -143,19 +167,64 @@ function convert_all_images_to_digest() {
           pids+=($!)
       fi
   done
-  
+
   # Wait for all background processes to complete
   for pid in "${pids[@]}"; do
       wait "$pid"
   done
-  
+
   # Source all the temporary files to set the environment variables
   for result_file in "$tmp_dir"/*; do
       if [[ -f "$result_file" ]]; then
           source "$result_file"
       fi
   done
-  
+
   # Clean up temporary directory
   rm -rf "$tmp_dir"
+}
+
+main() {
+  # Standardized main execution flow for operator build scripts
+  # Calls init(), build_containers(), push_containers(), build_bundle(), and deinit()
+  # if they are defined as functions in the sourcing script
+  #
+  # Usage:
+  #   main                           # Run all steps
+  #   main build_containers          # Run only build_containers
+  #   main init build_containers     # Run init, then build_containers
+  #   main build_containers push_containers build_bundle  # Run specific steps in order
+
+  # If no arguments provided, run all steps in standard order
+  if [ $# -eq 0 ]; then
+    if declare -f init > /dev/null; then
+      init
+    fi
+
+    if declare -f build_containers > /dev/null; then
+      build_containers
+    fi
+
+    if declare -f push_containers > /dev/null; then
+      push_containers
+    fi
+
+    if declare -f build_bundle > /dev/null; then
+      build_bundle
+    fi
+
+    if declare -f deinit > /dev/null; then
+      deinit
+    fi
+  else
+    # Run only the specified steps in the order given
+    for step in "$@"; do
+      if declare -f "$step" > /dev/null; then
+        echo "Running step: $step"
+        "$step"
+      else
+        echo "Warning: Function '$step' is not defined, skipping"
+      fi
+    done
+  fi
 }
