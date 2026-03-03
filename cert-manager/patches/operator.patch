@@ -1,4 +1,4 @@
-From 64a1caa1547aa448dc84bc9dd5ddb5b3eb9b9525 Mon Sep 17 00:00:00 2001
+From 1bc9f0ff0b2049a876f33ac9a5d52c8197458bad Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Fri, 30 May 2025 14:09:06 +0100
 Subject: [PATCH] OKDify
@@ -8,13 +8,13 @@ Subject: [PATCH] OKDify
  1 file changed, 10 insertions(+), 12 deletions(-)
 
 diff --git a/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml b/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml
-index 5b705214..6cc72dff 100644
+index fb30c009..de341c84 100644
 --- a/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml
 @@ -19,19 +19,17 @@ metadata:
      features.operators.openshift.io/token-auth-azure: "true"
      features.operators.openshift.io/token-auth-gcp: "true"
-     olm.skipRange: '>=1.17.0 <1.18.0'
+     olm.skipRange: '>=1.18.0 <1.18.1'
 -    operator.openshift.io/uninstall-message: The cert-manager Operator for Red Hat
 -      OpenShift will be removed from cert-manager-operator namespace. If your Operator
 +    operator.openshift.io/uninstall-message: The cert-manager Operator for OKD
@@ -34,14 +34,14 @@ index 5b705214..6cc72dff 100644
    labels:
      operatorframework.io/arch.amd64: supported
      operatorframework.io/arch.arm64: supported
-@@ -68,11 +66,11 @@ spec:
+@@ -112,11 +110,11 @@ spec:
        name: certmanagers.operator.openshift.io
        version: v1alpha1
    description: |
--    The cert-manager Operator for Red Hat OpenShift provides seamless support for [cert-manager v1.18.2](https://github.com/cert-manager/cert-manager/tree/v1.18.2), which automates certificate management.
+-    The cert-manager Operator for Red Hat OpenShift provides seamless support for [cert-manager v1.18.4](https://github.com/cert-manager/cert-manager/tree/v1.18.4), which automates certificate management.
 -    For more information, see the [cert-manager Operator for Red Hat OpenShift documentation](https://docs.openshift.com/container-platform/latest/security/cert_manager_operator/index.html).
 -  displayName: cert-manager Operator for Red Hat OpenShift
-+    The cert-manager Operator for OKD provides seamless support for [cert-manager v1.18.2](https://github.com/cert-manager/cert-manager/tree/v1.18.2), which automates certificate management.
++    The cert-manager Operator for OKD provides seamless support for [cert-manager v1.18.4](https://github.com/cert-manager/cert-manager/tree/v1.18.4), which automates certificate management.
 +    For more information, see the [cert-manager Operator for OKD documentation](https://docs.openshift.com/container-platform/latest/security/cert_manager_operator/index.html).
 +  displayName: cert-manager Operator for OKD
    icon:
@@ -50,7 +50,7 @@ index 5b705214..6cc72dff 100644
      mediatype: image/png
    install:
      spec:
-@@ -98,11 +96,11 @@ spec:
+@@ -143,11 +141,11 @@ spec:
    - name: Documentation
      url: https://github.com/openshift/cert-manager-operator/blob/master/README.md
    maintainers:
@@ -63,8 +63,8 @@ index 5b705214..6cc72dff 100644
    provider:
 -    name: Red Hat
 +    name: OKD Community
-   replaces: cert-manager-operator.v1.17.0
-   version: 1.18.0
+   replaces: cert-manager-operator.v1.18.0
+   version: 1.18.1
 -- 
-2.52.0
+2.53.0
 
