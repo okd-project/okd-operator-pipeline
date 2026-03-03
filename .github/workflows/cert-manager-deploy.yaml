@@ -1,13 +1,17 @@
 on:
   push:
     branches:
-      - release-main
-      - "4.20"
+      - "main"
     paths:
       - 'cert-manager/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Cert-Manager
 
 jobs:
   deploy:
-    uses: .github/workflows/operator-deploy.yaml
+    name: Deploy Cert-Manager
+    uses: ./.github/workflows/operator-deploy.yaml
     with:
-      path: 'cert-manager'
+      operator: cert-manager
+    secrets: inherit

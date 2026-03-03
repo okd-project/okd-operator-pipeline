@@ -1,31 +1,98 @@
 on:
   workflow_call:
     inputs:
-      path:
-        description: "Path to the operator build scripts"
+      operator:
+        description: "Operator name/directory to build and deploy"
         type: string
         required: true
+      base_registry:
+        description: "Base registry URL (default: quay.io/okderators)"
+        type: string
+        required: false
+        default: "quay.io/okderators"
+
+name: Deploy Operattttor
 
 jobs:
   deploy-operator:
+    name: Deploy Operator
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
 
-    - name: Install Podman
-      uses: redhat-actions/podman-install@main
+      - name: Install dependencies
+        # language=bash
+        run: |
+          # Install yq
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
 
-    - name: Log in to quay.io
-      uses: redhat-actions/podman-login@v1
-      with:
-        username: ${{ env.REGISTRY_USER }}
-        password: ${{ env.REGISTRY_PASSWORD }}
-        registry: ${{ vars.IMAGE_REGISTRY }}
+          # Install jq (should be pre-installed on ubuntu-latest)
+          sudo apt-get update && sudo apt-get install -y jq
 
-    - name: Build and push image
-      # language=bash
-      run: |
-        pushd ${{ inputs.path }}
-        bash ./build.sh
-        popd
+          # Install operator-sdk
+          export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
+          export OS=$(uname | awk '{print tolower($0)}')
+          export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.36.1
+          curl -LO ${OPERATOR_SDK_DL_URL}/operator-sdk_${OS}_${ARCH}
+          chmod +x operator-sdk_${OS}_${ARCH}
+          sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
+
+      - name: Install Podman
+        uses: redhat-actions/podman-install@main
+
+      - name: Set up OpenShift CLI
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          oc: latest
+
+      - name: Log in to Quay.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+          registry: quay.io
+
+      - name: Configure git
+        # language=bash
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Build and push operator
+        env:
+          NAMESPACE: ${{ inputs.operator }}
+          BASE_REGISTRY: ${{ inputs.base_registry }}
+        # language=bash
+        run: |
+          cd ${{ inputs.operator }}
+
+          # Verify build.sh exists
+          if [ ! -f "build.sh" ]; then
+            echo "Error: build.sh not found in ${{ inputs.operator }}"
+            exit 1
+          fi
+
+          # Run full build (init, build_containers, push_containers, build_bundle, deinit)
+          echo "Building and deploying ${{ inputs.operator }}..."
+          ./build.sh
+
+          echo "Successfully built and pushed ${{ inputs.operator }}"
+
+      - name: Create deployment summary
+        if: success()
+        # language=bash
+        run: |
+          echo "## Operator Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Operator:** \`${{ inputs.operator }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Registry:** \`${{ inputs.base_registry }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ✅ Successfully deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Images pushed:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ inputs.base_registry }}/${{ inputs.operator }}/*:*" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
