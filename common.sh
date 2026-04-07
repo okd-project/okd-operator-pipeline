@@ -9,7 +9,7 @@ if [ -z "${NAMESPACE:-}" ]; then
 fi
 
 BASE_REGISTRY=${BASE_REGISTRY:-"quay.io/okderators"}
-OKD_VERSION=${OKD_VERSION:-"4.20.0-okd-scos.6"}
+OKD_VERSION=${OKD_VERSION:-"4.21.0-okd-scos.10"}
 REGISTRY="${BASE_REGISTRY}/$NAMESPACE"
 OKD_RELEASE=quay.io/okd/scos-release:${OKD_VERSION}
 CHANNEL=${CHANNEL:-alpha}
