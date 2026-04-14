@@ -31,13 +31,13 @@ update() {
 }
 
 build_containers() {
-    #podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_OPERATOR -f operator.Containerfile operator
-    #podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_RELAY -f relay.Containerfile relay
+    podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg OKD_SHORT=${OCP_SHORT} -t $IMG_OPERATOR -f operator.Containerfile operator
+    podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg OKD_SHORT=${OCP_SHORT} -t $IMG_RELAY -f relay.Containerfile relay
     true
 }
 
 push_containers() {
-    #push_all_images
+    push_all_images
     true
 }
 

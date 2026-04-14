@@ -1,3 +1,5 @@
+ARG OKD_SHORT
+
 # Build the manager binary
 FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
 ARG TARGETOS
@@ -22,7 +24,8 @@ COPY vendor/ vendor/
 # by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o manager cmd/main.go
 
-FROM registry.ci.openshift.org/origin/scos-4.20:base-stream9
+
+FROM registry.ci.openshift.org/origin/scos-${OKD_SHORT}:base-stream9
 WORKDIR /
 COPY --from=builder /opt/app-root/src/manager .
 USER 65532:65532

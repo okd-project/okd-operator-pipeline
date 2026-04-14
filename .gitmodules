@@ -567,11 +567,11 @@
 [submodule "pf-status-relay/operator"]
 	path = pf-status-relay/operator
 	url = https://github.com/openshift/pf-status-relay-operator.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "pf-status-relay/relay"]
 	path = pf-status-relay/relay
 	url = https://github.com/openshift/pf-status-relay.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "network-observability/operator"]
 	path = network-observability/operator
 	url = https://github.com/netobserv/network-observability-operator.git
