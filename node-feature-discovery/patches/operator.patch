@@ -1,21 +1,23 @@
-From 8d139f78af963e309ca4d85a826ab672b68e1242 Mon Sep 17 00:00:00 2001
+From 3ca09802bb4e366e09a2d52a2fdc20192f3384b7 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Thu, 5 Jun 2025 16:45:02 +0100
 Subject: [PATCH] OKDify
 
 ---
- Dockerfile                                           | 11 +++++------
- .../manifests/bases/nfd.clusterserviceversion.yaml   | 12 ++++++------
- 2 files changed, 11 insertions(+), 12 deletions(-)
+ Dockerfile                                          | 11 ++++++-----
+ .../manifests/bases/nfd.clusterserviceversion.yaml  | 13 ++++++-------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/Dockerfile b/Dockerfile
-index 137aa947..c906e944 100644
+index 81edee9a..f49ab6df 100644
 --- a/Dockerfile
 +++ b/Dockerfile
-@@ -1,16 +1,15 @@
+@@ -1,16 +1,17 @@
  # Build the manager binary
--FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.22-openshift-4.18 AS builder
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.20 AS builder
 -WORKDIR /go/src/github.com/openshift/cluster-nfd-operator
++ARG OKD_SHORT
++
 +FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
  
  # Build
@@ -24,31 +26,32 @@ index 137aa947..c906e944 100644
  RUN make build
  
  # Create production image for running the operator
--FROM registry.ci.openshift.org/ocp/4.18:base-rhel9
-+FROM quay.io/centos/centos:stream9
+-FROM registry.ci.openshift.org/ocp/4.20:base-rhel9
++FROM registry.ci.openshift.org/origin/scos-${OKD_SHORT}:base-stream9
  
--ARG CSV=4.18
+ ARG CSV=4.20
 -COPY --from=builder /go/src/github.com/openshift/cluster-nfd-operator/node-feature-discovery-operator /
-+ARG CSV=4.20
 +COPY --from=builder /opt/app-root/src/node-feature-discovery-operator /
  
  COPY manifests /manifests
  
 diff --git a/config/manifests/bases/nfd.clusterserviceversion.yaml b/config/manifests/bases/nfd.clusterserviceversion.yaml
-index c9b830cf..ebac3f3e 100644
+index 84d2758b..276a8d33 100644
 --- a/config/manifests/bases/nfd.clusterserviceversion.yaml
 +++ b/config/manifests/bases/nfd.clusterserviceversion.yaml
-@@ -63,7 +63,7 @@ metadata:
+@@ -64,9 +64,8 @@ metadata:
          }
        ]
      capabilities: Deep Insights
 -    categories: Integration & Delivery,OpenShift Optional
 +    categories: Integration & Delivery,OKD Optional
-     containerImage: quay.io/openshift/origin-cluster-nfd-operator:4.18
+     containerImage: quay.io/openshift/origin-cluster-nfd-operator:4.20
+-    createdAt: "2025-04-08T11:06:30Z"
      description: |-
        The Node Feature Discovery Operator manages the detection of hardware features and configuration in a Kubernetes cluster by labeling the nodes with hardware-specific information. The Node Feature Discovery (NFD) will label the host with node-specific attributes, like PCI cards, kernel, or OS version, and many more.
-@@ -97,9 +97,9 @@ metadata:
-     operators.operatorframework.io/builder: operator-sdk-v1.16.0+git
+ 
+@@ -99,9 +98,9 @@ metadata:
+     operators.operatorframework.io/builder: operator-sdk-v1.32.0
      operators.operatorframework.io/internal-objects: '["noderesourcetopologies.topology.node.k8s.io"]'
      operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
 -    provider: Red Hat
@@ -59,7 +62,7 @@ index c9b830cf..ebac3f3e 100644
    labels:
      operatorframework.io/arch.amd64: supported
      operatorframework.io/arch.arm64: supported
-@@ -934,11 +934,11 @@ spec:
+@@ -829,11 +828,11 @@ spec:
    - name: Node Feature Discovery Documentation
      url: https://kubernetes-sigs.github.io/node-feature-discovery/stable/get-started/index.html
    maintainers:
@@ -73,7 +76,7 @@ index c9b830cf..ebac3f3e 100644
 -    name: Red Hat
 +    name: OKD Community
      url: https://github.com/openshift/cluster-nfd-operator
-   version: 4.18.0
+   version: 4.20.0
 -- 
-2.52.0
+2.53.0
 

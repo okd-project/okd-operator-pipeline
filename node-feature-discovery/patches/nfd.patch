@@ -1,19 +1,21 @@
-From f63b8e24e735a5e742d545dbd31e4bcdf6e07212 Mon Sep 17 00:00:00 2001
+From 30693e0a8271b11acdc8805569e97b0ea1307ee7 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Thu, 5 Jun 2025 16:46:17 +0100
 Subject: [PATCH] OKDify
 
 ---
- Dockerfile | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ Dockerfile | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/Dockerfile b/Dockerfile
-index 79edcbe81..e7b878af2 100644
+index ed35e226d..97911c3c1 100644
 --- a/Dockerfile
 +++ b/Dockerfile
-@@ -1,19 +1,18 @@
+@@ -1,19 +1,20 @@
++ARG OKD_SHORT
++
  # Build node feature discovery
--FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.22-openshift-4.18 AS builder
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.20 AS builder
 +FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
  
 -WORKDIR /go/node-feature-discovery
@@ -27,8 +29,8 @@ index 79edcbe81..e7b878af2 100644
 +RUN make build VERSION=${VERSION} HOSTMOUNT_PREFIX=${HOSTMOUNT_PREFIX}
  
  # Create full variant of the production image
--FROM registry.ci.openshift.org/ocp/4.18:base-rhel9
-+FROM quay.io/centos/centos:stream9
+-FROM registry.ci.openshift.org/ocp/4.20:base-rhel9
++FROM registry.ci.openshift.org/origin/scos-${OKD_SHORT}:base-stream9
  
  # Use more verbose logging of gRPC
  ENV GRPC_GO_LOG_SEVERITY_LEVEL="INFO"
@@ -38,5 +40,5 @@ index 79edcbe81..e7b878af2 100644
 +COPY --from=builder /opt/app-root/src/deployment/components/worker-config/nfd-worker.conf.example /etc/kubernetes/node-feature-discovery/nfd-worker.conf
 +COPY --from=builder /opt/app-root/src/bin/* /usr/bin/
 -- 
-2.52.0
+2.53.0
 
