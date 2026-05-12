@@ -1,17 +1,18 @@
-From b97a55f2b34748843f4e692a58e12983fe7825e6 Mon Sep 17 00:00:00 2001
+From 0a23dd48ae351bf73c06cba18aa58fefb3ce936f Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Fri, 9 May 2025 02:36:25 +0100
 Subject: [PATCH] OKDify
 
 ---
  config/manifests/bases/clusterserviceversion.yaml.in | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ go.mod                                               | 2 +-
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
 diff --git a/config/manifests/bases/clusterserviceversion.yaml.in b/config/manifests/bases/clusterserviceversion.yaml.in
-index e0d16544..6133d5a5 100644
+index 0092938b..e5da5215 100644
 --- a/config/manifests/bases/clusterserviceversion.yaml.in
 +++ b/config/manifests/bases/clusterserviceversion.yaml.in
-@@ -53,7 +53,6 @@ metadata:
+@@ -54,7 +54,6 @@ metadata:
      features.operators.openshift.io/token-auth-aws: "false"
      features.operators.openshift.io/token-auth-azure: "false"
      features.operators.openshift.io/token-auth-gcp: "false"
@@ -19,7 +20,7 @@ index e0d16544..6133d5a5 100644
      operators.operatorframework.io/internal-objects: '["logicalvolumes.topolvm.io", "lvmvolumegroups.lvm.topolvm.io", "lvmvolumegroupnodestatuses.lvm.topolvm.io"]'
    labels:
      operatorframework.io/arch.amd64: supported
-@@ -72,10 +71,10 @@ spec:
+@@ -73,10 +72,10 @@ spec:
        name: lvmclusters.lvm.topolvm.io
        version: v1alpha1
    description: Logical volume manager storage provides dynamically provisioned local storage.
@@ -33,13 +34,25 @@ index e0d16544..6133d5a5 100644
    install:
      spec:
        deployments: null
-@@ -101,5 +100,5 @@ spec:
+@@ -102,5 +101,5 @@ spec:
      name: Red Hat Support
    maturity: alpha
    provider:
 -    name: Red Hat
 +    name: OKD Community
    version: 0.0.0
+diff --git a/go.mod b/go.mod
+index 217615bd..3777d326 100644
+--- a/go.mod
++++ b/go.mod
+@@ -1,6 +1,6 @@
+ module github.com/openshift/lvm-operator/v4
+ 
+-go 1.24.11
++go 1.24.6
+ 
+ require (
+ 	github.com/aws/aws-sdk-go v1.55.6
 -- 
-2.49.0
+2.54.0
 

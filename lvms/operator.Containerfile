@@ -4,8 +4,6 @@ COPY --chown=default ./operator .
 
 RUN go version | tee -a ./go.version
 
-RUN go mod verify
-
 ENV CGO_ENABLED=1
 ENV GOEXPERIMENT=strictfipsruntime
 ENV GOOS=linux
@@ -17,6 +15,8 @@ FROM quay.io/centos/centos:stream9-minimal
 RUN microdnf update -y && \
     microdnf install -y util-linux xfsprogs e2fsprogs && \
     microdnf clean all
+
+RUN [ -d /run/lock ] || mkdir /run/lock
 
 ENV OPBIN=/lvms
 
