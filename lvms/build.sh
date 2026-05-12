@@ -3,8 +3,6 @@
 # Configuration and variable setup
 NAMESPACE="lvms"
 
-DATE="2025-11-01-182956"
-
 source ../common.sh
 
 # Image definitions
