@@ -9,10 +9,17 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build -mod=vendor -o ./frr-metrics
 WORKDIR $HOME/metallb/frr/frr-tools/status
 RUN CGO_ENABLED=0 GO111MODULE=on go build -mod=vendor -o ./frr-status
 
-WORKDIR $HOME/metallb/frr/cmd
+WORKDIR $HOME/metallb/frr/cmd/frr-k8s-controller
 RUN export SOURCE_GIT_COMMIT="${SOURCE_GIT_COMMIT:-$(git rev-parse --verify 'HEAD^{commit}')}" && \
       export GIT_BRANCH="${GIT_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}" && \
       CGO_ENABLED=0 GO111MODULE=on go build -mod=vendor -o ./frr-k8s \
+      -ldflags "-X frr-k8s/internal/version.gitCommit=${SOURCE_GIT_COMMIT} \
+      -X frr-k8s/internal/version.gitBranch=${GIT_BRANCH}"
+
+WORKDIR $HOME/metallb/frr/cmd/statuscleaner
+RUN export SOURCE_GIT_COMMIT="${SOURCE_GIT_COMMIT:-$(git rev-parse --verify 'HEAD^{commit}')}" && \
+      export GIT_BRANCH="${GIT_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}" && \
+      CGO_ENABLED=0 GO111MODULE=on go build -mod=vendor -o ./statuscleaner \
       -ldflags "-X frr-k8s/internal/version.gitCommit=${SOURCE_GIT_COMMIT} \
       -X frr-k8s/internal/version.gitBranch=${GIT_BRANCH}"
 
@@ -28,7 +35,8 @@ USER root
 
 ARG BUILD_SRC=/opt/app-root/src
 
-COPY --from=builder $BUILD_SRC/metallb/frr/cmd/frr-k8s \
+COPY --from=builder $BUILD_SRC/metallb/frr/cmd/frr-k8s-controller/frr-k8s \
+    $BUILD_SRC/metallb/frr/cmd/statuscleaner/statuscleaner \
     $BUILD_SRC/metallb/frr/frr-tools/reloader/frr-reloader.sh \
     $BUILD_SRC/metallb/frr/frr-tools/metrics/frr-metrics \
     $BUILD_SRC/metallb/frr/frr-tools/status/frr-status /
