@@ -68,15 +68,15 @@
 [submodule "metallb/operator"]
 	path = metallb/operator
 	url = https://github.com/openshift/metallb-operator.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "metallb/metallb"]
 	path = metallb/metallb
 	url = https://github.com/openshift/metallb.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "metallb/frr"]
 	path = metallb/frr
 	url = https://github.com/openshift/frr.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "cert-manager/operator"]
 	path = cert-manager/operator
 	url = https://github.com/openshift/cert-manager-operator.git
@@ -599,11 +599,11 @@
 [submodule "nmstate/operator"]
 	path = nmstate/operator
 	url = https://github.com/openshift/kubernetes-nmstate.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "nmstate/console-plugin"]
 	path = nmstate/console-plugin
 	url = https://github.com/openshift/nmstate-console-plugin.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "web-terminal/operator"]
 	path = web-terminal/operator
 	url = https://github.com/redhat-developer/web-terminal-operator.git
