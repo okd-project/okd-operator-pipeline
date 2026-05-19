@@ -4,7 +4,7 @@ NAMESPACE="data-foundation"
 
 source ../common.sh
 
-CEPH_RELEASE="8.1"
+CEPH_RELEASE="9.0"
 export CEPH_VERSION="$CEPH_RELEASE.0-${DATE}"
 
 export IMG_OAUTH_PROXY="$(get_payload_component oauth-proxy)"

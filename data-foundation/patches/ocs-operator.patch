@@ -1,12 +1,11 @@
-From 5e34689f1386966b3d4f873c7935fe04e4618015 Mon Sep 17 00:00:00 2001
+From c4cd8ee5b0e8fc010ceb72e929f413ae998ed08a Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Fri, 24 Oct 2025 15:33:45 +0100
 Subject: [PATCH] OKDify
 
 ---
  .../ocs-operator.clusterserviceversion.yaml   | 34 +++++++++----------
- tools/csv-merger/csv-merger.go                | 24 ++++++-------
- 2 files changed, 29 insertions(+), 29 deletions(-)
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
 diff --git a/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml b/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml
 index 7afab0517..e9c6a2b96 100644
@@ -89,49 +88,6 @@ index 7afab0517..e9c6a2b96 100644
 -    name: Red Hat
 +    name: OKD Community
    version: 0.0.0
-diff --git a/tools/csv-merger/csv-merger.go b/tools/csv-merger/csv-merger.go
-index da5cba9ae..12789f946 100644
---- a/tools/csv-merger/csv-merger.go
-+++ b/tools/csv-merger/csv-merger.go
-@@ -1,6 +1,7 @@
- package main
- 
- import (
-+	"bytes"
- 	"encoding/json"
- 	"flag"
- 	"fmt"
-@@ -576,19 +577,18 @@ func copyCrds(ocsCSV *csvv1.ClusterServiceVersion) {
- 		}
- 
- 		fmt.Printf("reading CRD file %s\n", crdFile)
--		// CRDs that refer to 'ObjectReference' fetches
--		// spec description from K8s in incorrect YAML format.
--		// This can not be prevented and documentation needs to
--		// be updated in Kubernetes. Until then the work around is
--		// to remove all occurrences of ' --- ' in description.
--		// "---" is used as YAML separator and should not be replaced.
--		// https://github.com/kubernetes/api/blob/master/core/v1/types.go#L5287-L5301
--		crdBytes = []byte(strings.ReplaceAll(string(crdBytes), " ---\n", " "))
--		entries := strings.Split(string(crdBytes), "---")
--		for _, entry := range entries {
-+
-+		toJSON, err := yaml.YAMLToJSON(crdBytes)
-+		if err == io.EOF {
-+			break
-+		}
-+		decoder := json.NewDecoder(bytes.NewReader(toJSON))
-+		for {
- 			crd := extv1.CustomResourceDefinition{}
--			err = yaml.Unmarshal([]byte(entry), &crd)
--			if err != nil {
-+			err = decoder.Decode(&crd)
-+			if err == io.EOF {
-+				break
-+			} else if err != nil {
- 				panic(err)
- 			}
- 
 -- 
-2.52.0
+2.54.0
 
