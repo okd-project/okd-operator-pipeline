@@ -105,7 +105,7 @@ deinit() {
 }
 
 update() {
-    submodule_update ceph-container release-8.1 https://github.com/ibmstorage/rhceph-container.git
+    submodule_update ceph-container release-${CEPH_RELEASE} https://github.com/ibmstorage/rhceph-container.git
     submodule_update ceph-csi release-${OCP_SHORT} https://github.com/red-hat-storage/ceph-csi.git
     submodule_update ceph-csi-operator release-${OCP_SHORT} https://github.com/red-hat-storage/ceph-csi-operator.git
     submodule_update cloudnative-pg rhodf-4.20 https://github.com/red-hat-storage/cloudnative-pg.git
