@@ -62,7 +62,7 @@ init() {
     submodule_initialize ceph-container release-${CEPH_RELEASE}
     submodule_initialize ceph-csi release-${OCP_SHORT}
     submodule_initialize ceph-csi-operator release-${OCP_SHORT}
-    submodule_initialize cloudnative-pg rhodf-${OCP_SHORT}
+    submodule_initialize cloudnative-pg rhodf-4.20
     submodule_initialize container-object-storage-interface-provisioner-sidecar master
     submodule_initialize kubernetes-csi-addons release-${OCP_SHORT}
     submodule_initialize must-gather release-${OCP_SHORT}
@@ -85,7 +85,7 @@ deinit() {
     submodule_reset ceph-container release-${CEPH_RELEASE}
     submodule_reset ceph-csi release-${OCP_SHORT}
     submodule_reset ceph-csi-operator release-${OCP_SHORT}
-    submodule_reset cloudnative-pg rhodf-${OCP_SHORT}
+    submodule_reset cloudnative-pg rhodf-4.20
     submodule_reset container-object-storage-interface-provisioner-sidecar master
     submodule_reset kubernetes-csi-addons release-${OCP_SHORT}
     submodule_reset must-gather release-${OCP_SHORT}
@@ -108,7 +108,7 @@ update() {
     submodule_update ceph-container release-8.1 https://github.com/ibmstorage/rhceph-container.git
     submodule_update ceph-csi release-${OCP_SHORT} https://github.com/red-hat-storage/ceph-csi.git
     submodule_update ceph-csi-operator release-${OCP_SHORT} https://github.com/red-hat-storage/ceph-csi-operator.git
-    submodule_update cloudnative-pg rhodf-${OCP_SHORT} https://github.com/red-hat-storage/cloudnative-pg.git
+    submodule_update cloudnative-pg rhodf-4.20 https://github.com/red-hat-storage/cloudnative-pg.git
     submodule_update container-object-storage-interface-provisioner-sidecar master https://github.com/kubernetes-retired/container-object-storage-interface-provisioner-sidecar.git
     submodule_update kubernetes-csi-addons release-${OCP_SHORT} https://github.com/red-hat-storage/kubernetes-csi-addons.git
     submodule_update must-gather release-${OCP_SHORT} https://github.com/red-hat-storage/odf-must-gather.git
