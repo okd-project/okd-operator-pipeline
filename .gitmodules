@@ -627,4 +627,4 @@
 [submodule "ptp/operator"]
 	path = ptp/operator
 	url = https://github.com/openshift/ptp-operator.git
-	branch = release-4.20
+	branch = release-4.21
