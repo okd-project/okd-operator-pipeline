@@ -148,6 +148,46 @@ Then diff each dumped `.Dockerfile` against the corresponding `.Containerfile` i
 - New build stages or stage dependencies
 - Changes to the type/version of base image (e.g. builder switching from Go 1.21 to Go 1.24 — update the OKD equivalent accordingly)
 
+### Implementing `build_bundle()`
+
+**Standard flow** — every `build_bundle()` should follow this order:
+
+1. Convert images to digests (if the Makefile lacks `--use-image-digests` support — see below)
+2. Update every source file that carries image references with the new values
+3. Call `make bundle` (or the equivalent Makefile target) — **never** call `operator-sdk generate bundle` directly; the Makefile applies custom CSV fixups that a direct call skips
+4. Call `make bundle-build` (or `podman build`) to build the bundle image and push it
+
+**`make bundle` owns `spec.relatedImages`** — operator-sdk auto-populates `spec.relatedImages`
+from every `RELATED_IMAGE_*` env var it finds in the deployment spec of the generated CSV.
+Do **not** replace this list with `=` after bundle generation; that overwrites entries
+operator-sdk correctly added and hides any images you failed to pre-set.
+If extra images genuinely need to be added that operator-sdk cannot detect from the deployment
+spec, append them with `+=`:
+
+```bash
+export EXTRA_IMAGES="..."
+yq e -i '.spec.relatedImages += env(EXTRA_IMAGES)' "${CSV_PATH}"
+```
+
+**Digest conversion** — when the operator's Makefile does not accept `BUNDLE_METADATA_OPTS` or
+`--use-image-digests`, call `convert_all_images_to_digest` before updating any source files.
+All `IMG_*` vars will then hold `registry/image@sha256:…` digests, and they must be written into
+the source files before `make bundle` runs.
+
+**Preserved env vars in committed bundle** — operators that call `make bundle --overwrite` merge
+the new kustomize output with the existing committed bundle. Deployment env vars that appear in
+the committed bundle but are absent from `config/manager/manager.yaml` (or wherever kustomize
+reads) are silently **preserved from the existing bundle unchanged**. If those env vars reference
+images you rebuild for OKD, patch them in the committed bundle CSV *before* calling `make bundle`:
+
+```bash
+# Replace upstream digests with OKD images in the bundle CSV deployment spec
+sed -i -E "s|upstream.registry/image@sha256:[a-f0-9]+|${IMG_REPLACEMENT}|g" "${CSV_PATH}"
+```
+
+This ensures `make bundle` generates `spec.relatedImages` entirely from OKD images rather than a
+mix of OKD and upstream.
+
 ### Handling patch conflicts
 
 If `./build.sh init` fails because a patch no longer applies cleanly:

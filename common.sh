@@ -55,11 +55,14 @@ submodule_reset() {
   if [ "${EXISTS}" = "1" ]; then
     local recorded_hash
     dir_name=$(basename "$(pwd)")
-    recorded_hash=$(git rev-parse HEAD:"${dir_name}/${name}" 2>/dev/null || echo "")
-
-    if [ -z "$recorded_hash" ]; then
-      echo "Error: Could not find recorded commit for ${name}. Ensure submodule is registered."
-      return 1
+    # git rev-parse prints the failed pathspec to stdout even on error, so we
+    # cannot rely on an empty-string check.  Validate that the result is an
+    # actual 40-character hex hash; anything else means the submodule is not
+    # yet committed to HEAD (e.g. added via `update` but not yet committed).
+    recorded_hash=$(git rev-parse HEAD:"${dir_name}/${name}" 2>/dev/null || true)
+    if [[ ! "$recorded_hash" =~ ^[0-9a-f]{40}$ ]]; then
+      echo "Submodule ${name} not yet committed to HEAD; skipping reset (run 'git add' and commit first, or use 'update' instead of 'init' for first-time setup)."
+      return 0
     fi
 
     # Clean untracked files and directories (removes any patch artifacts)

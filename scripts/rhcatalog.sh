@@ -26,6 +26,8 @@ declare -A OKD_TO_RH_PACKAGE=(
   ["service-mesh"]="servicemeshoperator"
   ["sr-iov"]="sriov-network-operator"
   ["web-terminal"]="web-terminal"
+  ["dev-spaces"]="devspaces"
+  ["devworkspace"]="devworkspace-operator"
 )
 
 # graphql_query <query-string>
