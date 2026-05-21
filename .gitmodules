@@ -515,7 +515,7 @@
 [submodule "data-foundation/ceph-container"]
 	path = data-foundation/ceph-container
 	url = https://github.com/ibmstorage/rhceph-container.git
-	branch = release-9.0
+	branch = release-8.1
 [submodule "oadp/velero"]
 	path = oadp/velero
 	url = https://github.com/openshift/velero.git
