@@ -37,7 +37,7 @@
 [submodule "cluster-logging/operator"]
 	path = cluster-logging/operator
 	url = https://github.com/openshift/cluster-logging-operator.git
-	branch = release-6.2
+	branch = release-6.5
 [submodule "cluster-logging/opa-openshift"]
 	path = cluster-logging/opa-openshift
 	url = https://github.com/observatorium/opa-openshift.git
@@ -45,7 +45,7 @@
 [submodule "cluster-logging/loki"]
 	path = cluster-logging/loki
 	url = https://github.com/openshift/loki.git
-	branch = release-6.2
+	branch = release-6.5
 [submodule "cluster-logging/log-file-metric-exporter"]
 	path = cluster-logging/log-file-metric-exporter
 	url = https://github.com/ViaQ/log-file-metric-exporter.git
@@ -57,7 +57,7 @@
 [submodule "cluster-logging/vector"]
 	path = cluster-logging/vector
 	url = https://github.com/ViaQ/vector.git
-	branch = v0.37.1-rh
+	branch = v0.54.0-rh
 [submodule "ingress-node-firewall/operator"]
 	path = ingress-node-firewall/operator
 	url = https://github.com/openshift/ingress-node-firewall.git
@@ -65,6 +65,7 @@
 [submodule "cluster-logging/eventrouter"]
 	path = cluster-logging/eventrouter
 	url = https://github.com/openshift/eventrouter
+	branch = master
 [submodule "metallb/operator"]
 	path = metallb/operator
 	url = https://github.com/openshift/metallb-operator.git

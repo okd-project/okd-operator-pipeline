@@ -2,7 +2,7 @@
 
 NAMESPACE="cluster-logging"
 export MAJOR=6
-export MINOR=3
+export MINOR=5
 
 source ../common.sh
 
@@ -21,11 +21,31 @@ IMG_BUNDLE_LOKI="${REGISTRY}/loki-operator-bundle:${OCP_DATE}"
 init() {
     submodule_initialize loki release-${OCP_SHORT}
     submodule_initialize operator release-${OCP_SHORT}
+    submodule_initialize log-file-metric-exporter main
+    submodule_initialize opa-openshift main
+    submodule_initialize observatorium-api main
+    submodule_initialize vector v0.54.0-rh
+    submodule_initialize eventrouter master
 }
 
 deinit() {
     submodule_reset loki release-${OCP_SHORT}
     submodule_reset operator release-${OCP_SHORT}
+    submodule_reset log-file-metric-exporter main
+    submodule_reset opa-openshift main
+    submodule_reset observatorium-api main
+    submodule_reset vector v0.54.0-rh
+    submodule_reset eventrouter master
+}
+
+update() {
+    submodule_update loki release-${OCP_SHORT} https://github.com/openshift/loki.git
+    submodule_update operator release-${OCP_SHORT} https://github.com/openshift/cluster-logging-operator.git
+    submodule_update log-file-metric-exporter main https://github.com/ViaQ/log-file-metric-exporter.git
+    submodule_update opa-openshift main https://github.com/observatorium/opa-openshift.git
+    submodule_update observatorium-api main https://github.com/observatorium/api.git
+    submodule_update vector v0.54.0-rh https://github.com/ViaQ/vector.git
+    submodule_update eventrouter master https://github.com/openshift/eventrouter
 }
 
 build_containers() {
@@ -62,6 +82,14 @@ build_bundle() {
     export OPA_OPENSHIFT_IMAGE=$IMG_OPA_OPENSHIFT
     export KUBE_RBAC_PROXY_IMAGE=$(get_payload_component kube-rbac-proxy)
 
+    # loki/pkg/push is a local module whose pseudo-version commit is not available
+    # on the public Go module proxy; add a replace directive at build time so Go
+    # uses the in-tree copy.  Also delete the stale go.sum hash for
+    # opentracing-contrib/go-stdlib (upstream hash changed); GONOSUMDB+mod=mod
+    # lets Go re-record the correct hash without consulting the sum database.
+    go mod edit -replace=github.com/grafana/loki/pkg/push=../pkg/push
+    sed -i '/^github.com\/opentracing-contrib\/go-stdlib v1\.1\.0 h1:/d' go.sum
+
     yq e -i ".metadata.annotations.containerImage = env(OPERATOR_IMG)" ./config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
     yq e -i "with(.spec.template.spec.containers[0] ;
       .image = env(OPERATOR_IMG) |
@@ -75,7 +103,7 @@ build_bundle() {
       .containers[] | select(.name == \"kube-rbac-proxy\").image = env(KUBE_RBAC_PROXY_IMAGE)
     )" ./config/overlays/openshift/manager_auth_proxy_patch.yaml
 
-    make bundle VARIANT=openshift VERSION=${OCP_DATE} IMG=${IMG_LOKI} "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" \
+    GONOSUMDB=* GOFLAGS=-mod=mod make bundle VARIANT=openshift VERSION=${OCP_DATE} IMG=${IMG_LOKI} "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" \
      BUNDLE_IMG=${IMG_BUNDLE_LOKI}
 
     pushd bundle/openshift

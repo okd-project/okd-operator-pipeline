@@ -1,4 +1,4 @@
-From 82e41d2a044daaed946bd6bc53e8178181b1ebb7 Mon Sep 17 00:00:00 2001
+From d690a33da86fee48660af2f86ec83379408a4b79 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Tue, 13 May 2025 15:13:08 +0100
 Subject: [PATCH] OKDify
@@ -8,15 +8,15 @@ Subject: [PATCH] OKDify
  1 file changed, 11 insertions(+), 13 deletions(-)
 
 diff --git a/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml b/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
-index 0660cf1f2..e200e38c2 100644
+index 2a1daed60..e39fa6b7b 100644
 --- a/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
 +++ b/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
 @@ -4,18 +4,18 @@ metadata:
    annotations:
      alm-examples: '[]'
      capabilities: Full Lifecycle
--    categories: OpenShift Optional, Logging & Tracing
-+    categories: OKD Optional, Logging & Tracing
+-    categories: OpenShift Optional, Logging & Tracing, Observability
++    categories: OKD Optional, Logging & Tracing, Observability
      certified: "false"
      containerImage: quay.io/openshift-logging/loki-operator:0.1.0
      description: |
@@ -45,7 +45,7 @@ index 0660cf1f2..e200e38c2 100644
    labels:
      operatorframework.io/arch.amd64: supported
      operatorframework.io/arch.arm64: supported
-@@ -2442,18 +2440,18 @@ spec:
+@@ -2541,18 +2539,18 @@ spec:
          - urn:alm:descriptor:io.kubernetes.conditions
        version: v1beta1
    description: |
@@ -69,7 +69,7 @@ index 0660cf1f2..e200e38c2 100644
    install:
      spec:
        deployments: null
-@@ -2479,5 +2477,5 @@ spec:
+@@ -2578,5 +2576,5 @@ spec:
    maturity: alpha
    minKubeVersion: 1.21.1
    provider:
@@ -77,5 +77,5 @@ index 0660cf1f2..e200e38c2 100644
 +    name: OKD Community
    version: 0.0.0
 -- 
-2.49.0
+2.54.0
 
