@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost/openvsx
+    username: openvsx
+    password: openvsx
+  jpa:
+    hibernate:
+      ddl-auto: update
+  mvc:
+    async:
+      request-timeout: 600000
+
+server:
+  port: 8080
+  error:
+    include-message: always
+
+ovsx:
+  webui:
+    frontendRoutes:
+      - /
+      - /extension/**
+      - /user/**
+      - /namespace/**
+      - /admin-dashboard/**

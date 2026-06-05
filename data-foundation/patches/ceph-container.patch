@@ -1,4 +1,4 @@
-From c10eab7bf6dddcfebf7511161985d7d2990926fc Mon Sep 17 00:00:00 2001
+From 15bb17ccb176dc963f7df343113f2a7d98c41f0d Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Fri, 24 Oct 2025 11:26:36 +0100
 Subject: [PATCH] OKDify
@@ -10,7 +10,7 @@ Subject: [PATCH] OKDify
  create mode 100644 ceph.repo
 
 diff --git a/Dockerfile b/Dockerfile
-index 4b6fd68..198fc4e 100644
+index 10192e6..1c6542a 100644
 --- a/Dockerfile
 +++ b/Dockerfile
 @@ -1,12 +1,12 @@
@@ -28,7 +28,7 @@ index 4b6fd68..198fc4e 100644
  
  # Is a ceph container ?
  LABEL ceph="True"
-@@ -43,10 +43,12 @@ COPY ./licenses /licenses
+@@ -49,10 +49,12 @@ COPY ./licenses /licenses
  # Install ceph and dependencies, and clean up
  #======================================================
  
@@ -43,10 +43,10 @@ index 4b6fd68..198fc4e 100644
  
  EXPOSE 6789 6800 6801 6802 6803 6804 6805 80 5000
  
-@@ -56,11 +58,11 @@ LABEL version="8"
+@@ -62,11 +64,11 @@ LABEL version="8"
  # Build specific labels
  LABEL com.redhat.component="rhceph-container"
- LABEL name="rhceph"
+ LABEL name=rhceph/rhceph-8-rhel9
 -LABEL description="Red Hat Ceph Storage 8"
 -LABEL summary="Provides the latest Red Hat Ceph Storage 8 on RHEL 9 in a fully featured and supported base image."
 -LABEL io.k8s.display-name="Red Hat Ceph Storage 8 on RHEL 9"
@@ -91,5 +91,5 @@ index 0000000..3f5dcf5
 +enabled_metadata=1
 \ No newline at end of file
 -- 
-2.51.0
+2.54.0
 

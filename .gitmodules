@@ -5,7 +5,7 @@
 [submodule "local-storage/operator"]
 	path = local-storage/operator
 	url = https://github.com/openshift/local-storage-operator.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "sr-iov/infiniband-cni"]
 	path = sr-iov/infiniband-cni
 	url = https://github.com/openshift/ib-sriov-cni.git
@@ -37,7 +37,7 @@
 [submodule "cluster-logging/operator"]
 	path = cluster-logging/operator
 	url = https://github.com/openshift/cluster-logging-operator.git
-	branch = release-6.2
+	branch = release-6.5
 [submodule "cluster-logging/opa-openshift"]
 	path = cluster-logging/opa-openshift
 	url = https://github.com/observatorium/opa-openshift.git
@@ -45,7 +45,7 @@
 [submodule "cluster-logging/loki"]
 	path = cluster-logging/loki
 	url = https://github.com/openshift/loki.git
-	branch = release-6.2
+	branch = release-6.5
 [submodule "cluster-logging/log-file-metric-exporter"]
 	path = cluster-logging/log-file-metric-exporter
 	url = https://github.com/ViaQ/log-file-metric-exporter.git
@@ -57,14 +57,15 @@
 [submodule "cluster-logging/vector"]
 	path = cluster-logging/vector
 	url = https://github.com/ViaQ/vector.git
-	branch = v0.37.1-rh
+	branch = v0.54.0-rh
 [submodule "ingress-node-firewall/operator"]
 	path = ingress-node-firewall/operator
 	url = https://github.com/openshift/ingress-node-firewall.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "cluster-logging/eventrouter"]
 	path = cluster-logging/eventrouter
 	url = https://github.com/openshift/eventrouter
+	branch = master
 [submodule "metallb/operator"]
 	path = metallb/operator
 	url = https://github.com/openshift/metallb-operator.git
@@ -431,63 +432,63 @@
 [submodule "data-foundation/ceph-csi-operator"]
 	path = data-foundation/ceph-csi-operator
 	url = https://github.com/red-hat-storage/ceph-csi-operator.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/kubernetes-csi-addons"]
 	path = data-foundation/kubernetes-csi-addons
 	url = https://github.com/red-hat-storage/kubernetes-csi-addons.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/noobaa-core"]
 	path = data-foundation/noobaa-core
 	url = https://github.com/red-hat-storage/noobaa-core.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/noobaa-operator"]
 	path = data-foundation/noobaa-operator
 	url = https://github.com/red-hat-storage/noobaa-operator.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/ocs-client-operator"]
 	path = data-foundation/ocs-client-operator
 	url = https://github.com/red-hat-storage/ocs-client-operator.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/ocs-operator"]
 	path = data-foundation/ocs-operator
 	url = https://github.com/red-hat-storage/ocs-operator.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/odf-cli"]
 	path = data-foundation/odf-cli
 	url = https://github.com/red-hat-storage/odf-cli.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/odf-console"]
 	path = data-foundation/odf-console
 	url = https://github.com/red-hat-storage/odf-console.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/odf-console-compatibility"]
 	path = data-foundation/odf-console-compatibility
 	url = https://github.com/red-hat-storage/odf-console.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/odf-multicluster-orchestrator"]
 	path = data-foundation/odf-multicluster-orchestrator
 	url = https://github.com/red-hat-storage/odf-multicluster-orchestrator.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/odf-operator"]
 	path = data-foundation/odf-operator
 	url = https://github.com/red-hat-storage/odf-operator.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/ramen"]
 	path = data-foundation/ramen
 	url = https://github.com/red-hat-storage/ramen.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/recipe"]
 	path = data-foundation/recipe
 	url = https://github.com/red-hat-storage/recipe.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/rook"]
 	path = data-foundation/rook
 	url = https://github.com/red-hat-storage/rook.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/must-gather"]
 	path = data-foundation/must-gather
 	url = https://github.com/red-hat-storage/odf-must-gather.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/cloudnative-pg"]
 	path = data-foundation/cloudnative-pg
 	url = https://github.com/red-hat-storage/cloudnative-pg.git
@@ -511,7 +512,7 @@
 [submodule "data-foundation/ceph-csi"]
 	path = data-foundation/ceph-csi
 	url = https://github.com/red-hat-storage/ceph-csi.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "data-foundation/ceph-container"]
 	path = data-foundation/ceph-container
 	url = https://github.com/ibmstorage/rhceph-container.git
@@ -619,7 +620,7 @@
 [submodule "data-foundation/external-snapshotter"]
 	path = data-foundation/external-snapshotter
 	url = https://github.com/red-hat-storage/external-snapshotter.git
-	branch = release-4.20
+	branch = release-4.21
 [submodule "gitops/release"]
 	path = gitops/release
 	url = https://github.com/rh-gitops-midstream/release.git
@@ -628,3 +629,47 @@
 	path = ptp/operator
 	url = https://github.com/openshift/ptp-operator.git
 	branch = release-4.21
+[submodule "devworkspace/operator"]
+	path = devworkspace/operator
+	url = https://github.com/devfile/devworkspace-operator.git
+	branch = 0.40.x
+[submodule "dev-spaces/che-operator"]
+	path = dev-spaces/che-operator
+	url = https://github.com/eclipse-che/che-operator.git
+	branch = 7.117.x
+[submodule "dev-spaces/che-server"]
+	path = dev-spaces/che-server
+	url = https://github.com/eclipse-che/che-server.git
+	branch = main
+[submodule "dev-spaces/che-dashboard"]
+	path = dev-spaces/che-dashboard
+	url = https://github.com/eclipse-che/che-dashboard.git
+	branch = main
+[submodule "dev-spaces/che-machine-exec"]
+	path = dev-spaces/che-machine-exec
+	url = https://github.com/eclipse-che/che-machine-exec.git
+	branch = 7.117.x
+[submodule "dev-spaces/che-code"]
+	path = dev-spaces/che-code
+	url = https://github.com/che-incubator/che-code.git
+	branch = 7.117.x
+[submodule "dev-spaces/jetbrains-ide-dev-server"]
+	path = dev-spaces/jetbrains-ide-dev-server
+	url = https://github.com/che-incubator/jetbrains-ide-dev-server.git
+	branch = 7.117.x
+[submodule "dev-spaces/traefik"]
+	path = dev-spaces/traefik
+	url = https://github.com/traefik/traefik.git
+	branch = v3.7
+[submodule "dev-spaces/configbump"]
+	path = dev-spaces/configbump
+	url = https://github.com/che-incubator/configbump.git
+	branch = 7.117.x
+[submodule "dev-spaces/stow"]
+	path = dev-spaces/stow
+	url = https://github.com/aspiers/stow.git
+	branch = master
+[submodule "dev-spaces/header-rewrite-traefik-plugin"]
+	path = dev-spaces/header-rewrite-traefik-plugin
+	url = https://github.com/che-incubator/header-rewrite-traefik-plugin.git
+	branch = main

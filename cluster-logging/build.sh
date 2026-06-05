@@ -2,7 +2,7 @@
 
 NAMESPACE="cluster-logging"
 export MAJOR=6
-export MINOR=3
+export MINOR=5
 
 source ../common.sh
 
@@ -21,11 +21,31 @@ IMG_BUNDLE_LOKI="${REGISTRY}/loki-operator-bundle:${OCP_DATE}"
 init() {
     submodule_initialize loki release-${OCP_SHORT}
     submodule_initialize operator release-${OCP_SHORT}
+    submodule_initialize log-file-metric-exporter main
+    submodule_initialize opa-openshift main
+    submodule_initialize observatorium-api main
+    submodule_initialize vector v0.54.0-rh
+    submodule_initialize eventrouter master
 }
 
 deinit() {
     submodule_reset loki release-${OCP_SHORT}
     submodule_reset operator release-${OCP_SHORT}
+    submodule_reset log-file-metric-exporter main
+    submodule_reset opa-openshift main
+    submodule_reset observatorium-api main
+    submodule_reset vector v0.54.0-rh
+    submodule_reset eventrouter master
+}
+
+update() {
+    submodule_update loki release-${OCP_SHORT} https://github.com/openshift/loki.git
+    submodule_update operator release-${OCP_SHORT} https://github.com/openshift/cluster-logging-operator.git
+    submodule_update log-file-metric-exporter main https://github.com/ViaQ/log-file-metric-exporter.git
+    submodule_update opa-openshift main https://github.com/observatorium/opa-openshift.git
+    submodule_update observatorium-api main https://github.com/observatorium/api.git
+    submodule_update vector v0.54.0-rh https://github.com/ViaQ/vector.git
+    submodule_update eventrouter master https://github.com/openshift/eventrouter
 }
 
 build_containers() {

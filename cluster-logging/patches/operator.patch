@@ -1,14 +1,14 @@
-From a1af8f663f430b8a648f7204146a6c059cd707d0 Mon Sep 17 00:00:00 2001
+From fac5566bc69b4a8e259c4ef3da9a532755d33afe Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Sun, 25 May 2025 18:18:42 +0100
 Subject: [PATCH] OKDify
 
 ---
- ...cluster-logging.clusterserviceversion.yaml | 34 +++++++++----------
- 1 file changed, 16 insertions(+), 18 deletions(-)
+ ...cluster-logging.clusterserviceversion.yaml | 35 +++++++++----------
+ 1 file changed, 16 insertions(+), 19 deletions(-)
 
 diff --git a/config/manifests/bases/cluster-logging.clusterserviceversion.yaml b/config/manifests/bases/cluster-logging.clusterserviceversion.yaml
-index 8512fa74d..9ee7fd8a9 100644
+index 3a6d0222b..494eaa504 100644
 --- a/config/manifests/bases/cluster-logging.clusterserviceversion.yaml
 +++ b/config/manifests/bases/cluster-logging.clusterserviceversion.yaml
 @@ -3,10 +3,10 @@ kind: ClusterServiceVersion
@@ -24,10 +24,11 @@ index 8512fa74d..9ee7fd8a9 100644
        configuring and managing log collection and forwarding.
      features.operators.openshift.io/cnf: "false"
      features.operators.openshift.io/cni: "false"
-@@ -30,11 +30,9 @@ metadata:
+@@ -30,12 +30,9 @@ metadata:
        }
      operatorframework.io/suggested-namespace: openshift-logging
      operators.openshift.io/infrastructure-features: '["disconnected","proxy-aware"]'
+-    operators.openshift.io/must-gather-image: quay.io/openshift-logging/cluster-logging-operator:latest
 -    operators.openshift.io/valid-subscription: '["OpenShift Kubernetes Engine", "OpenShift
 -      Container Platform", "OpenShift Platform Plus"]'
      operators.operatorframework.io/builder: operator-sdk-unknown
@@ -37,7 +38,7 @@ index 8512fa74d..9ee7fd8a9 100644
      target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
    labels:
      operatorframework.io/arch.amd64: supported
-@@ -1226,7 +1224,7 @@ spec:
+@@ -1333,7 +1330,7 @@ spec:
          path: outputs[0].name
        - description: |-
            OTLP configures forwarding log events to a receiver using the OpenTelemetry Protocol
@@ -46,7 +47,7 @@ index 8512fa74d..9ee7fd8a9 100644
          displayName: OpenTelemetry Output
          path: outputs[0].otlp
        - description: Authentication sets credentials for authenticating the requests.
-@@ -1817,26 +1815,26 @@ spec:
+@@ -2123,26 +2120,26 @@ spec:
          - urn:alm:descriptor:com.tectonic.ui:logFileMetricsExporterConditions
        version: v1alpha1
    description: |-
@@ -83,7 +84,7 @@ index 8512fa74d..9ee7fd8a9 100644
    install:
      spec:
        deployments: null
-@@ -1859,11 +1857,11 @@ spec:
+@@ -2165,11 +2162,11 @@ spec:
    links:
    - name: Documentation
      url: https://github.com/openshift/cluster-logging-operator/blob/master/README.adoc
@@ -96,7 +97,7 @@ index 8512fa74d..9ee7fd8a9 100644
    provider:
 -    name: Red Hat
 +    name: OKD Community
-   version: 6.3.0
+   version: 6.5.0
 -- 
-2.50.1
+2.54.0
 
