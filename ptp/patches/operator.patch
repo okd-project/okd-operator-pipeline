@@ -1,17 +1,18 @@
-From de4d6254000b8e3777214443d4cee9b8130828f3 Mon Sep 17 00:00:00 2001
-From: Chris Wheeler <chwheele@redhat.com>
-Date: Fri, 3 Apr 2026 16:51:01 -0700
+From ae158d513cf73449dcdf2b9a6183c57c2f614829 Mon Sep 17 00:00:00 2001
+From: Owen Howard <owen@ziax.com>
+Date: Tue, 9 Jun 2026 17:00:08 +0100
 Subject: [PATCH] OKDify
 
 ---
  .../bases/ptp-operator.clusterserviceversion.yaml         | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ ptp-tools/Dockerfile.lptpd                                | 4 +++-
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/config/manifests/bases/ptp-operator.clusterserviceversion.yaml b/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
-index 029b73d0..6f48dda1 100644
+index 501d07f9..45378225 100644
 --- a/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
-@@ -118,7 +118,7 @@ spec:
+@@ -120,7 +120,7 @@ spec:
          - urn:alm:descriptor:com.tectonic.ui:text
        version: v1
    description: |
@@ -20,7 +21,7 @@ index 029b73d0..6f48dda1 100644
  
      ## Introdution
      PTP Operator manages cluster wide PTP configuration.
-@@ -170,9 +170,9 @@ spec:
+@@ -172,9 +172,9 @@ spec:
    - name: Documentation operand
      url: https://github.com/k8snetworkplumbingwg/linuxptp-daemon
    maintainers:
@@ -33,6 +34,21 @@ index 029b73d0..6f48dda1 100644
 -    name: Red Hat
 +    name: OKD Community
    version: 0.0.0
+diff --git a/ptp-tools/Dockerfile.lptpd b/ptp-tools/Dockerfile.lptpd
+index 4f9027a1..ff968e50 100644
+--- a/ptp-tools/Dockerfile.lptpd
++++ b/ptp-tools/Dockerfile.lptpd
+@@ -7,7 +7,9 @@ RUN git clone -b main https://github.com/k8snetworkplumbingwg/linuxptp-daemon.gi
+ RUN make clean && make -j 16
+ 
+ FROM quay.io/centos/centos:stream9
+-RUN yum install -y gpsd-minimal glibc gpsd-minimal-clients linuxptp ethtool hwdata synce4l  && yum clean all
++RUN yum install -y pciutils linuxptp ethtool hwdata synce4l iproute procps-ng chrony \
++  && (yum -y install gpsd-minimal gpsd-minimal-clients || yum -y install gpsd gpsd-clients) \
++  && yum clean all
+ 
+ # Create symlinks for executables to match references
+ RUN ln -s /usr/bin/gpspipe /usr/local/bin/gpspipe
 -- 
-2.52.0
+2.54.0
 

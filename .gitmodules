@@ -628,7 +628,7 @@
 [submodule "ptp/operator"]
 	path = ptp/operator
 	url = https://github.com/openshift/ptp-operator.git
-	branch = release-4.21
+	branch = release-4.22
 [submodule "devworkspace/operator"]
 	path = devworkspace/operator
 	url = https://github.com/devfile/devworkspace-operator.git
