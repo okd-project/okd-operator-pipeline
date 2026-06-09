@@ -1,4 +1,4 @@
-From 55372c53747e36e7e473b9d1bdaf87e0f2b487c8 Mon Sep 17 00:00:00 2001
+From 466287226c210c02a8ec9d77bba84b4baca28281 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Sat, 10 May 2025 14:45:56 +0100
 Subject: [PATCH] OKDify
@@ -8,11 +8,11 @@ Subject: [PATCH] OKDify
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml b/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
-index 47ab3ef4d..73a323225 100644
+index 93b41f9c7..590fe0aca 100644
 --- a/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
 @@ -9,7 +9,7 @@ metadata:
-     containerImage: quay.io/openshift/origin-sriov-network-operator:4.20
+     containerImage: quay.io/openshift/origin-sriov-network-operator:4.21
      createdAt: 2019/04/30
      description: An operator for configuring SR-IOV components and initializing SRIOV
 -      network devices in Openshift cluster.
@@ -48,7 +48,7 @@ index 47ab3ef4d..73a323225 100644
    provider:
 -    name: Red Hat
 +    name: OKD Community
-   version: 4.20.0
+   version: 4.21.0
 -- 
-2.51.1
+2.54.0
 
