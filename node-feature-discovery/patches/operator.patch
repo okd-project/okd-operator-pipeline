@@ -1,4 +1,4 @@
-From 3ca09802bb4e366e09a2d52a2fdc20192f3384b7 Mon Sep 17 00:00:00 2001
+From b688b0c222218d8e7f46c2342a85953b0f255f08 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Thu, 5 Jun 2025 16:45:02 +0100
 Subject: [PATCH] OKDify
@@ -9,12 +9,12 @@ Subject: [PATCH] OKDify
  2 files changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/Dockerfile b/Dockerfile
-index 81edee9a..f49ab6df 100644
+index fee7377d..f49ab6df 100644
 --- a/Dockerfile
 +++ b/Dockerfile
 @@ -1,16 +1,17 @@
  # Build the manager binary
--FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.20 AS builder
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.21 AS builder
 -WORKDIR /go/src/github.com/openshift/cluster-nfd-operator
 +ARG OKD_SHORT
 +
@@ -26,7 +26,7 @@ index 81edee9a..f49ab6df 100644
  RUN make build
  
  # Create production image for running the operator
--FROM registry.ci.openshift.org/ocp/4.20:base-rhel9
+-FROM registry.ci.openshift.org/ocp/4.21:base-rhel9
 +FROM registry.ci.openshift.org/origin/scos-${OKD_SHORT}:base-stream9
  
  ARG CSV=4.20
@@ -78,5 +78,5 @@ index 84d2758b..276a8d33 100644
      url: https://github.com/openshift/cluster-nfd-operator
    version: 4.20.0
 -- 
-2.53.0
+2.54.0
 

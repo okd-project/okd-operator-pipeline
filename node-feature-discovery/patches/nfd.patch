@@ -1,21 +1,21 @@
-From 30693e0a8271b11acdc8805569e97b0ea1307ee7 Mon Sep 17 00:00:00 2001
+From 9670610601f6a9d9edab3470d26d6420bfab39ec Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Thu, 5 Jun 2025 16:46:17 +0100
 Subject: [PATCH] OKDify
 
 ---
- Dockerfile | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ Dockerfile | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/Dockerfile b/Dockerfile
-index ed35e226d..97911c3c1 100644
+index b6e5e67cd..97911c3c1 100644
 --- a/Dockerfile
 +++ b/Dockerfile
-@@ -1,19 +1,20 @@
+@@ -1,8 +1,9 @@
 +ARG OKD_SHORT
 +
  # Build node feature discovery
--FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.20 AS builder
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.21 AS builder
 +FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
  
 -WORKDIR /go/node-feature-discovery
@@ -24,21 +24,20 @@ index ed35e226d..97911c3c1 100644
  
  # Do actual build
  ARG VERSION=v0.10.0
- ARG HOSTMOUNT_PREFIX=/host-
--RUN make install VERSION=${VERSION} HOSTMOUNT_PREFIX=${HOSTMOUNT_PREFIX}
-+RUN make build VERSION=${VERSION} HOSTMOUNT_PREFIX=${HOSTMOUNT_PREFIX}
+@@ -10,10 +11,10 @@ ARG HOSTMOUNT_PREFIX=/host-
+ RUN make build VERSION=${VERSION} HOSTMOUNT_PREFIX=${HOSTMOUNT_PREFIX}
  
  # Create full variant of the production image
--FROM registry.ci.openshift.org/ocp/4.20:base-rhel9
+-FROM registry.ci.openshift.org/ocp/4.21:base-rhel9
 +FROM registry.ci.openshift.org/origin/scos-${OKD_SHORT}:base-stream9
  
  # Use more verbose logging of gRPC
  ENV GRPC_GO_LOG_SEVERITY_LEVEL="INFO"
  
 -COPY --from=builder /go/node-feature-discovery/deployment/components/worker-config/nfd-worker.conf.example /etc/kubernetes/node-feature-discovery/nfd-worker.conf
--COPY --from=builder /go/bin/* /usr/bin/
+-COPY --from=builder /go/node-feature-discovery/bin/* /usr/bin/
 +COPY --from=builder /opt/app-root/src/deployment/components/worker-config/nfd-worker.conf.example /etc/kubernetes/node-feature-discovery/nfd-worker.conf
 +COPY --from=builder /opt/app-root/src/bin/* /usr/bin/
 -- 
-2.53.0
+2.54.0
 
