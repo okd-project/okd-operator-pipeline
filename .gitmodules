@@ -69,15 +69,15 @@
 [submodule "metallb/operator"]
 	path = metallb/operator
 	url = https://github.com/openshift/metallb-operator.git
-	branch = release-4.21
+	branch = release-4.22
 [submodule "metallb/metallb"]
 	path = metallb/metallb
 	url = https://github.com/openshift/metallb.git
-	branch = release-4.21
+	branch = release-4.22
 [submodule "metallb/frr"]
 	path = metallb/frr
 	url = https://github.com/openshift/frr.git
-	branch = release-4.21
+	branch = release-4.22
 [submodule "cert-manager/operator"]
 	path = cert-manager/operator
 	url = https://github.com/openshift/cert-manager-operator.git

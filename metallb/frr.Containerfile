@@ -46,7 +46,7 @@ ENV PYTHONDONTWRITEBYTECODE yes
 RUN INSTALL_PKGS=" \
 	tcpdump libpcap \
 	iproute iputils strace socat \
-    frr \
+    frr10 \
 	python3 \
 	podman-catatonit" && \
 	yum install -y --setopt=tsflags=nodocs --setopt=skip_missing_names_on_install=False $INSTALL_PKGS
