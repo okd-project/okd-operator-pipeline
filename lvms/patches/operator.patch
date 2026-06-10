@@ -1,15 +1,14 @@
-From 0a23dd48ae351bf73c06cba18aa58fefb3ce936f Mon Sep 17 00:00:00 2001
+From 323be117352026433ed415434cbd03578f4158d3 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Fri, 9 May 2025 02:36:25 +0100
 Subject: [PATCH] OKDify
 
 ---
  config/manifests/bases/clusterserviceversion.yaml.in | 9 ++++-----
- go.mod                                               | 2 +-
- 2 files changed, 5 insertions(+), 6 deletions(-)
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/config/manifests/bases/clusterserviceversion.yaml.in b/config/manifests/bases/clusterserviceversion.yaml.in
-index 0092938b..e5da5215 100644
+index 8e90bcc8..f50e12e7 100644
 --- a/config/manifests/bases/clusterserviceversion.yaml.in
 +++ b/config/manifests/bases/clusterserviceversion.yaml.in
 @@ -54,7 +54,6 @@ metadata:
@@ -41,18 +40,6 @@ index 0092938b..e5da5215 100644
 -    name: Red Hat
 +    name: OKD Community
    version: 0.0.0
-diff --git a/go.mod b/go.mod
-index 217615bd..3777d326 100644
---- a/go.mod
-+++ b/go.mod
-@@ -1,6 +1,6 @@
- module github.com/openshift/lvm-operator/v4
- 
--go 1.24.11
-+go 1.24.6
- 
- require (
- 	github.com/aws/aws-sdk-go v1.55.6
 -- 
 2.54.0
 
