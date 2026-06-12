@@ -1,4 +1,4 @@
-From ffa7109dd68e84675b85286695d130abce247355 Mon Sep 17 00:00:00 2001
+From 2df647b4c7f945f43226a12a7941f1d1c07da181 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Mon, 1 Sep 2025 23:38:28 +0100
 Subject: [PATCH] OKDify
@@ -11,15 +11,16 @@ Subject: [PATCH] OKDify
  config/manifests/kustomization.yaml           |  3 +
  .../odf-operator.clusterserviceversion.yaml   | 89 +++++++++++++++++++
  controllers/subscription_controller.go        |  2 +-
- 7 files changed, 133 insertions(+), 13 deletions(-)
+ go.mod                                        |  2 +-
+ 8 files changed, 134 insertions(+), 14 deletions(-)
  create mode 100644 config/bundles/odf-dependencies/okd.yaml
  create mode 100644 config/manifests/okd/odf-operator.clusterserviceversion.yaml
 
 diff --git a/Makefile b/Makefile
-index 6217e105..c6f5bc02 100644
+index 47770557..2319b0ee 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -132,9 +132,7 @@ bundle-dependencies: ## Generate dependencies bundle manifests and metadata, the
+@@ -152,9 +152,7 @@ bundle-dependencies: ## Generate dependencies bundle manifests and metadata, the
  	@echo "$$DEPS_YAML" > bundle/$(PKG_NAME)/metadata/dependencies.yaml
  	cd config/bundles/$(PKG_NAME) && $(KUSTOMIZE) edit add annotation --force \
  		'olm.skipRange':"$(SKIP_RANGE)" \
@@ -30,7 +31,7 @@ index 6217e105..c6f5bc02 100644
  	$(KUSTOMIZE) build config/bundles/$(PKG_NAME) | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS) \
  		--output-dir bundle/$(PKG_NAME) --package $(PKG_NAME)
  	$(OPERATOR_SDK) bundle validate bundle/$(PKG_NAME)
-@@ -161,9 +159,7 @@ bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metada
+@@ -181,9 +179,7 @@ bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metada
  	cd config/console && $(KUSTOMIZE) edit set image odf-console=$(ODF_CONSOLE_IMG)
  	cd config/manifests/bases && $(KUSTOMIZE) edit add annotation --force \
  		'olm.skipRange':"$(SKIP_RANGE)" \
@@ -40,13 +41,13 @@ index 6217e105..c6f5bc02 100644
 +		'olm.properties':'[{"type": "olm.maxOpenShiftVersion", "value": "$(MAX_OCP_VERSION)"}]'
  	rm -rf bundle/odf-operator/manifests
  	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS) \
- 		--output-dir bundle/odf-operator
+ 		--output-dir bundle/odf-operator \
 diff --git a/config/bundles/odf-dependencies/kustomization.yaml b/config/bundles/odf-dependencies/kustomization.yaml
-index 948b74a9..a6b90701 100644
+index 7a8143d3..df58fd23 100644
 --- a/config/bundles/odf-dependencies/kustomization.yaml
 +++ b/config/bundles/odf-dependencies/kustomization.yaml
 @@ -6,7 +6,4 @@ commonAnnotations:
-   olm.properties: '[{"type": "olm.maxOpenShiftVersion", "value": "4.21"}]'
+   olm.properties: '[{"type": "olm.maxOpenShiftVersion", "value": "4.22"}]'
    olm.skipRange: ""
  patches:
 -- patch: '[{"op": "replace", "path": "/spec/replaces", "value": ""}]'
@@ -99,11 +100,11 @@ index 00000000..35944e5a
 +        d+HChQsXLlz8H/gLt60stP+jlegAAAAASUVORK5CYII=
 +      mediatype: image/png
 diff --git a/config/manifests/bases/odf-operator.clusterserviceversion.yaml b/config/manifests/bases/odf-operator.clusterserviceversion.yaml
-index 3ac90679..867448bb 100644
+index 181aec80..c72d62d6 100644
 --- a/config/manifests/bases/odf-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/odf-operator.clusterserviceversion.yaml
 @@ -13,8 +13,6 @@ metadata:
-     operatorframework.io/initialization-link: /odf/resource/odf.openshift.io~v1alpha1~StorageSystem/create/~new
+     operatorframework.io/initialization-link: /odf/overview?show-welcome-modal=true
      operatorframework.io/suggested-namespace: openshift-storage
      operators.openshift.io/infrastructure-features: '["disconnected"]'
 -    operators.openshift.io/valid-subscription: '["OpenShift Platform Plus","OpenShift
@@ -112,10 +113,10 @@ index 3ac90679..867448bb 100644
      repository: https://github.com/red-hat-storage/odf-operator
      support: Red Hat
 diff --git a/config/manifests/kustomization.yaml b/config/manifests/kustomization.yaml
-index ea44df8e..0efe7e7b 100644
+index 8b5236cd..52961ead 100644
 --- a/config/manifests/kustomization.yaml
 +++ b/config/manifests/kustomization.yaml
-@@ -26,3 +26,6 @@ resources:
+@@ -27,3 +27,6 @@ resources:
  #    # Update the indices in this path if adding or removing volumes in the manager's Deployment.
  #    - op: remove
  #      path: /spec/template/spec/volumes/0
@@ -220,10 +221,10 @@ index 00000000..67ce5069
 +      name: OKD Community
 \ No newline at end of file
 diff --git a/controllers/subscription_controller.go b/controllers/subscription_controller.go
-index 11ac7177..5d8d236e 100644
+index b2c4f2d1..38f58aa1 100644
 --- a/controllers/subscription_controller.go
 +++ b/controllers/subscription_controller.go
-@@ -46,7 +46,7 @@ import (
+@@ -48,7 +48,7 @@ import (
  type providerType string
  
  const (
@@ -232,6 +233,18 @@ index 11ac7177..5d8d236e 100644
  	providerNameIBM    providerType = "IBM"
  )
  
+diff --git a/go.mod b/go.mod
+index 759a432d..6fd15213 100644
+--- a/go.mod
++++ b/go.mod
+@@ -1,6 +1,6 @@
+ module github.com/red-hat-storage/odf-operator
+ 
+-go 1.24.10
++go 1.24.6
+ 
+ require (
+ 	github.com/blang/semver/v4 v4.0.0
 -- 
-2.52.0
+2.54.0
 
