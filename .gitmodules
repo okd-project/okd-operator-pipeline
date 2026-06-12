@@ -439,12 +439,12 @@
 	branch = release-4.21
 [submodule "data-foundation/noobaa-core"]
 	path = data-foundation/noobaa-core
-	url = https://github.com/red-hat-storage/noobaa-core.git
-	branch = release-4.21
+	url = https://github.com/noobaa/noobaa-core.git
+	branch = 5.21
 [submodule "data-foundation/noobaa-operator"]
 	path = data-foundation/noobaa-operator
-	url = https://github.com/red-hat-storage/noobaa-operator.git
-	branch = release-4.21
+	url = https://github.com/noobaa/noobaa-operator.git
+	branch = 5.21
 [submodule "data-foundation/ocs-client-operator"]
 	path = data-foundation/ocs-client-operator
 	url = https://github.com/red-hat-storage/ocs-client-operator.git

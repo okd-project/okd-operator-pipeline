@@ -8,6 +8,9 @@ COPY --chown=default ./rook .
 
 RUN go version | tee -a ./go.version
 
+# Downstream build uses go-toolset:1.24 which ships 1.24.6; lower go.mod minimum in all modules
+RUN find . -name go.mod -not -path '*/vendor/*' -exec sed -i 's/^go 1\.24\.10$/go 1.24.6/' {} \;
+
 RUN GOOS=linux go build -compiler gc -tags ceph_preview -ldflags "-v -n -X github.com/rook/rook/pkg/version.Version=${CI_VERSION}" -a -v -x -o bin/rook ./cmd/rook
 
 # create rook container

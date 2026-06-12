@@ -4,6 +4,8 @@ NAMESPACE="data-foundation"
 
 source ../common.sh
 
+MCG_BRANCH="5.21"
+
 CEPH_RELEASE="8.1"
 export CEPH_VERSION="$CEPH_RELEASE.0-${DATE}"
 
@@ -66,8 +68,8 @@ init() {
     submodule_initialize container-object-storage-interface-provisioner-sidecar master
     submodule_initialize kubernetes-csi-addons release-${OCP_SHORT}
     submodule_initialize must-gather release-${OCP_SHORT}
-    submodule_initialize noobaa-core release-${OCP_SHORT}
-    submodule_initialize noobaa-operator release-${OCP_SHORT}
+    submodule_initialize noobaa-core ${MCG_BRANCH}
+    submodule_initialize noobaa-operator ${MCG_BRANCH}
     submodule_initialize ocs-client-operator release-${OCP_SHORT}
     submodule_initialize ocs-operator release-${OCP_SHORT}
     submodule_initialize odf-cli release-${OCP_SHORT}
@@ -89,8 +91,8 @@ deinit() {
     submodule_reset container-object-storage-interface-provisioner-sidecar master
     submodule_reset kubernetes-csi-addons release-${OCP_SHORT}
     submodule_reset must-gather release-${OCP_SHORT}
-    submodule_reset noobaa-core release-${OCP_SHORT}
-    submodule_reset noobaa-operator release-${OCP_SHORT}
+    submodule_reset noobaa-core ${MCG_BRANCH}
+    submodule_reset noobaa-operator ${MCG_BRANCH}
     submodule_reset ocs-client-operator release-${OCP_SHORT}
     submodule_reset ocs-operator release-${OCP_SHORT}
     submodule_reset odf-cli release-${OCP_SHORT}
@@ -112,8 +114,8 @@ update() {
     submodule_update container-object-storage-interface-provisioner-sidecar master https://github.com/kubernetes-retired/container-object-storage-interface-provisioner-sidecar.git
     submodule_update kubernetes-csi-addons release-${OCP_SHORT} https://github.com/red-hat-storage/kubernetes-csi-addons.git
     submodule_update must-gather release-${OCP_SHORT} https://github.com/red-hat-storage/odf-must-gather.git
-    submodule_update noobaa-core release-${OCP_SHORT} https://github.com/red-hat-storage/noobaa-core.git
-    submodule_update noobaa-operator release-${OCP_SHORT} https://github.com/red-hat-storage/noobaa-operator.git
+    submodule_update noobaa-core ${MCG_BRANCH} https://github.com/noobaa/noobaa-core.git
+    submodule_update noobaa-operator ${MCG_BRANCH} https://github.com/noobaa/noobaa-operator.git
     submodule_update ocs-client-operator release-${OCP_SHORT} https://github.com/red-hat-storage/ocs-client-operator.git
     submodule_update ocs-operator release-${OCP_SHORT} https://github.com/red-hat-storage/ocs-operator.git
     submodule_update odf-cli release-${OCP_SHORT} https://github.com/red-hat-storage/odf-cli.git
@@ -193,6 +195,7 @@ build_bundle() {
 
     pushd kubernetes-csi-addons || return
     sed -i "s|sigs.k8s.io/kubebuilder/v4 v4.1.1 .*|sigs.k8s.io/kubebuilder/v4 v4.1.1 h1:cYSgEfjS5qzTdc1RgPHWZgCrgd1USbz2iO+mFr7BPls=|g" tools/go.sum
+    sed -i "s|github.com/operator-framework/operator-sdk v1.42.0 h1:.*|github.com/operator-framework/operator-sdk v1.42.0 h1:3qPCoXdIClwztlx+fP45wBKgpEb6V/2XS6/S+vPt44I=|g" tools/go.sum
     sed -i 's|--package=$(PACKAGE_NAME) $(BUNDLE_VERSION)|--package=$(PACKAGE_NAME) --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)|g' Makefile
     make bundle CONTAINER_CMD=podman VERSION=${OCP_DATE} BUNDLE_IMG=${IMG_BUNDLE_CSI_ADDONS_OPERATOR} \
      "SKIP_RANGE=>=${PREV_MINOR}.0 <${OCP_DATE}" CONTROLLER_IMG=${IMG_CSI_ADDONS_OPERATOR} BUNDLE_VERSION=${OCP_DATE} \
