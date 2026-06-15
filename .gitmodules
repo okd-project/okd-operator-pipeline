@@ -673,3 +673,7 @@
 	path = dev-spaces/header-rewrite-traefik-plugin
 	url = https://github.com/che-incubator/header-rewrite-traefik-plugin.git
 	branch = main
+[submodule "data-foundation/blackbox-exporter"]
+	path = data-foundation/blackbox-exporter
+	url = https://github.com/prometheus/blackbox_exporter.git
+	branch = v0.28.0
