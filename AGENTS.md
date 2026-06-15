@@ -142,10 +142,17 @@ Then, if it differs from what's checked in:
 3. `cd sandboxed-containers && ./build.sh update && ./build.sh init` (a nested
    `cloud-api-adaptor` submodule is pulled recursively; no patch is used unless `git am`
    fails on init).
-4. **Compare upstream Dockerfiles** (next section) — `operator.Containerfile` is derived
-   from the upstream `Dockerfile`; a single operator image carries both the `manager` and
-   `metrics-server` binaries and both bundle kustomize images (`controller`,
-   `metrics-server`) point at it, so `make bundle IMG=... VERSION=...` sets both.
+4. **Compare upstream Dockerfiles** (next section) — three images are built:
+   `operator.Containerfile` (from the upstream `Dockerfile`; carries both the `manager`
+   and `metrics-server` binaries, and both bundle kustomize images point at it, so
+   `make bundle IMG=... VERSION=...` sets both), `kata-monitor.Containerfile` (from the
+   upstream osc-monitor Dockerfile; builds from the kata-containers source vendored at
+   `operator/config/peerpods/podvm/cloud-api-adaptor/podvm-payload/kata-containers`, and
+   backs the monitor DaemonSet on the bare-metal path via `RELATED_IMAGE_KATA_MONITOR`),
+   and `must-gather.Containerfile` (from the upstream osc-must-gather Dockerfile; its
+   builder stage is the OKD payload's `must-gather` image via `get_payload_component`).
+   `build_bundle()` rewrites `RELATED_IMAGE_KATA_MONITOR` / `RELATED_IMAGE_MUST_GATHER`
+   in `config/manager/manager.yaml` to the OKD digests before `make bundle`.
 5. `./build.sh init build_containers` to confirm it compiles (the Go build pulls in the
    peer-pods deps regardless of scope).
 
@@ -170,10 +177,11 @@ For **OKD 4.22** the base is CentOS Stream 10 → chroot `centos-stream-10-x86_6
 why this is required (`controllers/openshift_controller.go` → `getExtensionName()` returns
 `kata-containers` for `quay.io/okd/scos-release` clusters).
 
-**Scope.** Only the default bare-metal Kata path is packaged for OKD. Peer-pods and
-Confidential Containers (cloud-api-adaptor, podvm, PCCS, TDX-QGS) and the kata-monitor
-image are **not** rebuilt; their CSV `RELATED_IMAGE_*` refs stay on `registry.redhat.io`
-and will not pull on OKD.
+**Scope.** Only the default bare-metal Kata path is packaged for OKD: the operator,
+kata-monitor, and must-gather images are rebuilt. Peer-pods and Confidential Containers
+images (cloud-api-adaptor, peerpods-webhook, podvm-builder/payload/oci, storage-helper)
+are **not** rebuilt; their CSV `RELATED_IMAGE_*` refs stay on `registry.redhat.io` and
+will not pull on OKD.
 
 ### Comparing with upstream Dockerfiles
 

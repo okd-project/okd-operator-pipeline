@@ -17,12 +17,21 @@ Prerequisites: a Fedora account and a COPR API token saved at `~/.config/copr`
 (generate one at <https://copr.fedorainfracloud.org/api/>), plus `copr-cli`
 (`pip install copr-cli` or `dnf install copr-cli`).
 
+The RPM is published to the COPR project **`owenh/sandboxed-containers-<MAJOR>.<MINOR>`**
+(e.g. `owenh/sandboxed-containers-1.13`). The version is the **operator version** — the
+`MAJOR`/`MINOR` exported in [`../build.sh`](../build.sh), which the script reads by
+default — so the RPMs land in a per-operator-release repo automatically.
+
 ```bash
-# Defaults target the okderators COPR + CentOS Stream 10 (SCOS base for OKD 4.20+).
-COPR_OWNER=okderators \
-COPR_PROJECT=sandboxed-containers-kata \
+# Defaults: owner owenh, project sandboxed-containers-<MAJOR>.<MINOR> from ../build.sh,
+# CentOS Stream 10 chroots (SCOS base for OKD 4.20+). Override as needed:
+COPR_OWNER=owenh \
+MAJOR=1 MINOR=13 \
 CHROOTS="centos-stream-10-x86_64 centos-stream-10-aarch64" \
 ./copr-build.sh
+
+# Or name the project explicitly:
+COPR_PROJECT=sandboxed-containers-1.13 ./copr-build.sh
 ```
 
 The build is also wired into CI: `.github/workflows/sandboxed-containers-kata-rpm.yaml`
@@ -82,9 +91,9 @@ spec:
           mode: 0644
           overwrite: true
           contents:
-            # data:,<url-encoded ini below>
+            # data:,<url-encoded ini below> (for operator 1.13 — adjust sandboxed-containers-<X.Y> to your release)
             source: >-
-              data:,%5Bcopr-kata-containers%5D%0Aname%3DCopr%20repo%20-%20kata-containers%0Abaseurl%3Dhttps%3A%2F%2Fdownload.copr.fedorainfracloud.org%2Fresults%2Fokderators%2Fsandboxed-containers-kata%2Fcentos-stream-10-%24basearch%2F%0Aenabled%3D1%0Agpgcheck%3D1%0Agpgkey%3Dhttps%3A%2F%2Fdownload.copr.fedorainfracloud.org%2Fresults%2Fokderators%2Fsandboxed-containers-kata%2Fpubkey.gpg%0A
+              data:,%5Bcopr-kata-containers%5D%0Aname%3DCopr%20repo%20-%20kata-containers%0Abaseurl%3Dhttps%3A//download.copr.fedorainfracloud.org/results/owenh/sandboxed-containers-1.13/centos-stream-10-%24basearch/%0Aenabled%3D1%0Agpgcheck%3D1%0Agpgkey%3Dhttps%3A//download.copr.fedorainfracloud.org/results/owenh/sandboxed-containers-1.13/pubkey.gpg%0A
 ```
 
 The decoded `.repo` contents are:
@@ -92,10 +101,10 @@ The decoded `.repo` contents are:
 ```ini
 [copr-kata-containers]
 name=Copr repo - kata-containers
-baseurl=https://download.copr.fedorainfracloud.org/results/okderators/sandboxed-containers-kata/centos-stream-10-$basearch/
+baseurl=https://download.copr.fedorainfracloud.org/results/owenh/sandboxed-containers-1.13/centos-stream-10-$basearch/
 enabled=1
 gpgcheck=1
-gpgkey=https://download.copr.fedorainfracloud.org/results/okderators/sandboxed-containers-kata/pubkey.gpg
+gpgkey=https://download.copr.fedorainfracloud.org/results/owenh/sandboxed-containers-1.13/pubkey.gpg
 ```
 
 > Tip: regenerate the `data:,` URL from an edited `.repo` file with
@@ -119,7 +128,8 @@ enabled in step 2 and reboots the node with the Kata runtime available.
 
 ## Scope / limitations
 
-Only the **default bare-metal Kata** path is supported on OKD. Peer-pods and Confidential
-Containers (cloud-api-adaptor, podvm, PCCS, TDX-QGS) and the kata-monitor image are not
+Only the **default bare-metal Kata** path is supported on OKD: the operator, kata-monitor,
+and must-gather images are rebuilt. Peer-pods and Confidential Containers images
+(cloud-api-adaptor, peerpods-webhook, podvm-builder/payload/oci, storage-helper) are not
 rebuilt for OKD; their `RELATED_IMAGE_*` references in the CSV still point at
 `registry.redhat.io` and will not pull on OKD.

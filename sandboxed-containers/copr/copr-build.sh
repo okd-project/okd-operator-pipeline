@@ -23,10 +23,22 @@ set -euo pipefail
 # --- Configuration -----------------------------------------------------------
 
 # COPR owner (a username, or "@group" for a group project) and project name.
-# The resulting public repo will be:
+# The project tracks the operator version: sandboxed-containers-<MAJOR>.<MINOR>
+# (e.g. sandboxed-containers-1.13). MAJOR/MINOR default to the values exported in
+# ../build.sh (the OSC operator version, not the OKD version) so there is a single
+# source of truth. The resulting public repo will be:
 #   https://download.copr.fedorainfracloud.org/results/${COPR_OWNER}/${COPR_PROJECT}/
-COPR_OWNER="${COPR_OWNER:-okderators}"
-COPR_PROJECT="${COPR_PROJECT:-sandboxed-containers-kata}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MAJOR="${MAJOR:-$(sed -n 's/^export MAJOR=//p' "${SCRIPT_DIR}/../build.sh")}"
+MINOR="${MINOR:-$(sed -n 's/^export MINOR=//p' "${SCRIPT_DIR}/../build.sh")}"
+if [ -z "${MAJOR}" ] || [ -z "${MINOR}" ]; then
+  echo "ERROR: could not read MAJOR/MINOR from ../build.sh; set them explicitly." >&2
+  exit 1
+fi
+OSC_VERSION="${MAJOR}.${MINOR}"
+
+COPR_OWNER="${COPR_OWNER:-owenh}"
+COPR_PROJECT="${COPR_PROJECT:-sandboxed-containers-${OSC_VERSION}}"
 
 # Space-separated list of build targets. Must track the SCOS base OS (see above).
 # SCOS is x86_64/aarch64; add other arches only if your SCOS build supports them.
@@ -65,11 +77,22 @@ command -v copr-cli >/dev/null 2>&1 || { echo "ERROR: copr-cli not found on PATH
 
 # --- Ensure the project exists with the right chroots ------------------------
 
+# Emit a GitHub Actions step summary when running in CI.
+if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+  {
+    echo "## Kata RPM COPR build"
+    echo
+    echo "**Project:** \`${PROJECT_REF}\`"
+    echo "**Operator version:** \`${OSC_VERSION}\`"
+    echo "**Chroots:** \`${CHROOTS}\`"
+  } >> "${GITHUB_STEP_SUMMARY}"
+fi
+
 echo ">> Ensuring COPR project ${PROJECT_REF} exists with chroots: ${CHROOTS}"
 if ! copr-cli create "${PROJECT_REF}" \
       "${CHROOT_ARGS[@]}" \
-      --description "Kata Containers RPM for OKD sandboxed-containers (SCOS rpm-ostree extension)" \
-      --instructions "Consumed by the openshift-sandboxed-containers operator on OKD/SCOS. See sandboxed-containers/copr/README.md in okd-operator-pipeline." \
+      --description "Kata Containers RPM for the OKD sandboxed-containers operator ${OSC_VERSION} (SCOS rpm-ostree extension)" \
+      --instructions "Consumed by the openshift-sandboxed-containers operator ${OSC_VERSION} on OKD/SCOS. See sandboxed-containers/copr/README.md in okd-operator-pipeline." \
       2>/dev/null; then
   echo ">> Project already exists (or create is a no-op); ensuring chroots are enabled."
   copr-cli modify "${PROJECT_REF}" "${CHROOT_ARGS[@]}"

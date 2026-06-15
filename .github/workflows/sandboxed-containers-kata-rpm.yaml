@@ -20,15 +20,13 @@ on:
   workflow_dispatch:
     inputs:
       copr_owner:
-        description: "COPR owner (username or @group)"
+        description: "COPR owner (username or @group; default: owenh)"
         type: string
         required: false
-        default: "okderators"
       copr_project:
-        description: "COPR project name"
+        description: "COPR project name (default: sandboxed-containers-<MAJOR>.<MINOR>, the operator version from sandboxed-containers/build.sh)"
         type: string
         required: false
-        default: "sandboxed-containers-kata"
       chroots:
         description: "Space-separated COPR chroots (must match the SCOS base OS)"
         type: string
@@ -58,19 +56,15 @@ jobs:
           printf '%s\n' "${{ secrets.COPR_API_TOKEN }}" > ~/.config/copr
           chmod 600 ~/.config/copr
 
+      # Empty inputs fall through to the script's own defaults (owner: owenh,
+      # project: sandboxed-containers-<MAJOR>.<MINOR> from the operator version
+      # exported in sandboxed-containers/build.sh). The script also writes the
+      # step summary.
       - name: Build Kata RPM in COPR
         env:
-          COPR_OWNER: ${{ inputs.copr_owner || 'okderators' }}
-          COPR_PROJECT: ${{ inputs.copr_project || 'sandboxed-containers-kata' }}
+          COPR_OWNER: ${{ inputs.copr_owner }}
+          COPR_PROJECT: ${{ inputs.copr_project }}
           CHROOTS: ${{ inputs.chroots || 'centos-stream-10-x86_64 centos-stream-10-aarch64' }}
         run: |
           cd sandboxed-containers/copr
           ./copr-build.sh
-
-      - name: Summary
-        if: always()
-        run: |
-          echo "## Kata RPM COPR build" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Project:** \`${{ inputs.copr_owner || 'okderators' }}/${{ inputs.copr_project || 'sandboxed-containers-kata' }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Chroots:** \`${{ inputs.chroots || 'centos-stream-10-x86_64 centos-stream-10-aarch64' }}\`" >> $GITHUB_STEP_SUMMARY
