@@ -22,14 +22,11 @@ RUN microdnf update -y && \
 
 RUN echo git rev-parse HEAD > /commit_hash
 
-COPY --from=builder /opt/app-root/src/build/bin /usr/local/bin
 COPY --from=builder /opt/app-root/src/bin/noobaa-operator ${OPERATOR}
 COPY --from=builder /opt/app-root/src/go.version /go.version
 
 #verifying that we have the binary
 RUN ${OPERATOR} version
-
-RUN  /usr/local/bin/user_setup
 
 ENTRYPOINT ["/usr/local/bin/noobaa-operator"]
 CMD ["operator", "run"]

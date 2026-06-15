@@ -7,6 +7,7 @@ COPY --chown=default ./odf-operator .
 RUN go version | tee -a ./go.version
 
 RUN GOOS=linux go build -mod=vendor -a -o bin/odf-operator ./main.go
+RUN GOOS=linux go build -mod=vendor -a -o bin/ux-backend-server services/ux-backend/main.go
 
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
@@ -18,6 +19,7 @@ RUN microdnf update -y && \
 ENV OPBIN=/manager
 
 COPY --from=builder /opt/app-root/src/bin/odf-operator "$OPBIN"
+COPY --from=builder /opt/app-root/src/bin/ux-backend-server /ux-backend-server
 COPY --from=builder /opt/app-root/src/go.version /go.version
 
 LABEL description="OpenShift Data Foundation Operator" \
@@ -25,6 +27,6 @@ LABEL description="OpenShift Data Foundation Operator" \
     io.k8s.display-name="ODF Operator based on RHEL 9" \
     io.k8s.description="OpenShift Data Foundation Operator container based on Red Hat Enterprise Linux 9 Image"
 
-RUN chmod +x "$OPBIN"
+RUN chmod +x "$OPBIN" /ux-backend-server
 
 ENTRYPOINT ["/manager"]

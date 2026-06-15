@@ -1,19 +1,19 @@
-From 25920c74d49e08aad9f420cf085df962db6f8a0c Mon Sep 17 00:00:00 2001
+From 37005514b66f7c5369d93f9d70f21ebda0e7b661 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Mon, 1 Sep 2025 12:45:11 +0100
 Subject: [PATCH] OKDify
 
 ---
  deploy/olm/noobaa-operator.clusterserviceversion.yaml | 2 +-
- pkg/cli/cli.go                                        | 8 --------
- 2 files changed, 1 insertion(+), 9 deletions(-)
+ pkg/cli/cli.go                                        | 9 ---------
+ 2 files changed, 1 insertion(+), 10 deletions(-)
 
 diff --git a/deploy/olm/noobaa-operator.clusterserviceversion.yaml b/deploy/olm/noobaa-operator.clusterserviceversion.yaml
-index be577b4..740d90a 100644
+index f9c1d0c..06bbb23 100644
 --- a/deploy/olm/noobaa-operator.clusterserviceversion.yaml
 +++ b/deploy/olm/noobaa-operator.clusterserviceversion.yaml
-@@ -19,7 +19,7 @@ spec:
-   minKubeVersion: 1.16.0
+@@ -20,7 +20,7 @@ spec:
+   minKubeVersion: 1.22.0
    maturity: alpha
    provider:
 -    name: NooBaa
@@ -22,24 +22,25 @@ index be577b4..740d90a 100644
    - name: Github
      url: https://github.com/noobaa/noobaa-core
 diff --git a/pkg/cli/cli.go b/pkg/cli/cli.go
-index 70d5d26..6793c46 100644
+index bb30f50..aa72de3 100644
 --- a/pkg/cli/cli.go
 +++ b/pkg/cli/cli.go
-@@ -12,7 +12,6 @@ import (
- 	"github.com/noobaa/noobaa-operator/v5/pkg/bucketclass"
+@@ -15,7 +15,6 @@ import (
+ 	"github.com/noobaa/noobaa-operator/v5/pkg/cosi"
  	"github.com/noobaa/noobaa-operator/v5/pkg/crd"
- 	"github.com/noobaa/noobaa-operator/v5/pkg/diagnose"
+ 	"github.com/noobaa/noobaa-operator/v5/pkg/diagnostics"
 -	"github.com/noobaa/noobaa-operator/v5/pkg/install"
  	"github.com/noobaa/noobaa-operator/v5/pkg/namespacestore"
+ 	"github.com/noobaa/noobaa-operator/v5/pkg/noobaaaccount"
  	"github.com/noobaa/noobaa-operator/v5/pkg/obc"
- 	"github.com/noobaa/noobaa-operator/v5/pkg/olm"
-@@ -105,13 +104,6 @@ Load noobaa completion to bash:
+@@ -120,14 +119,6 @@ Load noobaa completion to bash:
  	completionCmd.Flags().String("alias", "", "Custom alias name to generate the completion for")
  
  	groups := templates.CommandGroups{{
 -		Message: "Install:",
 -		Commands: []*cobra.Command{
 -			install.CmdInstall(),
+-			install.CmdUpgrade(),
 -			install.CmdUninstall(),
 -			install.CmdStatus(),
 -		},
