@@ -1,15 +1,29 @@
-From ae158d513cf73449dcdf2b9a6183c57c2f614829 Mon Sep 17 00:00:00 2001
-From: Owen Howard <owen@ziax.com>
-Date: Tue, 9 Jun 2026 17:00:08 +0100
+From cf4a335a09a9bf6e63041c908ba2e85aafca98a7 Mon Sep 17 00:00:00 2001
+From: Chris Wheeler <chwheele@redhat.com>
+Date: Fri, 3 Apr 2026 16:51:01 -0700
 Subject: [PATCH] OKDify
 
 ---
+ Makefile                                                  | 2 +-
  .../bases/ptp-operator.clusterserviceversion.yaml         | 8 ++++----
- ptp-tools/Dockerfile.lptpd                                | 4 +++-
- 2 files changed, 7 insertions(+), 5 deletions(-)
+ ptp-tools/Dockerfile.lptpd                                | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/Makefile b/Makefile
+index c696fbd2..393865ac 100644
+--- a/Makefile
++++ b/Makefile
+@@ -36,7 +36,7 @@ IMAGE_TAG_BASE ?= quay.io/openshift/origin-ptp-operator
+ BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
+
+ # BUNDLE_GEN_FLAGS are the flags passed to the operator-sdk generate bundle command
+-BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION).0 $(BUNDLE_METADATA_OPTS) --extra-service-accounts "linuxptp-daemon"
++BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS) --extra-service-accounts "linuxptp-daemon"
+
+ # Set the Operator SDK version to use. By default, what is installed on the system is used.
+ # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 diff --git a/config/manifests/bases/ptp-operator.clusterserviceversion.yaml b/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
-index 501d07f9..45378225 100644
+index eb583c08..6694eee9 100644
 --- a/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
 @@ -120,7 +120,7 @@ spec:
@@ -35,20 +49,15 @@ index 501d07f9..45378225 100644
 +    name: OKD Community
    version: 0.0.0
 diff --git a/ptp-tools/Dockerfile.lptpd b/ptp-tools/Dockerfile.lptpd
-index 4f9027a1..ff968e50 100644
+index 3cc5c280..a34c7cfd 100644
 --- a/ptp-tools/Dockerfile.lptpd
 +++ b/ptp-tools/Dockerfile.lptpd
-@@ -7,7 +7,9 @@ RUN git clone -b main https://github.com/k8snetworkplumbingwg/linuxptp-daemon.gi
- RUN make clean && make -j 16
- 
- FROM quay.io/centos/centos:stream9
--RUN yum install -y gpsd-minimal glibc gpsd-minimal-clients linuxptp ethtool hwdata synce4l  && yum clean all
-+RUN yum install -y pciutils linuxptp ethtool hwdata synce4l iproute procps-ng chrony \
-+  && (yum -y install gpsd-minimal gpsd-minimal-clients || yum -y install gpsd gpsd-clients) \
-+  && yum clean all
- 
- # Create symlinks for executables to match references
- RUN ln -s /usr/bin/gpspipe /usr/local/bin/gpspipe
--- 
+@@ -1,4 +1,4 @@
+-FROM docker.io/golang:1.24.3 AS builder
++FROM docker.io/golang:1.25 AS builder
+ WORKDIR /go/src/github.com/k8snetworkplumbingwg/linuxptp-daemon
+ ENV GOMAXPROCS=16
+
+--
 2.54.0
 
