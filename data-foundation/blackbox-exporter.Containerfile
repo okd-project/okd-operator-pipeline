@@ -26,5 +26,5 @@ CMD ["--config.file=/etc/blackbox_exporter/config.yml"]
 
 LABEL description="OKD Data Foundation Blackbox Exporter" \
     summary="Provides the latest Blackbox Exporter package for OKD Data Foundation." \
-    io.k8s.display-name="ODF Blackbox Exporter based on RHEL 9" \
-    io.k8s.description="ODF Blackbox Exporter container based on Red Hat Enterprise Linux 9 Image"
+    io.k8s.display-name="ODF Blackbox Exporter based on UBI 9" \
+    io.k8s.description="ODF Blackbox Exporter container based on UBI 9"

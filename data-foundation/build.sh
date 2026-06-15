@@ -5,6 +5,7 @@ NAMESPACE="data-foundation"
 source ../common.sh
 
 MCG_BRANCH="5.21"
+BLACKBOX_EXPORTER_VERSION="v0.28.0"
 
 CEPH_RELEASE="9.0"
 export CEPH_VERSION="$CEPH_RELEASE.0-${DATE}"
@@ -47,6 +48,7 @@ export IMG_ODF_OPERATOR="${REGISTRY}/odf-operator:${OCP_DATE}"
 export IMG_ROOK_OPERATOR="${REGISTRY}/rook-operator:${OCP_DATE}"
 export IMG_EXTERNAL_SNAPSHOTTER_OPERATOR="${REGISTRY}/external-snapshotter-operator:${OCP_DATE}"
 export IMG_CLOUDNATIVE_PG_OPERATOR="${REGISTRY}/cloudnative-pg-operator:${OCP_DATE}"
+export IMG_BLACKBOX_EXPORTER="${REGISTRY}/blackbox-exporter:${OCP_DATE}"
 
 IMG_BUNDLE_ROOK_OPERATOR="${REGISTRY}/rook-operator-bundle:${OCP_DATE}"
 IMG_BUNDLE_CEPH_CSI_OPERATOR="${REGISTRY}/ceph-csi-operator-bundle:${OCP_DATE}"
@@ -81,6 +83,7 @@ init() {
     submodule_initialize recipe release-${OCP_SHORT}
     submodule_initialize rook release-${OCP_SHORT}
     submodule_initialize external-snapshotter release-${OCP_SHORT}
+    submodule_initialize blackbox-exporter ${BLACKBOX_EXPORTER_VERSION}
 }
 
 deinit() {
@@ -104,6 +107,7 @@ deinit() {
     submodule_reset recipe release-${OCP_SHORT}
     submodule_reset rook release-${OCP_SHORT}
     submodule_reset external-snapshotter release-${OCP_SHORT}
+    submodule_reset blackbox-exporter ${BLACKBOX_EXPORTER_VERSION}
 }
 
 update() {
@@ -127,6 +131,7 @@ update() {
     submodule_update recipe release-${OCP_SHORT} https://github.com/red-hat-storage/recipe.git
     submodule_update rook release-${OCP_SHORT} https://github.com/red-hat-storage/rook.git
     submodule_update external-snapshotter release-${OCP_SHORT} https://github.com/red-hat-storage/external-snapshotter.git
+    submodule_update blackbox-exporter ${BLACKBOX_EXPORTER_VERSION} https://github.com/prometheus/blackbox_exporter.git
 }
 
 build_containers() {
@@ -155,6 +160,7 @@ build_containers() {
     podman build --build-arg CI_VERSION=${OCP_DATE} --build-arg CEPH_IMG=${IMG_CEPH} -t ${IMG_ROOK_OPERATOR} -f rook-operator.Containerfile .
     podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_EXTERNAL_SNAPSHOTTER_OPERATOR} -f external-snapshotter-operator.Containerfile .
     podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_EXTERNAL_SNAPSHOTTER_SIDECAR} -f external-snapshotter-sidecar.Containerfile .
+    podman build --build-arg CI_VERSION=${OCP_DATE} -t ${IMG_BLACKBOX_EXPORTER} -f blackbox-exporter.Containerfile .
 }
 
 push_containers() {
@@ -251,7 +257,8 @@ build_bundle() {
      OCS_METRICS_EXPORTER_IMAGE=${IMG_OCS_METRICS_EXPORTER} \
      NOOBAA_CORE_IMAGE=${IMG_MCG_CORE} NOOBAA_DB_IMAGE=${IMG_NOOBAA_DB} ROOK_IMAGE=${IMG_ROOK_OPERATOR} \
      CEPH_IMAGE=${IMG_CEPH} KUBE_RBAC_PROXY_IMAGE=${IMG_KUBE_RBAC_PROXY} CSV_VERSION=${OCP_DATE} \
-     SKIP_RANGE=">=${PREV_MINOR}.0 <${OCP_DATE}" make gen-release-csv VERSION=${OCP_DATE}
+     SKIP_RANGE=">=${PREV_MINOR}.0 <${OCP_DATE}" make gen-release-csv VERSION=${OCP_DATE} \
+     BLACKBOX_EXPORTER_IMAGE=${IMG_BLACKBOX_EXPORTER}
 
     podman build -t ${IMG_BUNDLE_OCS_OPERATOR} -f Dockerfile.bundle .
     podman push ${IMG_BUNDLE_OCS_OPERATOR}

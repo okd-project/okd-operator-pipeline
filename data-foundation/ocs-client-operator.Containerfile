@@ -11,7 +11,7 @@ COPY --chown=default ./ocs-client-operator .
 
 RUN go version | tee -a ./go.version
 
-RUN GOOS=linux go build -mod=vendor -a -o bin/manager cmd/main.go
+RUN GOOS=linux go build -mod=vendor -a -o bin/ocs-client-operator cmd/main.go
 RUN GOOS=linux go build -mod=vendor -a -o ${GOBIN:-bin}/status-reporter ./service/status-report/main.go
 
 
@@ -20,10 +20,10 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 RUN microdnf update -y && \
     microdnf clean all
 
-ENV OPBIN=/manager
+ENV OPBIN=/ocs-client-operator
 ENV ENTRYPOINT=/entrypoint
 
-COPY --from=builder /opt/app-root/src/bin/manager "$OPBIN"
+COPY --from=builder /opt/app-root/src/bin/ocs-client-operator "$OPBIN"
 COPY --from=builder /opt/app-root/src/bin/status-reporter /status-reporter
 COPY --from=builder /opt/app-root/src/hack/entrypoint.sh "$ENTRYPOINT"
 COPY --from=builder /opt/app-root/src/go.version /go.version
