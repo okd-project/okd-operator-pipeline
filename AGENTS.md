@@ -269,3 +269,4 @@ operator-sdk cleanup <package-name>
 - **`get_payload_component`** requires an active `oc` login and calls `oc adm release info` on `quay.io/okd/scos-release:${OKD_VERSION}` — this runs at script source time, not lazily
 - **Quay.io 403 errors** on first push to a new repository are transient; re-running `push_containers` resolves them
 - **Sourceable scripts:** `source build.sh` works for interactive debugging; functions can then be called individually without re-initializing submodules
+- **Check that the directory you're in is a submodule**: If it is, the change has to be made into a patch, or alternatively a `yq` or `sed` edit from the `build.sh` script.
