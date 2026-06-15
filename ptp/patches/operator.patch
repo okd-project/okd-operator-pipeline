@@ -1,17 +1,32 @@
-From de4d6254000b8e3777214443d4cee9b8130828f3 Mon Sep 17 00:00:00 2001
+From cf4a335a09a9bf6e63041c908ba2e85aafca98a7 Mon Sep 17 00:00:00 2001
 From: Chris Wheeler <chwheele@redhat.com>
 Date: Fri, 3 Apr 2026 16:51:01 -0700
 Subject: [PATCH] OKDify
 
 ---
+ Makefile                                                  | 2 +-
  .../bases/ptp-operator.clusterserviceversion.yaml         | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ ptp-tools/Dockerfile.lptpd                                | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/Makefile b/Makefile
+index c696fbd2..393865ac 100644
+--- a/Makefile
++++ b/Makefile
+@@ -36,7 +36,7 @@ IMAGE_TAG_BASE ?= quay.io/openshift/origin-ptp-operator
+ BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
+ 
+ # BUNDLE_GEN_FLAGS are the flags passed to the operator-sdk generate bundle command
+-BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION).0 $(BUNDLE_METADATA_OPTS) --extra-service-accounts "linuxptp-daemon"
++BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS) --extra-service-accounts "linuxptp-daemon"
+ 
+ # Set the Operator SDK version to use. By default, what is installed on the system is used.
+ # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 diff --git a/config/manifests/bases/ptp-operator.clusterserviceversion.yaml b/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
-index 029b73d0..6f48dda1 100644
+index eb583c08..6694eee9 100644
 --- a/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
-@@ -118,7 +118,7 @@ spec:
+@@ -120,7 +120,7 @@ spec:
          - urn:alm:descriptor:com.tectonic.ui:text
        version: v1
    description: |
@@ -20,7 +35,7 @@ index 029b73d0..6f48dda1 100644
  
      ## Introdution
      PTP Operator manages cluster wide PTP configuration.
-@@ -170,9 +170,9 @@ spec:
+@@ -172,9 +172,9 @@ spec:
    - name: Documentation operand
      url: https://github.com/k8snetworkplumbingwg/linuxptp-daemon
    maintainers:
@@ -33,6 +48,16 @@ index 029b73d0..6f48dda1 100644
 -    name: Red Hat
 +    name: OKD Community
    version: 0.0.0
+diff --git a/ptp-tools/Dockerfile.lptpd b/ptp-tools/Dockerfile.lptpd
+index 3cc5c280..a34c7cfd 100644
+--- a/ptp-tools/Dockerfile.lptpd
++++ b/ptp-tools/Dockerfile.lptpd
+@@ -1,4 +1,4 @@
+-FROM docker.io/golang:1.24.3 AS builder
++FROM docker.io/golang:1.25 AS builder
+ WORKDIR /go/src/github.com/k8snetworkplumbingwg/linuxptp-daemon
+ ENV GOMAXPROCS=16
+ 
 -- 
-2.52.0
+2.54.0
 
