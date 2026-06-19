@@ -50,6 +50,8 @@ build_bundle() {
     yq e -i '.spec.icon[0].mediatype = "image/png"' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
     yq e -i '.spec.provider.name = "OKD Community"' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
     yq e -i ".spec.labels.alm-status-descriptors = \"local-storage-operator.v${OCP_DATE}\"" ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
+    export OLM_PROPERTIES="[{\"type\":\"olm.maxOpenShiftVersion\",\"value\":\"${MAJOR}.$((MINOR + 1))\"}]"
+    yq e -i '.metadata.annotations["olm.properties"] = strenv(OLM_PROPERTIES)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
     yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].image = env(IMG_OPERATOR)' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
     yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].env |= map(select(.name == "KUBE_RBAC_PROXY_IMAGE").value = env(IMG_KUBE_RBAC_PROXY))' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
     yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].env |= map(select(.name == "DISKMAKER_IMAGE").value = env(IMG_DISKMAKER))' ./config/manifests/stable/local-storage-operator.clusterserviceversion.yaml
