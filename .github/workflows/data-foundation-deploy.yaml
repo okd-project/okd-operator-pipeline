@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'data-foundation/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Data-Foundation
+
+jobs:
+  deploy:
+    name: Deploy Data-Foundation
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: data-foundation
+    secrets: inherit

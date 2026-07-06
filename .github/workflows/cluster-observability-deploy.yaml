@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'cluster-observability/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Cluster-Observability
+
+jobs:
+  deploy:
+    name: Deploy Cluster-Observability
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: cluster-observability
+    secrets: inherit

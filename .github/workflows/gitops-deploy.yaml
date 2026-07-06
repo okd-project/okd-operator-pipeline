@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'gitops/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy GitOps
+
+jobs:
+  deploy:
+    name: Deploy GitOps
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: gitops
+    secrets: inherit

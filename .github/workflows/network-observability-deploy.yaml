@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'network-observability/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Network-Observability
+
+jobs:
+  deploy:
+    name: Deploy Network-Observability
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: network-observability
+    secrets: inherit

@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'acm/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy ACM
+
+jobs:
+  deploy:
+    name: Deploy ACM
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: acm
+    secrets: inherit

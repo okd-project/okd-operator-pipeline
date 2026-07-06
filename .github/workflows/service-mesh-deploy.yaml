@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'service-mesh/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Service-Mesh
+
+jobs:
+  deploy:
+    name: Deploy Service-Mesh
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: service-mesh
+    secrets: inherit
