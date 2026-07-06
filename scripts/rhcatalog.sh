@@ -25,6 +25,7 @@ declare -A OKD_TO_RH_PACKAGE=(
   ["oadp"]="redhat-oadp-operator"
   ["service-mesh"]="servicemeshoperator"
   ["sr-iov"]="sriov-network-operator"
+  ["vertical-pod-autoscaler"]="vertical-pod-autoscaler"
   ["web-terminal"]="web-terminal"
   ["dev-spaces"]="devspaces"
   ["devworkspace"]="devworkspace-operator"

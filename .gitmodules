@@ -677,3 +677,11 @@
 	path = data-foundation/blackbox-exporter
 	url = https://github.com/prometheus/blackbox_exporter.git
 	branch = v0.28.0
+[submodule "vertical-pod-autoscaler/operator"]
+	path = vertical-pod-autoscaler/operator
+	url = https://github.com/openshift/vertical-pod-autoscaler-operator.git
+	branch = release-4.22
+[submodule "vertical-pod-autoscaler/autoscaler"]
+	path = vertical-pod-autoscaler/autoscaler
+	url = https://github.com/openshift/kubernetes-autoscaler.git
+	branch = release-4.22
