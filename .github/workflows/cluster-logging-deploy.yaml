@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'cluster-logging/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Cluster-Logging
+
+jobs:
+  deploy:
+    name: Deploy Cluster-Logging
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: cluster-logging
+    secrets: inherit

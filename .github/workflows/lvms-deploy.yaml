@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'lvms/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy LVMS
+
+jobs:
+  deploy:
+    name: Deploy LVMS
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: lvms
+    secrets: inherit

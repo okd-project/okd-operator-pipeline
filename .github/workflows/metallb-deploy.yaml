@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'metallb/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Metallb
+
+jobs:
+  deploy:
+    name: Deploy Metallb
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: metallb
+    secrets: inherit
