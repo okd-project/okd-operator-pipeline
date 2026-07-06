@@ -33,7 +33,7 @@ okd-operator-pipeline/
                             # ingress-node-firewall, local-storage, lvms, metallb,
                             # multicluster-engine, network-observability, nmstate,
                             # node-feature-discovery, oadp, pf-status-relay, sr-iov,
-                            # web-terminal, cluster-observability
+                            # vertical-pod-autoscaler, web-terminal, cluster-observability
 ```
 
 ## Build System
