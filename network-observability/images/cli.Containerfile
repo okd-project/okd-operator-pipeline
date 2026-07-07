@@ -6,7 +6,7 @@ ARG IMG_CLI
 FROM $IMG_CLI as ose-cli
 
 # Build the manager binary
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.25 as builder
 ARG BUILDVERSION
 ARG IMAGE=quay.io/okderators/network-observability/cli:${BUILDVERSION}
 ARG AGENT_IMAGE=quay.io/okderators/network-observability/ebpf-agent:${BUILDVERSION}
@@ -14,6 +14,7 @@ ARG AGENT_IMAGE=quay.io/okderators/network-observability/ebpf-agent:${BUILDVERSI
 WORKDIR /opt/app-root
 
 COPY cmd cmd
+COPY internal internal
 COPY main.go main.go
 COPY go.mod go.mod
 COPY go.sum go.sum
