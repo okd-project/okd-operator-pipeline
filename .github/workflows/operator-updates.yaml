@@ -23,6 +23,7 @@ jobs:
           - external-secrets
           - gitops
           - ingress-node-firewall
+          - kube-descheduler
           - local-storage
           - lvms
           - metallb

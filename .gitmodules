@@ -689,3 +689,11 @@
 	path = network-observability/console-plugin-pf5
 	url = https://github.com/openshift/network-observability-console-plugin.git
 	branch = release-1.12-pf5
+[submodule "kube-descheduler/operator"]
+	path = kube-descheduler/operator
+	url = https://github.com/openshift/cluster-kube-descheduler-operator.git
+	branch = release-4.22
+[submodule "kube-descheduler/descheduler"]
+	path = kube-descheduler/descheduler
+	url = https://github.com/openshift/descheduler.git
+	branch = release-4.22
