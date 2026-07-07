@@ -30,7 +30,7 @@ okd-operator-pipeline/
 ├── service-mesh/           # Example: independently-versioned (MAJOR=3 MINOR=0)
 ├── gitops/                 # Example: independently-versioned (MAJOR=1 MINOR=19)
 └── ...                     # acm, cert-manager, data-foundation, external-secrets,
-                            # ingress-node-firewall, local-storage, lvms, metallb,
+                            # ingress-node-firewall, kube-descheduler, local-storage, lvms, metallb,
                             # multicluster-engine, network-observability, nmstate,
                             # node-feature-discovery, oadp, pf-status-relay, sr-iov,
                             # vertical-pod-autoscaler, web-terminal, cluster-observability

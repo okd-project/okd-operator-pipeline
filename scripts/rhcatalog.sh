@@ -15,6 +15,7 @@ declare -A OKD_TO_RH_PACKAGE=(
   ["external-secrets"]="external-secrets-operator"
   ["gitops"]="openshift-gitops-operator"
   ["ingress-node-firewall"]="ingress-node-firewall"
+  ["kube-descheduler"]="cluster-kube-descheduler-operator"
   ["local-storage"]="local-storage-operator"
   ["lvms"]="lvms-operator"
   ["metallb"]="metallb-operator"
