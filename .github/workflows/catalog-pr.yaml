@@ -63,27 +63,12 @@ jobs:
     name: Open Catalog Index PR
     runs-on: ubuntu-latest
     steps:
-      - name: Check for catalog token
-        id: token
-        env:
-          TOKEN: ${{ secrets.CATALOG_PUSH_TOKEN }}
-        # language=bash
-        run: |
-          if [ -n "$TOKEN" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::CATALOG_PUSH_TOKEN is not set; skipping catalog index PR"
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Checkout repository
-        if: steps.token.outputs.enabled == 'true'
         uses: actions/checkout@v4
         with:
           submodules: false
 
       - name: Checkout catalog index
-        if: steps.token.outputs.enabled == 'true'
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.catalog_repo }}
@@ -92,7 +77,6 @@ jobs:
           path: catalog-index
 
       - name: Install dependencies
-        if: steps.token.outputs.enabled == 'true'
         # language=bash
         run: |
           # Install yq
@@ -104,18 +88,15 @@ jobs:
           sudo chmod +x /usr/local/bin/opm
 
       - name: Install Podman
-        if: steps.token.outputs.enabled == 'true'
         uses: redhat-actions/podman-install@main
 
       - name: Configure git
-        if: steps.token.outputs.enabled == 'true'
         # language=bash
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Render bundles into catalog
-        if: steps.token.outputs.enabled == 'true'
         id: render
         env:
           BUNDLE_IMAGES: ${{ inputs.bundle_images }}
@@ -143,14 +124,12 @@ jobs:
           echo "bundle_names=${BUNDLE_NAMES# }" >> "$GITHUB_OUTPUT"
 
       - name: Validate catalog
-        if: steps.token.outputs.enabled == 'true'
         # language=bash
         run: |
           cd catalog-index
           opm validate catalog
 
       - name: Create pull request
-        if: steps.token.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ secrets.CATALOG_PUSH_TOKEN }}
           CATALOG_REPO: ${{ inputs.catalog_repo }}
