@@ -26,8 +26,8 @@ on:
         required: false
         default: "alpha"
     secrets:
-      CATALOG_PUSH_TOKEN:
-        description: "Token with permission to push branches and open PRs on the catalog index repository"
+      CATALOG_APP_PRIVATE_KEY:
+        description: "Private key of the GitHub App used to push branches and open PRs on the catalog index repository (app id comes from the CATALOG_APP_ID variable)"
         required: false
   workflow_dispatch:
     inputs:
@@ -68,12 +68,30 @@ jobs:
         with:
           submodules: false
 
+      - name: Parse catalog repository
+        id: catalog
+        env:
+          CATALOG_REPO: ${{ inputs.catalog_repo }}
+        # language=bash
+        run: |
+          echo "owner=${CATALOG_REPO%%/*}" >> "$GITHUB_OUTPUT"
+          echo "name=${CATALOG_REPO##*/}" >> "$GITHUB_OUTPUT"
+
+      - name: Mint catalog token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.CATALOG_APP_ID }}
+          private-key: ${{ secrets.CATALOG_APP_PRIVATE_KEY }}
+          owner: ${{ steps.catalog.outputs.owner }}
+          repositories: ${{ steps.catalog.outputs.name }}
+
       - name: Checkout catalog index
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.catalog_repo }}
           ref: ${{ inputs.catalog_branch }}
-          token: ${{ secrets.CATALOG_PUSH_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           path: catalog-index
 
       - name: Install dependencies
@@ -131,7 +149,7 @@ jobs:
 
       - name: Create pull request
         env:
-          GH_TOKEN: ${{ secrets.CATALOG_PUSH_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           CATALOG_REPO: ${{ inputs.catalog_repo }}
           CATALOG_BRANCH: ${{ inputs.catalog_branch }}
           BUNDLE_IMAGES: ${{ inputs.bundle_images }}
