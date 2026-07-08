@@ -10,6 +10,16 @@ on:
         type: string
         required: false
         default: "quay.io/okderators"
+      update_catalog:
+        description: "Open a PR against the catalog index with the built bundle(s)"
+        type: boolean
+        required: false
+        default: true
+      catalog_branch:
+        description: "Catalog index branch to target with the PR"
+        type: string
+        required: false
+        default: "release-4.21"
 
 name: Deploy Operator
 
@@ -17,6 +27,8 @@ jobs:
   deploy-operator:
     name: Deploy Operator
     runs-on: ubuntu-latest
+    outputs:
+      bundle_images: ${{ steps.bundles.outputs.bundle_images }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -62,6 +74,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Pin build date
+        # DATE is baked into every image tag by common.sh; pinning it lets
+        # later steps reconstruct the exact image references build.sh pushed
+        # language=bash
+        run: echo "DATE=$(date +%Y-%m-%d-%H%M%S)" >> "$GITHUB_ENV"
+
       - name: Build and push operator
         env:
           NAMESPACE: ${{ inputs.operator }}
@@ -82,6 +100,32 @@ jobs:
 
           echo "Successfully built and pushed ${{ inputs.operator }}"
 
+      - name: Collect bundle image references
+        id: bundles
+        env:
+          NAMESPACE: ${{ inputs.operator }}
+          BASE_REGISTRY: ${{ inputs.base_registry }}
+        # language=bash
+        run: |
+          cd ${{ inputs.operator }}
+
+          # Sourcing build.sh (guarded by BASH_SOURCE, so main() does not run)
+          # re-derives the IMG_BUNDLE* variables with the pinned DATE
+          BUNDLES=$(bash -c 'source ./build.sh >/dev/null 2>&1; for v in $(compgen -v IMG_BUNDLE); do echo "${!v}"; done') || BUNDLES=""
+
+          if [ -z "$BUNDLES" ]; then
+            echo "::warning::Could not determine bundle image references; the catalog PR job will be skipped"
+          else
+            echo "Bundle images:"
+            echo "$BUNDLES"
+          fi
+
+          {
+            echo "bundle_images<<BUNDLES_EOF"
+            echo "$BUNDLES"
+            echo "BUNDLES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create deployment summary
         if: success()
         # language=bash
@@ -96,3 +140,14 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ inputs.base_registry }}/${{ inputs.operator }}/*:*" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  catalog-pr:
+    name: Catalog Index PR
+    needs: deploy-operator
+    if: inputs.update_catalog && needs.deploy-operator.outputs.bundle_images != ''
+    uses: ./.github/workflows/catalog-pr.yaml
+    with:
+      operator: ${{ inputs.operator }}
+      bundle_images: ${{ needs.deploy-operator.outputs.bundle_images }}
+      catalog_branch: ${{ inputs.catalog_branch }}
+    secrets: inherit
