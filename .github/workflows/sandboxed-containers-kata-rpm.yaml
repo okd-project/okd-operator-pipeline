@@ -1,0 +1,76 @@
+# Builds the Kata Containers RPM in Fedora COPR for the sandboxed-containers operator.
+#
+# Requires a repository secret named COPR_API_TOKEN containing the full contents of a
+# COPR API config (from https://copr.fedorainfracloud.org/api/), i.e.:
+#
+#   [copr-cli]
+#   login = <login>
+#   username = <username>
+#   token = <token>
+#   copr_url = https://copr.fedorainfracloud.org
+#
+# See sandboxed-containers/copr/README.md for details (chroot selection, node-side repo).
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'sandboxed-containers/copr/**'
+  workflow_dispatch:
+    inputs:
+      copr_owner:
+        description: "COPR owner (username or @group)"
+        type: string
+        required: false
+        default: "okderators"
+      copr_project:
+        description: "COPR project name"
+        type: string
+        required: false
+        default: "sandboxed-containers-kata"
+      chroots:
+        description: "Space-separated COPR chroots (must match the SCOS base OS)"
+        type: string
+        required: false
+        default: "centos-stream-10-x86_64 centos-stream-10-aarch64"
+
+name: Build Sandboxed-Containers Kata RPM (COPR)
+
+jobs:
+  copr-build:
+    name: COPR build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Install copr-cli
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install copr-cli
+
+      - name: Configure COPR credentials
+        run: |
+          mkdir -p ~/.config
+          printf '%s\n' "${{ secrets.COPR_API_TOKEN }}" > ~/.config/copr
+          chmod 600 ~/.config/copr
+
+      - name: Build Kata RPM in COPR
+        env:
+          COPR_OWNER: ${{ inputs.copr_owner || 'okderators' }}
+          COPR_PROJECT: ${{ inputs.copr_project || 'sandboxed-containers-kata' }}
+          CHROOTS: ${{ inputs.chroots || 'centos-stream-10-x86_64 centos-stream-10-aarch64' }}
+        run: |
+          cd sandboxed-containers/copr
+          ./copr-build.sh
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Kata RPM COPR build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** \`${{ inputs.copr_owner || 'okderators' }}/${{ inputs.copr_project || 'sandboxed-containers-kata' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Chroots:** \`${{ inputs.chroots || 'centos-stream-10-x86_64 centos-stream-10-aarch64' }}\`" >> $GITHUB_STEP_SUMMARY

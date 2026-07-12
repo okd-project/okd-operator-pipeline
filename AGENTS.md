@@ -29,6 +29,13 @@ okd-operator-pipeline/
 ├── cluster-logging/        # Example: independently-versioned (MAJOR=6 MINOR=3)
 ├── service-mesh/           # Example: independently-versioned (MAJOR=3 MINOR=0)
 ├── gitops/                 # Example: independently-versioned (MAJOR=1 MINOR=19)
+├── sandboxed-containers/    # Example: independently-versioned (MAJOR=1 MINOR=12) + Kata RPM in COPR
+│   ├── build.sh            # NAMESPACE="sandboxed-containers"; MAJOR=1 MINOR=12
+│   ├── operator/           # Git submodule (branch: osc-release-v1.12)
+│   ├── operator.Containerfile
+│   └── copr/               # Kata RPM build for Fedora COPR (operand = rpm-ostree extension)
+│       ├── copr-build.sh
+│       └── README.md
 └── ...                     # acm, cert-manager, data-foundation, external-secrets,
                             # ingress-node-firewall, local-storage, lvms, metallb,
                             # multicluster-engine, network-observability, nmstate,
@@ -111,6 +118,62 @@ source build.sh && init && build_containers  # Interactive / debug
 3. **Compare upstream Dockerfiles** — see [Comparing with upstream Dockerfiles](#comparing-with-upstream-dockerfiles) below
 4. Run `./build.sh update && ./build.sh init` to verify patches apply
 5. Run `./build.sh init build_containers` to verify the operator compiles
+
+### Sandboxed Containers (Kata) — operator + Kata RPM in COPR
+
+`sandboxed-containers` (upstream `openshift/sandboxed-containers-operator`, "OSC") is an
+independently-versioned operator **plus** an RPM operand. Its operand is the Kata runtime,
+which on SCOS is installed via an rpm-ostree **extension**, not a container image — so the
+Kata RPM must be built in **Fedora COPR**. This section is the complete recipe; it should
+let a request like *"Add Sandboxed containers operator for 4.22"* work end-to-end.
+
+**Version mapping.** OSC branches are `osc-release-v<MAJOR>.<MINOR>` (note the `v`), *not*
+`release-<OCP_SHORT>`, and track the operator version, not the OKD version. To target an
+OKD release, pick the **latest** upstream `osc-release-v<X.Y>` branch:
+
+```bash
+git ls-remote --heads https://github.com/openshift/sandboxed-containers-operator.git 'osc-release-v*' \
+  | sed 's#.*/osc-release-v##' | sort -V | tail -1     # e.g. 1.12  ->  MAJOR=1 MINOR=12
+```
+
+Then, if it differs from what's checked in:
+1. Set `export MAJOR=<X>` / `export MINOR=<Y>` in `sandboxed-containers/build.sh`.
+2. Update `branch = osc-release-v<X.Y>` for `sandboxed-containers/operator` in `.gitmodules`.
+3. `cd sandboxed-containers && ./build.sh update && ./build.sh init` (a nested
+   `cloud-api-adaptor` submodule is pulled recursively; no patch is used unless `git am`
+   fails on init).
+4. **Compare upstream Dockerfiles** (next section) — `operator.Containerfile` is derived
+   from the upstream `Dockerfile`; a single operator image carries both the `manager` and
+   `metrics-server` binaries and both bundle kustomize images (`controller`,
+   `metrics-server`) point at it, so `make bundle IMG=... VERSION=...` sets both.
+5. `./build.sh init build_containers` to confirm it compiles (the Go build pulls in the
+   peer-pods deps regardless of scope).
+
+**The Kata RPM (COPR).** Build it with `sandboxed-containers/copr/copr-build.sh`, wired
+into CI as `.github/workflows/sandboxed-containers-kata-rpm.yaml` (needs the
+`COPR_API_TOKEN` repo secret). The COPR **chroot must match the SCOS base OS** of the
+target OKD version — confirm before building:
+
+```bash
+oc adm release info quay.io/okd/scos-release:${OKD_VERSION} | grep -i machine-os   # base OS
+```
+
+| OKD release | SCOS base | COPR chroot |
+|---|---|---|
+| 4.20+ | CentOS Stream 10 | `centos-stream-10-*` |
+| ≤ 4.19 | CentOS Stream 9 | `centos-stream-9-*` |
+
+For **OKD 4.22** the base is CentOS Stream 10 → chroot `centos-stream-10-x86_64`
+(+ `centos-stream-10-aarch64`). SCOS nodes then need the COPR repo enabled via a
+`MachineConfig` `.repo` drop so the `kata-containers` extension resolves — see
+`sandboxed-containers/copr/README.md` for the build steps, the node-side MachineConfig, and
+why this is required (`controllers/openshift_controller.go` → `getExtensionName()` returns
+`kata-containers` for `quay.io/okd/scos-release` clusters).
+
+**Scope.** Only the default bare-metal Kata path is packaged for OKD. Peer-pods and
+Confidential Containers (cloud-api-adaptor, podvm, PCCS, TDX-QGS) and the kata-monitor
+image are **not** rebuilt; their CSV `RELATED_IMAGE_*` refs stay on `registry.redhat.io`
+and will not pull on OKD.
 
 ### Comparing with upstream Dockerfiles
 
