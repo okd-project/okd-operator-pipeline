@@ -138,13 +138,17 @@ jobs:
             echo "Rendering ${BUNDLE} into the catalog..."
             bash ./hack/add-bundle.sh "$BUNDLE"
 
-            # Derive the CSV/bundle name the same way add-bundle.sh does
-            BUNDLE_NAME=$(opm render "$BUNDLE" -o yaml | yq 'select(.schema == "olm.bundle") | .name')
-            OPERATOR_NAME=${BUNDLE_NAME%%.*}
+            # The bundle name is its CSV name; the package comes from the
+            # bundle's own package field (the CSV name prefix is not reliable,
+            # e.g. clusterkubedescheduleroperator.vX belongs to package
+            # cluster-kube-descheduler-operator)
+            RENDERED=$(opm render "$BUNDLE" -o yaml)
+            BUNDLE_NAME=$(yq 'select(.schema == "olm.bundle") | .name' <<< "$RENDERED")
+            PACKAGE_NAME=$(yq 'select(.schema == "olm.bundle") | .package' <<< "$RENDERED")
 
             # Wire the new bundle into the package's channel upgrade graph
             bash "$GITHUB_WORKSPACE/scripts/update-catalog-package.sh" \
-              "catalog/${OPERATOR_NAME}/${OPERATOR_NAME}.yaml" "$BUNDLE_NAME" "$CHANNEL"
+              "catalog/${PACKAGE_NAME}/${PACKAGE_NAME}.yaml" "$BUNDLE_NAME" "$CHANNEL"
 
             BUNDLE_NAMES="${BUNDLE_NAMES} ${BUNDLE_NAME}"
           done
