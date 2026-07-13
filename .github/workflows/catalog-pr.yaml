@@ -129,7 +129,7 @@ jobs:
           BUNDLE_NAMES=""
           for BUNDLE in $BUNDLE_IMAGES; do
             echo "Rendering ${BUNDLE} into the catalog..."
-            ./hack/add-bundle.sh "$BUNDLE"
+            bash ./hack/add-bundle.sh "$BUNDLE"
 
             # Derive the CSV/bundle name the same way add-bundle.sh does
             BUNDLE_NAME=$(opm render "$BUNDLE" -o yaml | yq 'select(.schema == "olm.bundle") | .name')
