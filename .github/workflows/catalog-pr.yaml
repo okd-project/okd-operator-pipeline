@@ -111,6 +111,13 @@ jobs:
       - name: Install Podman
         uses: redhat-actions/podman-install@main
 
+      - name: Configure container registries
+        # The runner image ships a v1-format registries.conf; opm's image
+        # library only accepts the v2 format
+        # language=bash
+        run: |
+          printf 'unqualified-search-registries = ["docker.io"]\n' | sudo tee /etc/containers/registries.conf
+
       - name: Configure git
         # language=bash
         run: |
