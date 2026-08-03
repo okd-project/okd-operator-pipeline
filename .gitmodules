@@ -693,3 +693,11 @@
 	path = sandboxed-containers/operator
 	url = https://github.com/openshift/sandboxed-containers-operator.git
 	branch = osc-release-v1.12
+[submodule "kube-descheduler/operator"]
+	path = kube-descheduler/operator
+	url = https://github.com/openshift/cluster-kube-descheduler-operator.git
+	branch = release-4.22
+[submodule "kube-descheduler/descheduler"]
+	path = kube-descheduler/descheduler
+	url = https://github.com/openshift/descheduler.git
+	branch = release-4.22

@@ -1,0 +1,214 @@
+on:
+  workflow_call:
+    inputs:
+      bundle_images:
+        description: "Bundle image reference(s), whitespace- or newline-separated"
+        type: string
+        required: true
+      operator:
+        description: "Operator name/directory the bundles were built from (informational)"
+        type: string
+        required: false
+        default: ""
+      catalog_repo:
+        description: "Catalog index repository (owner/name)"
+        type: string
+        required: false
+        default: "okd-project/okderators-catalog-index"
+      catalog_branch:
+        description: "Catalog index branch to target with the PR"
+        type: string
+        required: false
+        default: "release-4.21"
+      channel:
+        description: "OLM channel used when the operator has no package file yet (existing packages use their defaultChannel)"
+        type: string
+        required: false
+        default: "alpha"
+    secrets:
+      CATALOG_APP_ID:
+        description: "App ID of the GitHub App used to push branches and open PRs on the catalog index repository"
+        required: false
+      CATALOG_APP_PRIVATE_KEY:
+        description: "Private key of the GitHub App used to push branches and open PRs on the catalog index repository"
+        required: false
+  workflow_dispatch:
+    inputs:
+      bundle_images:
+        description: "Bundle image reference(s), whitespace-separated"
+        type: string
+        required: true
+      operator:
+        description: "Operator name/directory the bundles were built from (informational)"
+        type: string
+        required: false
+        default: ""
+      catalog_repo:
+        description: "Catalog index repository (owner/name)"
+        type: string
+        required: false
+        default: "okd-project/okderators-catalog-index"
+      catalog_branch:
+        description: "Catalog index branch to target with the PR"
+        type: string
+        required: false
+        default: "release-4.21"
+      channel:
+        description: "OLM channel used when the operator has no package file yet"
+        type: string
+        required: false
+        default: "alpha"
+
+name: Catalog Index PR
+
+jobs:
+  catalog-pr:
+    name: Open Catalog Index PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Parse catalog repository
+        id: catalog
+        env:
+          CATALOG_REPO: ${{ inputs.catalog_repo }}
+        # language=bash
+        run: |
+          echo "owner=${CATALOG_REPO%%/*}" >> "$GITHUB_OUTPUT"
+          echo "name=${CATALOG_REPO##*/}" >> "$GITHUB_OUTPUT"
+
+      - name: Mint catalog token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.CATALOG_APP_ID }}
+          private-key: ${{ secrets.CATALOG_APP_PRIVATE_KEY }}
+          owner: ${{ steps.catalog.outputs.owner }}
+          repositories: ${{ steps.catalog.outputs.name }}
+
+      - name: Checkout catalog index
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.catalog_repo }}
+          ref: ${{ inputs.catalog_branch }}
+          token: ${{ steps.app-token.outputs.token }}
+          path: catalog-index
+
+      - name: Install dependencies
+        # language=bash
+        run: |
+          # Install yq
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+          # Install opm
+          sudo wget -qO /usr/local/bin/opm https://github.com/operator-framework/operator-registry/releases/latest/download/linux-amd64-opm
+          sudo chmod +x /usr/local/bin/opm
+
+      - name: Install Podman
+        uses: redhat-actions/podman-install@main
+
+      - name: Configure container registries
+        # The runner image ships a v1-format registries.conf; opm's image
+        # library only accepts the v2 format
+        # language=bash
+        run: |
+          printf 'unqualified-search-registries = ["docker.io"]\n' | sudo tee /etc/containers/registries.conf
+
+      - name: Configure git
+        # language=bash
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Render bundles into catalog
+        id: render
+        env:
+          BUNDLE_IMAGES: ${{ inputs.bundle_images }}
+          CHANNEL: ${{ inputs.channel }}
+        # language=bash
+        run: |
+          cd catalog-index
+
+          BUNDLE_NAMES=""
+          for BUNDLE in $BUNDLE_IMAGES; do
+            echo "Rendering ${BUNDLE} into the catalog..."
+            bash ./hack/add-bundle.sh "$BUNDLE"
+
+            # The bundle name is its CSV name; the package comes from the
+            # bundle's own package field (the CSV name prefix is not reliable,
+            # e.g. clusterkubedescheduleroperator.vX belongs to package
+            # cluster-kube-descheduler-operator)
+            RENDERED=$(opm render "$BUNDLE" -o yaml)
+            BUNDLE_NAME=$(yq 'select(.schema == "olm.bundle") | .name' <<< "$RENDERED")
+            PACKAGE_NAME=$(yq 'select(.schema == "olm.bundle") | .package' <<< "$RENDERED")
+
+            # Wire the new bundle into the package's channel upgrade graph
+            bash "$GITHUB_WORKSPACE/scripts/update-catalog-package.sh" \
+              "catalog/${PACKAGE_NAME}/${PACKAGE_NAME}.yaml" "$BUNDLE_NAME" "$CHANNEL"
+
+            BUNDLE_NAMES="${BUNDLE_NAMES} ${BUNDLE_NAME}"
+          done
+
+          echo "bundle_names=${BUNDLE_NAMES# }" >> "$GITHUB_OUTPUT"
+
+      - name: Validate catalog
+        # language=bash
+        run: |
+          cd catalog-index
+          opm validate catalog
+
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          CATALOG_REPO: ${{ inputs.catalog_repo }}
+          CATALOG_BRANCH: ${{ inputs.catalog_branch }}
+          BUNDLE_IMAGES: ${{ inputs.bundle_images }}
+          BUNDLE_NAMES: ${{ steps.render.outputs.bundle_names }}
+          OPERATOR: ${{ inputs.operator }}
+        # language=bash
+        run: |
+          cd catalog-index
+
+          if [ -z "$(git status --porcelain catalog)" ]; then
+            echo "Catalog already contains these bundles; nothing to do."
+            exit 0
+          fi
+
+          FIRST_NAME=$(echo "$BUNDLE_NAMES" | cut -d' ' -f1)
+          BRANCH="add-${FIRST_NAME//[^a-zA-Z0-9.-]/-}-${GITHUB_RUN_ID}"
+          TITLE="Add ${BUNDLE_NAMES// /, } to the catalog"
+
+          git checkout -b "$BRANCH"
+          git add catalog
+          git commit -m "$TITLE"
+          git push origin "$BRANCH"
+
+          {
+            echo "Adds the following bundle(s) to the catalog:"
+            echo ""
+            for NAME in $BUNDLE_NAMES; do
+              echo "- \`${NAME}\`"
+            done
+            echo ""
+            echo "Bundle image(s):"
+            echo ""
+            for IMAGE in $BUNDLE_IMAGES; do
+              echo "- \`${IMAGE}\`"
+            done
+            echo ""
+            if [ -n "$OPERATOR" ]; then
+              echo "Built from operator directory \`${OPERATOR}\` in \`${GITHUB_REPOSITORY}\`."
+            fi
+            echo "Rendered with \`hack/add-bundle.sh\`, channel entries updated, and validated with \`opm validate\` by [this workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})."
+          } > "$RUNNER_TEMP/pr-body.md"
+
+          gh pr create \
+            --repo "$CATALOG_REPO" \
+            --base "$CATALOG_BRANCH" \
+            --head "$BRANCH" \
+            --title "$TITLE" \
+            --body-file "$RUNNER_TEMP/pr-body.md"
