@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'nmstate/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy NMState
+
+jobs:
+  deploy:
+    name: Deploy NMState
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: nmstate
+    secrets: inherit

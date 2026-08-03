@@ -19,7 +19,7 @@ WORKDIR /opt/app-root/web
 RUN npm run format-all
 RUN npm run build
 
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as go-builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.25 as go-builder
 
 ARG BUILDVERSION
 
@@ -34,7 +34,7 @@ COPY pkg/ pkg/
 ENV GOEXPERIMENT strictfipsruntime
 RUN go build -tags strictfipsruntime -ldflags "-X 'main.buildVersion=$BUILDVERSION' -X 'main.buildDate=`date +%Y-%m-%d\ %H:%M`'" -mod vendor -o plugin-backend cmd/plugin-backend.go
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.7-1764794109
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 ARG BUILDVERSION
 ARG BUILDVERSION_Y
 

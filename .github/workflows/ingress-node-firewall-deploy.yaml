@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'ingress-node-firewall/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Ingress-Node-Firewall
+
+jobs:
+  deploy:
+    name: Deploy Ingress-Node-Firewall
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: ingress-node-firewall
+    secrets: inherit

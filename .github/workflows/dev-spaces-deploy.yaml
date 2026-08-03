@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'dev-spaces/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Dev-Spaces
+
+jobs:
+  deploy:
+    name: Deploy Dev-Spaces
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: dev-spaces
+    secrets: inherit

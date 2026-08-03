@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'vertical-pod-autoscaler/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Vertical-Pod-Autoscaler
+
+jobs:
+  deploy:
+    name: Deploy Vertical-Pod-Autoscaler
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: vertical-pod-autoscaler
+    secrets: inherit

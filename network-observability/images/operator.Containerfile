@@ -2,7 +2,7 @@ ARG BUILDVERSION
 ARG BUILDVERSION_Y
 
 # Build the manager binary
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.25 as builder
 ARG BUILDVERSION
 
 WORKDIR /opt/app-root

@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'web-terminal/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Web-Terminal
+
+jobs:
+  deploy:
+    name: Deploy Web-Terminal
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: web-terminal
+    secrets: inherit

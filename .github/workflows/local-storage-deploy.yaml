@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'local-storage/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Local-Storage
+
+jobs:
+  deploy:
+    name: Deploy Local-Storage
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: local-storage
+    secrets: inherit

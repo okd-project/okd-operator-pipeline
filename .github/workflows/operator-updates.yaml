@@ -18,9 +18,12 @@ jobs:
           - cluster-logging
           - cluster-observability
           - data-foundation
+          - dev-spaces
+          - devworkspace
           - external-secrets
           - gitops
           - ingress-node-firewall
+          - kube-descheduler
           - local-storage
           - lvms
           - metallb
@@ -30,8 +33,10 @@ jobs:
           - node-feature-discovery
           - oadp
           - pf-status-relay
+          - ptp
           - service-mesh
           - sr-iov
+          - vertical-pod-autoscaler
           - web-terminal
 
     steps:

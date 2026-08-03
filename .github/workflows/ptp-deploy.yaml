@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'ptp/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy PTP
+
+jobs:
+  deploy:
+    name: Deploy PTP
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: ptp
+    secrets: inherit

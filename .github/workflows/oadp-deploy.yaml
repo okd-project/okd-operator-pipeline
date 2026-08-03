@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'oadp/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy OADP
+
+jobs:
+  deploy:
+    name: Deploy OADP
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: oadp
+    secrets: inherit

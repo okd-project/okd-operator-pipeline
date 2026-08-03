@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'sr-iov/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy SR-IOV
+
+jobs:
+  deploy:
+    name: Deploy SR-IOV
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: sr-iov
+    secrets: inherit

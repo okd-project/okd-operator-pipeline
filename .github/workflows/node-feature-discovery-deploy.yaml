@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'node-feature-discovery/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Node-Feature-Discovery
+
+jobs:
+  deploy:
+    name: Deploy Node-Feature-Discovery
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: node-feature-discovery
+    secrets: inherit

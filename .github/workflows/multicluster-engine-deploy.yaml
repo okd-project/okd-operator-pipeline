@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'multicluster-engine/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Multicluster-Engine
+
+jobs:
+  deploy:
+    name: Deploy Multicluster-Engine
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: multicluster-engine
+    secrets: inherit

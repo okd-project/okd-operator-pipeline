@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'pf-status-relay/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Pf-Status-Relay
+
+jobs:
+  deploy:
+    name: Deploy Pf-Status-Relay
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: pf-status-relay
+    secrets: inherit
