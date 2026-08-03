@@ -42,7 +42,7 @@ COPR_PROJECT="${COPR_PROJECT:-sandboxed-containers-${OSC_VERSION}}"
 
 # Space-separated list of build targets. Must track the SCOS base OS (see above).
 # SCOS is x86_64/aarch64; add other arches only if your SCOS build supports them.
-CHROOTS="${CHROOTS:-centos-stream-10-x86_64 centos-stream-10-aarch64}"
+CHROOTS="${CHROOTS:-epel-10-x86_64 epel-9-x86_64}"
 
 # Source of the kata-containers spec. Defaults to Fedora dist-git (rawhide), which
 # carries kata-containers.spec + a lookaside "sources" file (handled by the rpkg

@@ -27,7 +27,7 @@ default — so the RPMs land in a per-operator-release repo automatically.
 # CentOS Stream 10 chroots (SCOS base for OKD 4.20+). Override as needed:
 COPR_OWNER=owenh \
 MAJOR=1 MINOR=13 \
-CHROOTS="centos-stream-10-x86_64 centos-stream-10-aarch64" \
+CHROOTS="epel-10-x86_64 epel-9-x86_64" \
 ./copr-build.sh
 
 # Or name the project explicitly:

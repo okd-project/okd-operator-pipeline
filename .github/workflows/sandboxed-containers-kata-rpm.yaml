@@ -64,7 +64,7 @@ jobs:
         env:
           COPR_OWNER: ${{ inputs.copr_owner }}
           COPR_PROJECT: ${{ inputs.copr_project }}
-          CHROOTS: ${{ inputs.chroots || 'centos-stream-10-x86_64 centos-stream-10-aarch64' }}
+          CHROOTS: ${{ inputs.chroots || 'epel-10-x86_64 epel-9-x86_64' }}
         run: |
           cd sandboxed-containers/copr
           ./copr-build.sh
