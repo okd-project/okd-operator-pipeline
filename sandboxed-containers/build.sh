@@ -78,6 +78,14 @@ build_bundle() {
     yq e -i '(.spec.template.spec.containers[] | select(.name == "manager") | .env[] | select(.name == "RELATED_IMAGE_KATA_MONITOR") | .value) = env(IMG_KATA_MONITOR)' "${MANAGER_YAML}"
     yq e -i '(.spec.template.spec.containers[] | select(.name == "manager") | .env[] | select(.name == "RELATED_IMAGE_MUST_GATHER") | .value) = env(IMG_MUST_GATHER)' "${MANAGER_YAML}"
 
+    # The MCO only accepts "sandboxed-containers" as the extension name (validated
+    # against SupportedExtensions() on all OSes since the SCOS/OCP MCO convergence)
+    # and translates it to the kata-containers package itself. Upstream's
+    # getExtensionName() still defaults to "kata-containers" on SCOS, which fails
+    # rendering with "invalid extensions found: [kata-containers]" — override it
+    # via the operator's supported env var instead of patching the code.
+    yq e -i '(.spec.template.spec.containers[] | select(.name == "manager") | .env) |= (map(select(.name != "SANDBOXED_CONTAINERS_EXTENSION")) + [{"name": "SANDBOXED_CONTAINERS_EXTENSION", "value": "sandboxed-containers"}])' "${MANAGER_YAML}"
+
     # OKD branding on the CSV base
     export ICON="$(base64 -w 0 ../../icon.png)"
     yq e -i '.metadata.annotations.containerImage = env(IMG_OPERATOR)' "${CSV_BASE}"

@@ -1,15 +1,15 @@
 # Kata Containers RPM (Fedora COPR) for OKD sandboxed-containers
 
 The [sandboxed-containers operator](../) installs the Kata Containers runtime on
-cluster nodes. On SCOS (OKD's CentOS Stream CoreOS), a default `KataConfig` makes the
-operator emit a `MachineConfig` that requests the **`kata-containers` rpm-ostree
-extension** (see `controllers/openshift_controller.go`, `getExtensionName()` returns
-`kata-containers` for `quay.io/okd/scos-release` clusters).
+cluster nodes. A default `KataConfig` makes the operator emit a `MachineConfig` that
+requests the **`sandboxed-containers` rpm-ostree extension** — the only extension name
+the MCO accepts (validated against `SupportedExtensions()` on all OSes), which the MCO
+daemon translates to installing the **`kata-containers` package**.
 
-`rpm-ostree` can only install that extension if the **`kata-containers` RPM is available
-in a yum repo the node can reach**. Red Hat ships this RPM in the RHCOS extensions image,
-but that content is not available on OKD — so we build it ourselves in **Fedora COPR** and
-enable the resulting repo on the nodes.
+`rpm-ostree` can only install that package if it is **available in a yum repo the node
+can reach**. Red Hat ships it in the RHCOS extensions image, but SCOS's extensions image
+does not carry it — so we build it ourselves in **Fedora COPR** and enable the resulting
+repo on the nodes.
 
 ## 1. Build the RPM
 
@@ -44,10 +44,16 @@ under `sandboxed-containers/copr/`.
 The chroot **must match the SCOS base OS of the target OKD release**, or the RPM won't be
 installable on the node:
 
-| OKD release | SCOS base        | COPR chroot            |
-|-------------|------------------|------------------------|
-| 4.20+       | CentOS Stream 10 | `centos-stream-10-*`   |
-| ≤ 4.19      | CentOS Stream 9  | `centos-stream-9-*`    |
+| OKD release | SCOS base        | COPR chroot  |
+|-------------|------------------|--------------|
+| 4.20+       | CentOS Stream 10 | `epel-10-*`  |
+| ≤ 4.19      | CentOS Stream 9  | `epel-9-*`   |
+
+The `epel-N` chroots are used (rather than `centos-stream-N`) because they carry EPEL
+in the buildroot — the kata spec `BuildRequires` busybox, which CentOS Stream dropped
+and only exists in EPEL. The produced RPMs are el10/el9 and install fine on SCOS;
+busybox is also a **runtime** `Requires`, satisfied from EPEL when composing the
+extensions payload (see step 2).
 
 Confirm with `oc adm release info quay.io/okd/scos-release:<version>` or the OKD release
 notes before building for a new OKD version.
@@ -67,48 +73,21 @@ KATA_COMMITTISH=c10s \
 
 You can also build from a prebuilt SRPM with `KATA_SRPM=<url-or-path>`.
 
-## 2. Enable the repo on SCOS nodes
+## 2. Deliver the RPM to the nodes — via the extensions payload
 
-Publishing the RPM is not enough — the nodes need the COPR repo configured so
-`rpm-ostree` can resolve the `kata-containers` extension. Apply a `MachineConfig` that
-drops a `.repo` file on the worker pool **before** creating the `KataConfig`. Replace
-`<owner>`/`<project>` and confirm the chroot matches your nodes' arch/OS.
+The `kata-containers` RPM **and its dependency closure** (busybox from EPEL,
+qemu-kvm-core, virtiofsd, … from CentOS Stream) are delivered to SCOS nodes through the
+OKD **extensions payload**, so `rpm-ostree` can resolve the `sandboxed-containers`
+extension without any yum repos configured on the nodes. Neither the operator nor any
+manual `MachineConfig` configures node-side repos; the COPR repo built above is consumed
+when composing the extensions payload, not by the nodes directly.
 
-```yaml
-apiVersion: machineconfiguration.openshift.io/v1
-kind: MachineConfig
-metadata:
-  labels:
-    machineconfiguration.openshift.io/role: worker
-  name: 50-kata-copr-repo
-spec:
-  config:
-    ignition:
-      version: 3.2.0
-    storage:
-      files:
-        - path: /etc/yum.repos.d/kata-containers-copr.repo
-          mode: 0644
-          overwrite: true
-          contents:
-            # data:,<url-encoded ini below> (for operator 1.13 — adjust sandboxed-containers-<X.Y> to your release)
-            source: >-
-              data:,%5Bcopr-kata-containers%5D%0Aname%3DCopr%20repo%20-%20kata-containers%0Abaseurl%3Dhttps%3A//download.copr.fedorainfracloud.org/results/owenh/sandboxed-containers-1.13/centos-stream-10-%24basearch/%0Aenabled%3D1%0Agpgcheck%3D1%0Agpgkey%3Dhttps%3A//download.copr.fedorainfracloud.org/results/owenh/sandboxed-containers-1.13/pubkey.gpg%0A
-```
-
-The decoded `.repo` contents are:
-
-```ini
-[copr-kata-containers]
-name=Copr repo - kata-containers
-baseurl=https://download.copr.fedorainfracloud.org/results/owenh/sandboxed-containers-1.13/centos-stream-10-$basearch/
-enabled=1
-gpgcheck=1
-gpgkey=https://download.copr.fedorainfracloud.org/results/owenh/sandboxed-containers-1.13/pubkey.gpg
-```
-
-> Tip: regenerate the `data:,` URL from an edited `.repo` file with
-> `python3 -c 'import sys,urllib.parse;print("data:,"+urllib.parse.quote(open(sys.argv[1]).read()))' kata-containers-copr.repo`.
+The operator requests the `sandboxed-containers` extension name — the only name the
+MCO's `SupportedExtensions()` validation accepts, which the MCO daemon translates to
+installing the `kata-containers` package. Upstream defaults to `kata-containers` on
+SCOS (which fails rendering), so [`../build.sh`](../build.sh) `build_bundle()` sets the
+operator's supported `SANDBOXED_CONTAINERS_EXTENSION=sandboxed-containers` env override
+in the manager deployment before `make bundle`.
 
 ## 3. Install the operator and create a KataConfig
 
@@ -123,8 +102,8 @@ EOF
 ```
 
 The operator creates the `50-enable-sandboxed-containers-extension` MachineConfig; the MCO
-runs `rpm-ostree` on each targeted node, which pulls `kata-containers` from the COPR repo
-enabled in step 2 and reboots the node with the Kata runtime available.
+runs `rpm-ostree` on each targeted node, which installs `kata-containers` from the
+extensions payload (step 2) and reboots the node with the Kata runtime available.
 
 ## Scope / limitations
 

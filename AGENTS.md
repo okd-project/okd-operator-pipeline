@@ -29,10 +29,12 @@ okd-operator-pipeline/
 ├── cluster-logging/        # Example: independently-versioned (MAJOR=6 MINOR=3)
 ├── service-mesh/           # Example: independently-versioned (MAJOR=3 MINOR=0)
 ├── gitops/                 # Example: independently-versioned (MAJOR=1 MINOR=19)
-├── sandboxed-containers/    # Example: independently-versioned (MAJOR=1 MINOR=12) + Kata RPM in COPR
-│   ├── build.sh            # NAMESPACE="sandboxed-containers"; MAJOR=1 MINOR=12
-│   ├── operator/           # Git submodule (branch: osc-release-v1.12)
+├── sandboxed-containers/    # Example: independently-versioned (MAJOR=1 MINOR=13) + Kata RPM in COPR
+│   ├── build.sh            # NAMESPACE="sandboxed-containers"; MAJOR=1 MINOR=13
+│   ├── operator/           # Git submodule (branch: osc-release-v1.13)
 │   ├── operator.Containerfile
+│   ├── kata-monitor.Containerfile
+│   ├── must-gather.Containerfile
 │   └── copr/               # Kata RPM build for Fedora COPR (operand = rpm-ostree extension)
 │       ├── copr-build.sh
 │       └── README.md
@@ -140,8 +142,8 @@ Then, if it differs from what's checked in:
 1. Set `export MAJOR=<X>` / `export MINOR=<Y>` in `sandboxed-containers/build.sh`.
 2. Update `branch = osc-release-v<X.Y>` for `sandboxed-containers/operator` in `.gitmodules`.
 3. `cd sandboxed-containers && ./build.sh update && ./build.sh init` (a nested
-   `cloud-api-adaptor` submodule is pulled recursively; no patch is used unless `git am`
-   fails on init).
+   `cloud-api-adaptor` submodule is pulled recursively; no patch is carried — the
+   submodule builds unmodified).
 4. **Compare upstream Dockerfiles** (next section) — three images are built:
    `operator.Containerfile` (from the upstream `Dockerfile`; carries both the `manager`
    and `metrics-server` binaries, and both bundle kustomize images point at it, so
@@ -170,12 +172,17 @@ oc adm release info quay.io/okd/scos-release:${OKD_VERSION} | grep -i machine-os
 | 4.20+ | CentOS Stream 10 | `centos-stream-10-*` |
 | ≤ 4.19 | CentOS Stream 9 | `centos-stream-9-*` |
 
-For **OKD 4.22** the base is CentOS Stream 10 → chroot `centos-stream-10-x86_64`
-(+ `centos-stream-10-aarch64`). SCOS nodes then need the COPR repo enabled via a
-`MachineConfig` `.repo` drop so the `kata-containers` extension resolves — see
-`sandboxed-containers/copr/README.md` for the build steps, the node-side MachineConfig, and
-why this is required (`controllers/openshift_controller.go` → `getExtensionName()` returns
-`kata-containers` for `quay.io/okd/scos-release` clusters).
+For **OKD 4.22** the base is CentOS Stream 10 → chroot `epel-10-x86_64` (the epel
+chroots carry busybox, a BuildRequires missing from CentOS Stream). Node-side, the
+kata-containers RPM **and its dependency closure** (busybox, qemu-kvm-core, virtiofsd,
+…) are delivered via the OKD **extensions payload**, not node yum repos — the operator
+does not configure any repos on the nodes. See `sandboxed-containers/copr/README.md`.
+The MCO only accepts `sandboxed-containers` as the *extension name* (validated against
+`SupportedExtensions()` on all OSes since the SCOS/OCP MCO convergence) and translates it
+to the `kata-containers` *package*. Upstream's `getExtensionName()` still defaults to
+`kata-containers` on SCOS, which fails rendering — `build_bundle()` therefore sets the
+operator's supported `SANDBOXED_CONTAINERS_EXTENSION=sandboxed-containers` env override
+in `config/manager/manager.yaml` before `make bundle`, so the CSV deployment carries it.
 
 **Scope.** Only the default bare-metal Kata path is packaged for OKD: the operator,
 kata-monitor, and must-gather images are rebuilt. Peer-pods and Confidential Containers
