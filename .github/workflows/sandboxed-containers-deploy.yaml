@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'sandboxed-containers/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Sandboxed-Containers
+
+jobs:
+  deploy:
+    name: Deploy Sandboxed-Containers
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: sandboxed-containers
+    secrets: inherit
