@@ -2,7 +2,7 @@
 
 NAMESPACE="cert-manager"
 MAJOR=1
-MINOR=18
+MINOR=20
 
 source ../common.sh
 
