@@ -13,6 +13,8 @@ IMG_ISTIO_CSR="${REGISTRY}/istio-csr:${OCP_DATE}"
 
 IMG_BUNDLE="${REGISTRY}/operator-bundle:${OCP_DATE}"
 
+CSV_BASE="config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml"
+
 init() {
     submodule_initialize istio-csr main
     submodule_initialize cert-manager release-${OCP_SHORT}
@@ -59,6 +61,13 @@ build_bundle() {
      .env |= map(select(.name == \"ISTIOCSR_OPERAND_IMAGE_VERSION\").value = \"${OCP_DATE}\") |
      .env |= map(select(.name == \"OPERATOR_IMAGE_VERSION\").value = \"${OCP_DATE}\")
     )" ./config/manager/manager.yaml
+
+    # Upstream's graph targets 1.19, which OKD never published (1.14, 1.15, 1.18),
+    # so the bundle would offer no upgrade edge any okderators user can take.
+    export OLM_SKIP_RANGE=">=1.0.0 <${OCP_DATE}"
+    yq e -i '.metadata.annotations["olm.skipRange"] = strenv(OLM_SKIP_RANGE)' "${CSV_BASE}"
+    yq e -i 'del(.spec.replaces)' "${CSV_BASE}"
+    yq e -i 'del(.spec.skips)' "${CSV_BASE}"
 
     make bundle BUNDLE_VERSION=${OCP_DATE} IMG=${IMG_OPERATOR} "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" \
      BUNDLE_IMG=${IMG_BUNDLE} CONTAINER_ENGINE=podman ISTIO_CSR_VERSION=${OCP_DATE}
