@@ -23,6 +23,7 @@ declare -A OKD_TO_RH_PACKAGE=(
   ["nmstate"]="kubernetes-nmstate-operator"
   ["node-feature-discovery"]="nfd"
   ["oadp"]="redhat-oadp-operator"
+  ["secondary-scheduler"]="openshift-secondary-scheduler-operator"
   ["service-mesh"]="servicemeshoperator"
   ["sr-iov"]="sriov-network-operator"
   ["web-terminal"]="web-terminal"

@@ -677,3 +677,7 @@
 	path = data-foundation/blackbox-exporter
 	url = https://github.com/prometheus/blackbox_exporter.git
 	branch = v0.28.0
+[submodule "secondary-scheduler/operator"]
+	path = secondary-scheduler/operator
+	url = https://github.com/openshift/secondary-scheduler-operator.git
+	branch = release-4.21

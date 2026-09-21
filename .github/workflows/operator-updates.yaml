@@ -30,6 +30,7 @@ jobs:
           - node-feature-discovery
           - oadp
           - pf-status-relay
+          - secondary-scheduler
           - service-mesh
           - sr-iov
           - web-terminal

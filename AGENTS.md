@@ -32,7 +32,7 @@ okd-operator-pipeline/
 └── ...                     # acm, cert-manager, data-foundation, external-secrets,
                             # ingress-node-firewall, local-storage, lvms, metallb,
                             # multicluster-engine, network-observability, nmstate,
-                            # node-feature-discovery, oadp, pf-status-relay, sr-iov,
+                            # node-feature-discovery, oadp, pf-status-relay, secondary-scheduler, sr-iov,
                             # web-terminal, cluster-observability
 ```
 

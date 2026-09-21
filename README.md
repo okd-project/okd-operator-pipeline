@@ -28,6 +28,7 @@ The pipeline supports building the following operators:
 - **node-feature-discovery**: Node Feature Discovery
 - **gitops**: GitOps (ArgoCD)
 - **web-terminal**: Web Terminal Operator
+- **secondary-scheduler**: Secondary Scheduler Operator
 
 ## Building Operators
 Check out [BUILDING.md](BUILDING.md) for detailed instructions on how to build an operator.
