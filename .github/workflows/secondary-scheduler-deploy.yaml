@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - 'secondary-scheduler/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Secondary-Scheduler
+
+jobs:
+  deploy:
+    name: Deploy Secondary-Scheduler
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: secondary-scheduler
+    secrets: inherit

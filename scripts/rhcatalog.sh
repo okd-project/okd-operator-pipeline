@@ -25,6 +25,7 @@ declare -A OKD_TO_RH_PACKAGE=(
   ["node-feature-discovery"]="nfd"
   ["oadp"]="redhat-oadp-operator"
   ["sandboxed-containers"]="sandboxed-containers-operator"
+  ["secondary-scheduler"]="openshift-secondary-scheduler-operator"
   ["service-mesh"]="servicemeshoperator"
   ["sr-iov"]="sriov-network-operator"
   ["vertical-pod-autoscaler"]="vertical-pod-autoscaler"

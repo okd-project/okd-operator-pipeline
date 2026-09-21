@@ -701,3 +701,7 @@
 	path = kube-descheduler/descheduler
 	url = https://github.com/openshift/descheduler.git
 	branch = release-4.22
+[submodule "secondary-scheduler/operator"]
+	path = secondary-scheduler/operator
+	url = https://github.com/openshift/secondary-scheduler-operator.git
+	branch = release-4.22
