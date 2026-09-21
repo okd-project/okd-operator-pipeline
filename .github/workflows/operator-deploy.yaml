@@ -62,6 +62,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Pin build date
+        # DATE is baked into every image tag by common.sh; pinning it lets
+        # later steps reconstruct the exact image references build.sh pushed
+        # language=bash
+        run: echo "DATE=$(date +%Y-%m-%d-%H%M%S)" >> "$GITHUB_ENV"
+
       - name: Build and push operator
         env:
           NAMESPACE: ${{ inputs.operator }}
