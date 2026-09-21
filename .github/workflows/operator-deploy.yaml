@@ -100,6 +100,37 @@ jobs:
 
           echo "Successfully built and pushed ${{ inputs.operator }}"
 
+      - name: Tag pushed images with the release version
+        # Every image build.sh pushes is tagged <MAJOR>.<MINOR>.0-<DATE>; add a
+        # floating <MAJOR>.<MINOR>.0 tag alongside it so the latest build of a
+        # release can be referenced without knowing the timestamp
+        env:
+          NAMESPACE: ${{ inputs.operator }}
+          BASE_REGISTRY: ${{ inputs.base_registry }}
+        # language=bash
+        run: |
+          cd ${{ inputs.operator }}
+
+          # Sourcing build.sh (guarded by BASH_SOURCE, so main() does not run)
+          # re-derives every image variable with the pinned DATE. Only images in
+          # this operator's registry that carry the dated tag are retagged;
+          # upstream/payload images and fixed-version tags are left alone.
+          bash -c '
+            source ./build.sh >/dev/null 2>&1
+            SHORT_TAG="${OCP_SHORT}.0"
+            for v in $(compgen -v | grep -E "(^|_)IMG(_|$)"); do
+              img="${!v}"
+              [[ "${img}" == "${REGISTRY}/"*":${OCP_DATE}" ]] || continue
+              short="${img%:${OCP_DATE}}:${SHORT_TAG}"
+              if ! skopeo inspect --no-tags "docker://${img}" >/dev/null 2>&1; then
+                echo "::warning::${img} was not pushed; skipping ${short}"
+                continue
+              fi
+              echo "Tagging ${img} -> ${short}"
+              skopeo copy --all "docker://${img}" "docker://${short}"
+            done
+          '
+
       - name: Collect bundle image references
         id: bundles
         env:
