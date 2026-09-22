@@ -1,14 +1,15 @@
-From e27b1f9d27cfbc05b5041c2e422ed16b7f72531f Mon Sep 17 00:00:00 2001
+From 7a10eb319c23d41e4cacd6f446460b48415a0c26 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Fri, 24 Oct 2025 12:58:45 +0100
 Subject: [PATCH] OKDify
 
 ---
- src/deploy/NVA_build/setup_platform.sh | 2 ++
- 1 file changed, 2 insertions(+)
+ src/deploy/NVA_build/setup_platform.sh |  2 ++
+ src/upgrade/upgrade_manager.js         | 46 ++++++++++++++++++++++++++
+ 2 files changed, 48 insertions(+)
 
 diff --git a/src/deploy/NVA_build/setup_platform.sh b/src/deploy/NVA_build/setup_platform.sh
-index 267497b76..25ff82b2c 100755
+index 16f4cb45e..5f8c265d0 100755
 --- a/src/deploy/NVA_build/setup_platform.sh
 +++ b/src/deploy/NVA_build/setup_platform.sh
 @@ -18,12 +18,14 @@ function deploy_log {
@@ -26,6 +27,77 @@ index 267497b76..25ff82b2c 100755
  
      deploy_log "setup_supervisors start"
      mkdir -p /log/supervisor
+diff --git a/src/upgrade/upgrade_manager.js b/src/upgrade/upgrade_manager.js
+index bd71b11e9..5d7c5519c 100644
+--- a/src/upgrade/upgrade_manager.js
++++ b/src/upgrade/upgrade_manager.js
+@@ -4,6 +4,7 @@
+ const argv = require('minimist')(process.argv);
+ const _ = require('lodash');
+ const pkg = require('../../package.json');
++const config = require('../../config');
+ const { should_upgrade, run_upgrade_scripts } = require('./upgrade_utils');
+ const dbg = require('../util/debug_module')('UPGRADE');
+ dbg.set_process_name('Upgrade');
+@@ -27,6 +28,44 @@ async function init_db_upgrade(db_client, system_store) {
+     }
+ }
+ 
++// OKD: systems created with early 5.20.0 builds still carry the legacy internal (mongo)
++// pool. Upstream removes it with upgrade_scripts/5.20.0/remove_mongo_pool.js, but
++// upgrade_utils.load_required_scripts only runs version folders strictly newer than the
++// version being upgraded from, so a 5.20.0 -> 5.21.x upgrade skips that script. The pool
++// then survives with no hosts_pool_info and every read_system() call crashes in
++// pool_server.get_pool_info ("Cannot read properties of undefined (reading 'host_count')").
++// Run the removal on every start, independent of the version check. It is a no-op once
++// the pool is gone.
++async function remove_legacy_internal_pool(system_store) {
++    const legacy_pools = system_store.data.pools.filter(pool =>
++        pool.mongo_info || pool.resource_type === 'INTERNAL');
++    if (legacy_pools.length === 0) return;
++
++    const legacy_ids = legacy_pools.map(pool => String(pool._id));
++    dbg.log0('remove_legacy_internal_pool: removing legacy internal pool(s):',
++        legacy_pools.map(pool => pool.name));
++    const remove_mongo_pool = require('./upgrade_scripts/5.20.0/remove_mongo_pool');
++    await remove_mongo_pool.run({ dbg, system_store });
++
++    // remove_mongo_pool leaves accounts that used the removed pool as default_resource
++    // pointing at a deleted id. Re-point them to the default pool the script guarantees
++    // exists, which is the same pool a freshly created system assigns to its accounts.
++    const default_pool = system_store.data.systems[0].pools_by_name[config.DEFAULT_POOL_NAME];
++    if (!default_pool) throw new Error(`remove_legacy_internal_pool: default pool ${config.DEFAULT_POOL_NAME} not found`);
++    const updates = system_store.data.accounts
++        .filter(account => account.default_resource &&
++            legacy_ids.includes(String(account.default_resource._id || account.default_resource)))
++        .map(account => ({
++            _id: account._id,
++            $set: { default_resource: default_pool._id }
++        }));
++    if (updates.length > 0) {
++        dbg.log0(`remove_legacy_internal_pool: re-pointing ${updates.length} account(s) to pool ${default_pool.name}`);
++        await system_store.make_changes({ update: { accounts: updates } });
++    }
++    dbg.log0('remove_legacy_internal_pool: done');
++}
++
+ async function upgrade_db() {
+     const system_store = require('../server/system_services/system_store').get_instance({ standalone: true });
+     const system_server = require('../server/system_services/system_server');
+@@ -39,6 +78,13 @@ async function upgrade_db() {
+         process.exit(1);
+     }
+ 
++    try {
++        await remove_legacy_internal_pool(system_store);
++    } catch (err) {
++        dbg.error('failed to remove legacy internal pool!!', err);
++        return 1;
++    }
++
+     let exit_code = 0;
+     const container_version = pkg.version;
+     const server_version = _.get(system_store, 'data.systems.0.current_version');
 -- 
-2.51.0
+2.55.0
 
