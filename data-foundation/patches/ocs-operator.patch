@@ -1,11 +1,12 @@
-From c4cd8ee5b0e8fc010ceb72e929f413ae998ed08a Mon Sep 17 00:00:00 2001
+From 6b87300b1b802f367f687a072fb749b70d416216 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Fri, 24 Oct 2025 15:33:45 +0100
 Subject: [PATCH] OKDify
 
 ---
  .../ocs-operator.clusterserviceversion.yaml   | 34 +++++++++----------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+ controllers/storagecluster/storageconsumer.go | 13 +++++++
+ 2 files changed, 30 insertions(+), 17 deletions(-)
 
 diff --git a/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml b/config/manifests/ocs-operator/bases/ocs-operator.clusterserviceversion.yaml
 index 7afab0517..e9c6a2b96 100644
@@ -88,6 +89,57 @@ index 7afab0517..e9c6a2b96 100644
 -    name: Red Hat
 +    name: OKD Community
    version: 0.0.0
+diff --git a/controllers/storagecluster/storageconsumer.go b/controllers/storagecluster/storageconsumer.go
+index 84bafea04..1f6be2bbe 100644
+--- a/controllers/storagecluster/storageconsumer.go
++++ b/controllers/storagecluster/storageconsumer.go
+@@ -6,6 +6,7 @@ import (
+ 	"fmt"
+ 	"maps"
+ 	"slices"
++	"strings"
+ 
+ 	ocsv1 "github.com/red-hat-storage/ocs-operator/api/v4/v1"
+ 	ocsv1a1 "github.com/red-hat-storage/ocs-operator/api/v4/v1alpha1"
+@@ -264,6 +265,9 @@ func getLocalStorageClassNames(ctx context.Context, kubeClient client.Client, st
+ 		scItem.Name = scName
+ 		scSpec = append(scSpec, scItem)
+ 	}
++	slices.SortFunc(scSpec, func(a, b ocsv1a1.StorageClassSpec) int {
++		return strings.Compare(a.Name, b.Name)
++	})
+ 	return scSpec, nil
+ }
+ 
+@@ -300,6 +304,9 @@ func getLocalVolumeSnapshotClassNames(ctx context.Context, kubeClient client.Cli
+ 		vscItem.Name = vscName
+ 		vscSpec = append(vscSpec, vscItem)
+ 	}
++	slices.SortFunc(vscSpec, func(a, b ocsv1a1.VolumeSnapshotClassSpec) int {
++		return strings.Compare(a.Name, b.Name)
++	})
+ 	return vscSpec, nil
+ }
+ 
+@@ -342,6 +349,9 @@ func getLocalVolumeGroupSnapshotClassNames(ctx context.Context, kubeClient clien
+ 		vgscItem.Name = vgscName
+ 		vgscSpec = append(vgscSpec, vgscItem)
+ 	}
++	slices.SortFunc(vgscSpec, func(a, b ocsv1a1.VolumeGroupSnapshotClassSpec) int {
++		return strings.Compare(a.Name, b.Name)
++	})
+ 	return vgscSpec, nil
+ }
+ 
+@@ -357,5 +367,8 @@ func getLocalNetworkFenceClassNames(storageCluster *ocsv1.StorageCluster) []ocsv
+ 		nfcItem.Name = nfcName
+ 		nfcSpec = append(nfcSpec, nfcItem)
+ 	}
++	slices.SortFunc(nfcSpec, func(a, b ocsv1a1.NetworkFenceClassesSpec) int {
++		return strings.Compare(a.Name, b.Name)
++	})
+ 	return nfcSpec
+ }
 -- 
-2.54.0
+2.55.0
 
