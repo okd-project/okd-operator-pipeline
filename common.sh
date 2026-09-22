@@ -9,7 +9,7 @@ if [ -z "${NAMESPACE:-}" ]; then
 fi
 
 BASE_REGISTRY=${BASE_REGISTRY:-"quay.io/okderators"}
-OKD_VERSION=${OKD_VERSION:-"4.22.0-okd-scos.2"}
+OKD_VERSION=${OKD_VERSION:-"5.0.0-okd-scos.0"}
 REGISTRY="${BASE_REGISTRY}/$NAMESPACE"
 OKD_RELEASE=quay.io/okd/scos-release:${OKD_VERSION}
 CHANNEL=${CHANNEL:-alpha}
@@ -21,7 +21,13 @@ MINOR=${MINOR:-"$(echo "${OKD_VERSION}" | cut -d. -f2)"}
 OCP_SHORT="${MAJOR}.${MINOR}"
 DATE=${DATE:-"$(date +%Y-%m-%d-%H%M%S)"}
 OCP_DATE="${MAJOR}.${MINOR}.0-${DATE}"
-PREV_MINOR="${MAJOR}.$((MINOR - 1))"
+# Previous minor release, used for OLM skipRange. On a major rollover (x.0) the
+# previous release is the last minor of the previous major (4.22 -> 5.0).
+if [ "${MINOR}" -eq 0 ]; then
+  PREV_MINOR=${PREV_MINOR:-"$((MAJOR - 1)).22"}
+else
+  PREV_MINOR=${PREV_MINOR:-"${MAJOR}.$((MINOR - 1))"}
+fi
 
 RELEASE_INFO="$(oc adm release info ${OKD_RELEASE} -o='json')"
 

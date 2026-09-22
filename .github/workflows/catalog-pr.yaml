@@ -19,7 +19,7 @@ on:
         description: "Catalog index branch to target with the PR"
         type: string
         required: false
-        default: "release-4.21"
+        default: "release-5.0"
       channel:
         description: "OLM channel used when the operator has no package file yet (existing packages use their defaultChannel)"
         type: string
@@ -52,7 +52,7 @@ on:
         description: "Catalog index branch to target with the PR"
         type: string
         required: false
-        default: "release-4.21"
+        default: "release-5.0"
       channel:
         description: "OLM channel used when the operator has no package file yet"
         type: string

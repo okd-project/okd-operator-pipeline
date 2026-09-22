@@ -6,7 +6,7 @@ This document is written for AI agents. For human-oriented docs see `BUILDING.md
 
 This repository builds and packages upstream Kubernetes operators for **OKD** (the community OpenShift distribution). Each top-level directory is one operator. The build system is pure bash, sharing utilities from `common.sh`.
 
-**OKD versioning:** `OKD_VERSION` in `common.sh` (e.g. `4.21.0-okd-scos.10`) drives everything. `OCP_SHORT` = `MAJOR.MINOR` (e.g. `4.21`). Most operators track `release-${OCP_SHORT}` branches. Some operators use independent versioning and override `MAJOR`/`MINOR` in their `build.sh`.
+**OKD versioning:** `OKD_VERSION` in `common.sh` (e.g. `5.0.0-okd-scos.0`) drives everything. `OCP_SHORT` = `MAJOR.MINOR` (e.g. `5.0`). Most operators track `release-${OCP_SHORT}` branches. Some operators use independent versioning and override `MAJOR`/`MINOR` in their `build.sh`.
 
 ## Directory Layout
 
@@ -18,9 +18,9 @@ okd-operator-pipeline/
 ├── .gitmodules             # All submodule registrations (100+ submodules)
 ├── metallb/                # Example: OKD-versioned operator
 │   ├── build.sh            # NAMESPACE="metallb"; sources ../common.sh
-│   ├── frr/                # Git submodule (branch: release-4.21)
-│   ├── metallb/            # Git submodule (branch: release-4.21)
-│   ├── operator/           # Git submodule (branch: release-4.21)
+│   ├── frr/                # Git submodule (branch: release-5.0)
+│   ├── metallb/            # Git submodule (branch: release-5.0)
+│   ├── operator/           # Git submodule (branch: release-5.0)
 │   ├── frr.Containerfile
 │   ├── metallb.Containerfile
 │   ├── operator.Containerfile
@@ -54,9 +54,10 @@ okd-operator-pipeline/
 | `NAMESPACE` | `metallb` | Set in `build.sh` before `source ../common.sh` |
 | `BASE_REGISTRY` | `quay.io/okderators` | Env override or default |
 | `REGISTRY` | `quay.io/okderators/metallb` | `${BASE_REGISTRY}/${NAMESPACE}` |
-| `OKD_VERSION` | `4.21.0-okd-scos.10` | Env override or default |
-| `OCP_SHORT` | `4.21` | Derived from `MAJOR.MINOR` |
-| `OCP_DATE` | `4.21.0-2026-05-12-104500` | Used for all image tags |
+| `OKD_VERSION` | `5.0.0-okd-scos.0` | Env override or default |
+| `OCP_SHORT` | `5.0` | Derived from `MAJOR.MINOR` |
+| `OCP_DATE` | `5.0.0-2026-05-12-104500` | Used for all image tags |
+| `PREV_MINOR` | `4.22` | Previous release for OLM `skipRange`; rolls over across majors (`5.0` → `4.22`), env override |
 | `DATE` | `2026-05-12-104500` | `$(date +%Y-%m-%d-%H%M%S)` or env override |
 
 ### `build.sh` Structure
@@ -107,7 +108,7 @@ source build.sh && init && build_containers  # Interactive / debug
 
 ### OKD-versioned operators (most operators)
 
-1. Update `.gitmodules` — change `branch = release-4.20` → `branch = release-4.21` for each submodule in the operator
+1. Update `.gitmodules` — change `branch = release-4.22` → `branch = release-5.0` for each submodule in the operator
 2. Run `./build.sh update` from the operator directory to pull new commits
 3. **Compare upstream Dockerfiles** — see [Comparing with upstream Dockerfiles](#comparing-with-upstream-dockerfiles) below
 4. Run `./build.sh init` to verify patches still apply cleanly
@@ -127,7 +128,7 @@ source build.sh && init && build_containers  # Interactive / debug
 independently-versioned operator **plus** an RPM operand. Its operand is the Kata runtime,
 which on SCOS is installed via an rpm-ostree **extension**, not a container image — so the
 Kata RPM must be built in **Fedora COPR**. This section is the complete recipe; it should
-let a request like *"Add Sandboxed containers operator for 4.22"* work end-to-end.
+let a request like *"Add Sandboxed containers operator for 5.0"* work end-to-end.
 
 **Version mapping.** OSC branches are `osc-release-v<MAJOR>.<MINOR>` (note the `v`), *not*
 `release-<OCP_SHORT>`, and track the operator version, not the OKD version. To target an
@@ -172,7 +173,7 @@ oc adm release info quay.io/okd/scos-release:${OKD_VERSION} | grep -i machine-os
 | 4.20+ | CentOS Stream 10 | `centos-stream-10-*` |
 | ≤ 4.19 | CentOS Stream 9 | `centos-stream-9-*` |
 
-For **OKD 4.22** the base is CentOS Stream 10 → chroot `epel-10-x86_64` (the epel
+For **OKD 5.0** the base is CentOS Stream 10 → chroot `epel-10-x86_64` (the epel
 chroots carry busybox, a BuildRequires missing from CentOS Stream). Node-side, the
 kata-containers RPM **and its dependency closure** (busybox, qemu-kvm-core, virtiofsd,
 …) are delivered via the OKD **extensions payload**, not node yum repos — the operator
@@ -199,8 +200,8 @@ Red Hat publishes the Dockerfiles used to build each operator component in the c
 ./scripts/rhcatalog.sh dump-containerfiles <operator> v<MAJOR>.<MINOR>.0 /tmp/<operator>-upstream/
 
 # Example:
-./scripts/rhcatalog.sh dump-containerfiles metallb v4.21.0 /tmp/metallb-upstream/
-./scripts/rhcatalog.sh dump-containerfiles sr-iov  v4.21.0 /tmp/sr-iov-upstream/
+./scripts/rhcatalog.sh dump-containerfiles metallb v5.0.0 /tmp/metallb-upstream/
+./scripts/rhcatalog.sh dump-containerfiles sr-iov  v5.0.0 /tmp/sr-iov-upstream/
 ```
 
 Then diff each dumped `.Dockerfile` against the corresponding `.Containerfile` in the operator directory. The mapping is not systematic — use the component name in the filename as a guide (e.g. `metallb-rhel9-operator.Dockerfile` → `operator.Containerfile`, `frr-rhel9.Dockerfile` → `frr.Containerfile`).
@@ -340,7 +341,7 @@ operator-sdk cleanup <package-name>
 
 ## Conventions and Gotchas
 
-- **Floating release tags:** the CI deploy workflow (`.github/workflows/operator-deploy.yaml`) retags every pushed `${REGISTRY}/<image>:${OCP_DATE}` image as `${REGISTRY}/<image>:${OCP_SHORT}.0` (e.g. `4.22.0` next to `4.22.0-<DATE>`) via `skopeo copy`. Local `./build.sh` runs push only the dated tag
+- **Floating release tags:** the CI deploy workflow (`.github/workflows/operator-deploy.yaml`) retags every pushed `${REGISTRY}/<image>:${OCP_DATE}` image as `${REGISTRY}/<image>:${OCP_SHORT}.0` (e.g. `5.0.0` next to `5.0.0-<DATE>`) via `skopeo copy`. Local `./build.sh` runs push only the dated tag
 - **`IMG_*` naming:** operand images use `IMG_<COMPONENT>` (exported); bundle images use `IMG_BUNDLE` or `IMG_BUNDLE_<NAME>` (not exported, not pushed by `push_all_images`)
 - **`push_all_images`** skips any variable starting with `IMG_BUNDLE` and any image not prefixed with `$REGISTRY`
 - **`bundle.Dockerfile`** is regenerated by `operator-sdk` during `build_bundle`; the existing one is renamed to `bundle.Dockerfile_orig` temporarily

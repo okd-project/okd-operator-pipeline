@@ -63,8 +63,8 @@ Images will be pushed to `${BASE_REGISTRY}/<namespace>/<image-name>:<version>`.
 ### Optional Variables
 
 ```bash
-# Target OKD version (default: 4.20.0-okd-scos.6)
-export OKD_VERSION="4.20.0-okd-scos.6"
+# Target OKD version (default: 5.0.0-okd-scos.0)
+export OKD_VERSION="5.0.0-okd-scos.0"
 
 # Operator channel (default: alpha)
 export CHANNEL="stable"
@@ -192,7 +192,7 @@ If this happens, try re-running the `push_containers` task to ensure to retry pu
 |-------------------|----------------------|-----------------------------------|
 | `NAMESPACE`       | Operator specific    | Operator namespace/directory name |
 | `BASE_REGISTRY`   | `quay.io/okderators` | Base container registry URL       |
-| `OKD_VERSION`     | `4.20.0-okd-scos.6`  | Target OKD version                |
+| `OKD_VERSION`     | `5.0.0-okd-scos.0`   | Target OKD version                |
 | `CHANNEL`         | `alpha`              | Operator channel                  |
 | `DEFAULT_CHANNEL` | `alpha`              | Default operator channel          |
 | `MAJOR`           | Operator specific    | Major version override            |
