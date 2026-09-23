@@ -1,29 +1,15 @@
-From cf4a335a09a9bf6e63041c908ba2e85aafca98a7 Mon Sep 17 00:00:00 2001
+From d29c4433f7ae67767523c098a4965a426e3aa391 Mon Sep 17 00:00:00 2001
 From: Chris Wheeler <chwheele@redhat.com>
 Date: Fri, 3 Apr 2026 16:51:01 -0700
 Subject: [PATCH] OKDify
 
 ---
- Makefile                                                  | 2 +-
  .../bases/ptp-operator.clusterserviceversion.yaml         | 8 ++++----
- ptp-tools/Dockerfile.lptpd                                | 2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ ptp-tools/Dockerfile.lptpd                                | 5 ++++-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index c696fbd2..393865ac 100644
---- a/Makefile
-+++ b/Makefile
-@@ -36,7 +36,7 @@ IMAGE_TAG_BASE ?= quay.io/openshift/origin-ptp-operator
- BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
-
- # BUNDLE_GEN_FLAGS are the flags passed to the operator-sdk generate bundle command
--BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION).0 $(BUNDLE_METADATA_OPTS) --extra-service-accounts "linuxptp-daemon"
-+BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS) --extra-service-accounts "linuxptp-daemon"
-
- # Set the Operator SDK version to use. By default, what is installed on the system is used.
- # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 diff --git a/config/manifests/bases/ptp-operator.clusterserviceversion.yaml b/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
-index eb583c08..6694eee9 100644
+index 4935650d..1f157a8b 100644
 --- a/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/ptp-operator.clusterserviceversion.yaml
 @@ -120,7 +120,7 @@ spec:
@@ -35,7 +21,7 @@ index eb583c08..6694eee9 100644
  
      ## Introdution
      PTP Operator manages cluster wide PTP configuration.
-@@ -172,9 +172,9 @@ spec:
+@@ -172,10 +172,10 @@ spec:
    - name: Documentation operand
      url: https://github.com/k8snetworkplumbingwg/linuxptp-daemon
    maintainers:
@@ -44,20 +30,33 @@ index eb583c08..6694eee9 100644
 +  - email: maintainers@okd.io
 +    name: OKD Community
    maturity: alpha
+   minKubeVersion: 1.35.0
    provider:
 -    name: Red Hat
 +    name: OKD Community
    version: 0.0.0
 diff --git a/ptp-tools/Dockerfile.lptpd b/ptp-tools/Dockerfile.lptpd
-index 3cc5c280..a34c7cfd 100644
+index 4f9027a1..eb8e2042 100644
 --- a/ptp-tools/Dockerfile.lptpd
 +++ b/ptp-tools/Dockerfile.lptpd
-@@ -1,4 +1,4 @@
--FROM docker.io/golang:1.24.3 AS builder
-+FROM docker.io/golang:1.25 AS builder
- WORKDIR /go/src/github.com/k8snetworkplumbingwg/linuxptp-daemon
- ENV GOMAXPROCS=16
-
---
-2.54.0
+@@ -7,7 +7,9 @@ RUN git clone -b main https://github.com/k8snetworkplumbingwg/linuxptp-daemon.gi
+ RUN make clean && make -j 16
+ 
+ FROM quay.io/centos/centos:stream9
+-RUN yum install -y gpsd-minimal glibc gpsd-minimal-clients linuxptp ethtool hwdata synce4l  && yum clean all
++RUN yum install -y pciutils linuxptp ethtool hwdata synce4l iproute procps-ng chrony i2c-tools \
++  && (yum -y install gpsd-minimal gpsd-minimal-clients || yum -y install gpsd gpsd-clients) \
++  && yum clean all
+ 
+ # Create symlinks for executables to match references
+ RUN ln -s /usr/bin/gpspipe /usr/local/bin/gpspipe
+@@ -16,5 +18,6 @@ RUN ln -s /usr/bin/ubxtool /usr/local/bin/ubxtool
+ 
+ 
+ COPY --from=builder /go/src/github.com/k8snetworkplumbingwg/linuxptp-daemon/bin/ptp /usr/local/bin/
++COPY --from=builder /go/src/github.com/k8snetworkplumbingwg/linuxptp-daemon/extra/leap-seconds.list /usr/share/zoneinfo/leap-seconds.list
+ 
+ CMD ["/usr/local/bin/ptp"]
+-- 
+2.55.0
 

@@ -56,7 +56,7 @@ build_bundle() {
     yq e -i '.spec.template.spec.containers[0].env |= map(select(.name == "SIDECAR_EVENT_IMAGE").value = env(IMG_CEP))' ./config/manager/env.yaml
     yq e -i '.spec.template.spec.containers[0].env |= map(select(.name == "KUBE_RBAC_PROXY_IMAGE").value = env(IMG_KUBE_RBAC_PROXY))' ./config/manager/env.yaml
 
-    make bundle VERSION="${OCP_DATE}" BUNDLE_METADATA_OPTS="${BUNDLE_METADATA_OPTS}" IMG="${IMG_OPERATOR}"
+    make bundle VERSION="${OCP_DATE}" BUNDLE_VERSION="${OCP_DATE}" BUNDLE_METADATA_OPTS="${BUNDLE_METADATA_OPTS}" IMG="${IMG_OPERATOR}"
 
     # Build and push the bundle image
     podman build -t "${BUNDLE_IMG}" -f bundle.Dockerfile .
