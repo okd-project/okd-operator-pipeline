@@ -3,7 +3,7 @@
 NAMESPACE="secondary-scheduler"
 
 # The secondary scheduler operator is versioned independently of the OCP
-# release (1.6.x targets OCP 4.22) while its submodule tracks OCP release branches
+# release (1.6.1 targets OCP 5.0) while its submodule tracks OCP release branches
 MAJOR=1
 MINOR=6
 

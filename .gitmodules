@@ -704,4 +704,4 @@
 [submodule "secondary-scheduler/operator"]
 	path = secondary-scheduler/operator
 	url = https://github.com/openshift/secondary-scheduler-operator.git
-	branch = release-4.22
+	branch = release-5.0

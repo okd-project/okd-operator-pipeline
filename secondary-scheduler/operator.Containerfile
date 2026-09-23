@@ -1,12 +1,14 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 COPY --chown=default ./operator .
 
-RUN make build --warn-undefined-variables
+RUN make build --warn-undefined-variables \
+    && gzip secondary-scheduler-operator-tests-ext
 
 FROM quay.io/centos/centos:stream9
 
 COPY --from=builder /opt/app-root/src/secondary-scheduler-operator /usr/bin/
+COPY --from=builder /opt/app-root/src/secondary-scheduler-operator-tests-ext.gz /usr/bin/
 COPY --from=builder /opt/app-root/src/manifests /manifests
 COPY --from=builder /opt/app-root/src/metadata /metadata
 RUN mkdir /licenses
