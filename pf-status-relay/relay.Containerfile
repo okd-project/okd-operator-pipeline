@@ -1,6 +1,6 @@
 ARG OKD_SHORT
 
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 COPY --chown=default . .
 RUN CGO_ENABLED=1 GOOS=linux go build -a -ldflags '-w' -o pf-status-relay cmd/pf-status-relay.go

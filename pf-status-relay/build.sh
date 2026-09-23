@@ -3,15 +3,12 @@
 # Configuration and variable setup
 NAMESPACE="pf-status-relay"
 
-DATE="2025-12-14-152353"
-
 source ../common.sh
 
 # Image definitions
 IMG_OPERATOR=${REGISTRY}/operator:${OCP_DATE}
 IMG_RELAY=${REGISTRY}/relay:${OCP_DATE}
 IMG_BUNDLE=${REGISTRY}/bundle:${OCP_DATE}
-IMG_KUBE_RBAC_PROXY=$(get_payload_component "kube-rbac-proxy")
 
 ## Functions
 
@@ -46,10 +43,18 @@ build_bundle() {
 
     pushd operator
 
-    yq e -i ".spec.template.spec.containers[0].image = \"${IMG_KUBE_RBAC_PROXY}\"" config/default/manager_auth_proxy_patch.yaml
+    CSV_BASE="config/manifests/bases/pf-status-relay-operator.clusterserviceversion.yaml"
+    CSV="bundle/manifests/pf-status-relay-operator.clusterserviceversion.yaml"
+
     yq e -i ".spec.template.spec.containers[0].env[0].value = \"${IMG_RELAY}\"" config/manager/env_patch.yaml
+    export OLM_SKIP_RANGE=">=4.3.0-0 <${OCP_DATE}"
+    yq e -i '.metadata.annotations["olm.skipRange"] = strenv(OLM_SKIP_RANGE)' "${CSV_BASE}"
 
     make bundle VERSION=${OCP_DATE} IMG=${IMG_OPERATOR} "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" BUNDLE_IMG=${IMG_BUNDLE} RELAY_IMG=${IMG_RELAY}
+
+    # PF_STATUS_RELAY_IMAGE lacks the RELATED_IMAGE_ prefix, so operator-sdk does not list it.
+    export IMG_RELAY
+    yq e -i '.spec.relatedImages += [{"name": "pf-status-relay", "image": strenv(IMG_RELAY)}]' "${CSV}"
 
     podman build -f bundle.Dockerfile -t ${IMG_BUNDLE} .
     podman push ${IMG_BUNDLE}
