@@ -1,13 +1,15 @@
 # Build the manager binary
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
-ARG VERSION=0.0.0
+# Named OPERATOR_VERSION because the go-toolset image exports VERSION (its Go
+# version), which would shadow a VERSION build arg in RUN steps
+ARG OPERATOR_VERSION=0.0.0
 
 COPY --chown=default ./operator .
 
 # Upstream injects the git hash via .git; the submodule gitfile points outside
 # the build context, so pass the version explicitly instead
-RUN make container-binary-build INJECT_VERSION=v${VERSION}
+RUN make container-binary-build INJECT_VERSION=v${OPERATOR_VERSION}
 
 FROM quay.io/centos/centos:stream9
 

@@ -30,7 +30,7 @@ update() {
 }
 
 build_containers() {
-    podman build --build-arg VERSION=${OCP_DATE} -t "${IMG_OPERATOR}" -f operator.Containerfile .
+    podman build --build-arg OPERATOR_VERSION=${OCP_DATE} -t "${IMG_OPERATOR}" -f operator.Containerfile .
     podman build -t "${IMG_VPA}" -f vertical-pod-autoscaler.Containerfile .
 }
 
