@@ -1,4 +1,4 @@
-From 466287226c210c02a8ec9d77bba84b4baca28281 Mon Sep 17 00:00:00 2001
+From fafdc634359a5c7166f2ceecb30aa520fe34eb74 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Sat, 10 May 2025 14:45:56 +0100
 Subject: [PATCH] OKDify
@@ -8,11 +8,11 @@ Subject: [PATCH] OKDify
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml b/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
-index 93b41f9c7..590fe0aca 100644
+index 007b31c1b..b86efbce8 100644
 --- a/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/sriov-network-operator.clusterserviceversion.yaml
 @@ -9,7 +9,7 @@ metadata:
-     containerImage: quay.io/openshift/origin-sriov-network-operator:4.21
+     containerImage: quay.io/openshift/origin-sriov-network-operator:5.0
      createdAt: 2019/04/30
      description: An operator for configuring SR-IOV components and initializing SRIOV
 -      network devices in Openshift cluster.
@@ -29,7 +29,7 @@ index 93b41f9c7..590fe0aca 100644
      target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
    labels:
      operatorframework.io/arch.amd64: supported
-@@ -100,10 +100,10 @@ spec:
+@@ -101,10 +101,10 @@ spec:
        name: sriovoperatorconfigs.sriovnetwork.openshift.io
        version: v1
    description: |
@@ -42,13 +42,13 @@ index 93b41f9c7..590fe0aca 100644
  
      ### Supported Features
      * Initialize the SR-IOV NICs on nodes.
-@@ -159,5 +159,5 @@ spec:
+@@ -160,5 +160,5 @@ spec:
    - email: support@redhat.com
      name: Red Hat
    provider:
 -    name: Red Hat
 +    name: OKD Community
-   version: 4.21.0
+   version: 5.0.0
 -- 
-2.54.0
+2.55.0
 

@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 COPY --chown=default ./sr-iov/operator ./sr-iov/operator
 COPY --chown=default .git/ .git/
@@ -8,7 +8,7 @@ RUN make _build-sriov-network-config-daemon BIN_PATH=build/_output/cmd
 
 FROM quay.io/centos/centos:stream9
 
-RUN yum -y update && ARCH_DEP_PKGS=$(if [ "$(uname -m)" != "s390x" ]; then echo -n mstflint ; fi) && yum -y install pciutils hwdata $ARCH_DEP_PKGS && yum clean all
+RUN yum -y update && ARCH_DEP_PKGS=$(if [ "$(uname -m)" != "s390x" ]; then echo -n mstflint ; fi) && yum -y install pciutils hwdata kmod $ARCH_DEP_PKGS && yum clean all
 COPY --from=builder /opt/app-root/src/sr-iov/operator/build/_output/cmd/sriov-network-config-daemon /usr/bin/
 COPY ./sr-iov/operator/bindata /bindata
 ENV PLUGINSPATH=/plugins
