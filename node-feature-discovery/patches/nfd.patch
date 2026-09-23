@@ -1,34 +1,37 @@
-From 9670610601f6a9d9edab3470d26d6420bfab39ec Mon Sep 17 00:00:00 2001
+From 597ebb70d78603fd4907e0e257b9f0657298c5a0 Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Thu, 5 Jun 2025 16:46:17 +0100
 Subject: [PATCH] OKDify
 
 ---
- Dockerfile | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ Dockerfile | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
 diff --git a/Dockerfile b/Dockerfile
-index b6e5e67cd..97911c3c1 100644
+index f216afbb5..7209e1036 100644
 --- a/Dockerfile
 +++ b/Dockerfile
-@@ -1,8 +1,9 @@
+@@ -1,19 +1,21 @@
 +ARG OKD_SHORT
 +
  # Build node feature discovery
--FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.21 AS builder
-+FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.26-openshift-5.0 AS builder
++FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
  
 -WORKDIR /go/node-feature-discovery
 -COPY . .
 +COPY --chown=default . .
  
  # Do actual build
- ARG VERSION=v0.10.0
-@@ -10,10 +11,10 @@ ARG HOSTMOUNT_PREFIX=/host-
- RUN make build VERSION=${VERSION} HOSTMOUNT_PREFIX=${HOSTMOUNT_PREFIX}
+-ARG VERSION=v0.10.0
++# go-toolset exports VERSION=<go version>, which would shadow an ARG VERSION in RUN
++ARG NFD_VERSION=v0.10.0
+ ARG HOSTMOUNT_PREFIX=/host-
+-RUN make build VERSION=${VERSION} HOSTMOUNT_PREFIX=${HOSTMOUNT_PREFIX}
++RUN make build VERSION=${NFD_VERSION} HOSTMOUNT_PREFIX=${HOSTMOUNT_PREFIX}
  
  # Create full variant of the production image
--FROM registry.ci.openshift.org/ocp/4.21:base-rhel9
+-FROM registry.ci.openshift.org/ocp/5.0:base-rhel9
 +FROM registry.ci.openshift.org/origin/scos-${OKD_SHORT}:base-stream9
  
  # Use more verbose logging of gRPC
@@ -39,5 +42,5 @@ index b6e5e67cd..97911c3c1 100644
 +COPY --from=builder /opt/app-root/src/deployment/components/worker-config/nfd-worker.conf.example /etc/kubernetes/node-feature-discovery/nfd-worker.conf
 +COPY --from=builder /opt/app-root/src/bin/* /usr/bin/
 -- 
-2.54.0
+2.55.0
 

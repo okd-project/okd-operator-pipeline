@@ -1,4 +1,4 @@
-From b688b0c222218d8e7f46c2342a85953b0f255f08 Mon Sep 17 00:00:00 2001
+From 64d9f775b47a22ffc579a8e6aaa66f81b671feae Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Thu, 5 Jun 2025 16:45:02 +0100
 Subject: [PATCH] OKDify
@@ -9,16 +9,16 @@ Subject: [PATCH] OKDify
  2 files changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/Dockerfile b/Dockerfile
-index fee7377d..f49ab6df 100644
+index 65c84605..7451a19c 100644
 --- a/Dockerfile
 +++ b/Dockerfile
 @@ -1,16 +1,17 @@
  # Build the manager binary
--FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.24-openshift-4.21 AS builder
+-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.26-openshift-5.0 AS builder
 -WORKDIR /go/src/github.com/openshift/cluster-nfd-operator
 +ARG OKD_SHORT
 +
-+FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
++FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
  
  # Build
 -COPY . .
@@ -26,7 +26,7 @@ index fee7377d..f49ab6df 100644
  RUN make build
  
  # Create production image for running the operator
--FROM registry.ci.openshift.org/ocp/4.21:base-rhel9
+-FROM registry.ci.openshift.org/ocp/5.0:base-rhel9
 +FROM registry.ci.openshift.org/origin/scos-${OKD_SHORT}:base-stream9
  
  ARG CSV=4.20
@@ -36,7 +36,7 @@ index fee7377d..f49ab6df 100644
  COPY manifests /manifests
  
 diff --git a/config/manifests/bases/nfd.clusterserviceversion.yaml b/config/manifests/bases/nfd.clusterserviceversion.yaml
-index 84d2758b..276a8d33 100644
+index e8d9586a..d964f6bc 100644
 --- a/config/manifests/bases/nfd.clusterserviceversion.yaml
 +++ b/config/manifests/bases/nfd.clusterserviceversion.yaml
 @@ -64,9 +64,8 @@ metadata:
@@ -62,7 +62,7 @@ index 84d2758b..276a8d33 100644
    labels:
      operatorframework.io/arch.amd64: supported
      operatorframework.io/arch.arm64: supported
-@@ -829,11 +828,11 @@ spec:
+@@ -837,11 +836,11 @@ spec:
    - name: Node Feature Discovery Documentation
      url: https://kubernetes-sigs.github.io/node-feature-discovery/stable/get-started/index.html
    maintainers:
@@ -78,5 +78,5 @@ index 84d2758b..276a8d33 100644
      url: https://github.com/openshift/cluster-nfd-operator
    version: 4.20.0
 -- 
-2.54.0
+2.55.0
 

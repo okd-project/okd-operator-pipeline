@@ -29,7 +29,7 @@ update() {
 
 build_containers() {
     podman build --build-arg CSV=${OCP_SHORT} --build-arg OKD_SHORT=${OCP_SHORT} -f operator/Dockerfile -t ${IMG_OPERATOR} operator
-    podman build -f nfd/Dockerfile --build-arg OKD_SHORT=${OCP_SHORT} --build-arg VERSION=${OCP_DATE} -t ${IMG_NFD} nfd
+    podman build -f nfd/Dockerfile --build-arg OKD_SHORT=${OCP_SHORT} --build-arg NFD_VERSION=${OCP_DATE} -t ${IMG_NFD} nfd
 }
 
 push_containers() {
