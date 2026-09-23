@@ -696,11 +696,11 @@
 [submodule "kube-descheduler/operator"]
 	path = kube-descheduler/operator
 	url = https://github.com/openshift/cluster-kube-descheduler-operator.git
-	branch = release-4.22
+	branch = release-5.0
 [submodule "kube-descheduler/descheduler"]
 	path = kube-descheduler/descheduler
 	url = https://github.com/openshift/descheduler.git
-	branch = release-4.22
+	branch = release-5.0
 [submodule "secondary-scheduler/operator"]
 	path = secondary-scheduler/operator
 	url = https://github.com/openshift/secondary-scheduler-operator.git

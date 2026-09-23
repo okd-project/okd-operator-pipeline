@@ -3,7 +3,7 @@
 NAMESPACE="kube-descheduler"
 
 # The descheduler operator is versioned independently of the OCP release
-# (5.4.x targets OCP 4.22) while its submodules track OCP release branches
+# (5.4.x targets OCP 4.22 through 5.0) while its submodules track OCP release branches
 MAJOR=5
 MINOR=4
 
