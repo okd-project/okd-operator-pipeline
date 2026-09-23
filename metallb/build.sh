@@ -41,7 +41,8 @@ update() {
 }
 
 build_containers() {
-    podman build -t "${IMG_OPERATOR}" -f operator.Containerfile ./operator
+    podman build -t "${IMG_OPERATOR}" -f operator.Containerfile \
+        --build-arg GIT_COMMIT="$(git -C operator rev-parse HEAD)" ./operator
     podman build -t "${IMG_METALLB}" -f metallb.Containerfile ../
     podman build -t "${IMG_FRR}" -f frr.Containerfile ../
 }

@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 # Copy the Go Modules manifests
 COPY --chown=default go.mod go.mod
@@ -14,7 +14,8 @@ COPY --chown=default vendor/ vendor/
 COPY --chown=default bindata/deployment/ bindata/deployment/
 
 # Build
-RUN CGO_ENABLED=0 GO111MODULE=on go build -a -mod=vendor -o manager main.go
+ARG GIT_COMMIT=unknown
+RUN CGO_ENABLED=0 GO111MODULE=on go build -a -mod=vendor -ldflags "-X 'main.build=${GIT_COMMIT}'" -o manager main.go
 
 FROM quay.io/centos/centos:stream9
 
