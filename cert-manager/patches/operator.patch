@@ -1,20 +1,43 @@
-From 1bc9f0ff0b2049a876f33ac9a5d52c8197458bad Mon Sep 17 00:00:00 2001
-From: Owen Howard <owen@ziax.com>
-Date: Fri, 30 May 2025 14:09:06 +0100
+From dadf2d44cadb40e64c42c484898b513e0fb1ed46 Mon Sep 17 00:00:00 2001
+From: OKD Community <maintainers@okd.io>
+Date: Tue, 8 Sep 2026 20:06:52 +0200
 Subject: [PATCH] OKDify
 
 ---
+ Makefile                                      | 10 ++++++---
  ...anager-operator.clusterserviceversion.yaml | 22 +++++++++----------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+ 2 files changed, 17 insertions(+), 15 deletions(-)
 
+diff --git a/Makefile b/Makefile
+index 4b3edb2e..738d96d5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -21,10 +21,14 @@ export XDG_CONFIG_HOME ?= $(PROJECT_ROOT)/_output/.config
+ # DEFAULT_VERSION is the default version to use for image tags when not set.
+ DEFAULT_VERSION := 1.20.0
+ 
+-# Helper function to validate semver (Major.Minor.Patch format)
+-# Returns 'valid' if the version matches semver (X.Y.Z) or 'latest', empty string otherwise
++# Helper function to validate semver (Major.Minor.Patch[-prerelease] format)
++# Returns 'valid' if the version matches semver (X.Y.Z or X.Y.Z-prerelease) or
++# 'latest', empty string otherwise.
++# The pre-release suffix is permitted because it is part of the semver spec and
++# downstream rebuilds distinguish multiple builds of the same upstream version
++# that way (e.g. 1.20.0-2026-09-08-200000).
+ define validate-semver
+-$(shell echo '$(1)' | grep -Eq '^([0-9]+\.[0-9]+\.[0-9]+|latest)$$' && echo valid)
++$(shell echo '$(1)' | grep -Eq '^([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?|latest)$$' && echo valid)
+ endef
+ 
+ # Formats version for image tags: adds 'v' prefix for semver, keeps 'latest' as-is
 diff --git a/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml b/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml
-index fb30c009..de341c84 100644
+index 9f3841f1..4ad9ee07 100644
 --- a/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml
 +++ b/config/manifests/bases/cert-manager-operator.clusterserviceversion.yaml
 @@ -19,19 +19,17 @@ metadata:
      features.operators.openshift.io/token-auth-azure: "true"
      features.operators.openshift.io/token-auth-gcp: "true"
-     olm.skipRange: '>=1.18.0 <1.18.1'
+     olm.skipRange: '>=1.19.0 <1.20.0'
 -    operator.openshift.io/uninstall-message: The cert-manager Operator for Red Hat
 -      OpenShift will be removed from cert-manager-operator namespace. If your Operator
 +    operator.openshift.io/uninstall-message: The cert-manager Operator for OKD
@@ -34,14 +57,14 @@ index fb30c009..de341c84 100644
    labels:
      operatorframework.io/arch.amd64: supported
      operatorframework.io/arch.arm64: supported
-@@ -112,11 +110,11 @@ spec:
+@@ -126,11 +124,11 @@ spec:
        name: certmanagers.operator.openshift.io
        version: v1alpha1
    description: |
--    The cert-manager Operator for Red Hat OpenShift provides seamless support for [cert-manager v1.18.4](https://github.com/cert-manager/cert-manager/tree/v1.18.4), which automates certificate management.
+-    The cert-manager Operator for Red Hat OpenShift provides seamless support for [cert-manager v1.20.3](https://github.com/cert-manager/cert-manager/tree/v1.20.3), which automates certificate management.
 -    For more information, see the [cert-manager Operator for Red Hat OpenShift documentation](https://docs.openshift.com/container-platform/latest/security/cert_manager_operator/index.html).
 -  displayName: cert-manager Operator for Red Hat OpenShift
-+    The cert-manager Operator for OKD provides seamless support for [cert-manager v1.18.4](https://github.com/cert-manager/cert-manager/tree/v1.18.4), which automates certificate management.
++    The cert-manager Operator for OKD provides seamless support for [cert-manager v1.20.3](https://github.com/cert-manager/cert-manager/tree/v1.20.3), which automates certificate management.
 +    For more information, see the [cert-manager Operator for OKD documentation](https://docs.openshift.com/container-platform/latest/security/cert_manager_operator/index.html).
 +  displayName: cert-manager Operator for OKD
    icon:
@@ -50,7 +73,7 @@ index fb30c009..de341c84 100644
      mediatype: image/png
    install:
      spec:
-@@ -143,11 +141,11 @@ spec:
+@@ -158,11 +156,11 @@ spec:
    - name: Documentation
      url: https://github.com/openshift/cert-manager-operator/blob/master/README.md
    maintainers:
@@ -59,12 +82,12 @@ index fb30c009..de341c84 100644
 +  - email: maintainers@okd.io
 +    name: OKD Community
    maturity: stable
-   minKubeVersion: 1.27.0
+   minKubeVersion: 1.31.0
    provider:
 -    name: Red Hat
 +    name: OKD Community
-   replaces: cert-manager-operator.v1.18.0
-   version: 1.18.1
+   replaces: cert-manager-operator.v1.19.0
+   version: 1.20.0
 -- 
-2.53.0
+2.50.1 (Apple Git-155)
 
