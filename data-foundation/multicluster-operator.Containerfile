@@ -1,4 +1,4 @@
-FROM quay.io/projectquay/golang:1.25 as builder
+FROM quay.io/projectquay/golang:1.26 as builder
 
 ENV GOFLAGS=''
 
@@ -10,7 +10,7 @@ RUN go version | tee -a ./go.version
 
 RUN GOOS=linux go build -a -o bin/odf-multicluster-operator ./main.go
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
 # Update the image to get the latest CVE updates
 RUN microdnf update -y && \

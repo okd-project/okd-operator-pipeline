@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25 as builder
+FROM registry.access.redhat.com/ubi10/go-toolset:1.26 as builder
 
 ARG CI_VERSION
 
@@ -8,7 +8,7 @@ RUN go version | tee -a ./go.version
 
 RUN make GIT_TAG=${CI_VERSION} build
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
 # Update the image to get the latest CVE updates
 RUN microdnf update -y && \

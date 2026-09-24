@@ -4,10 +4,10 @@ NAMESPACE="data-foundation"
 
 source ../common.sh
 
-MCG_BRANCH="5.21"
+MCG_BRANCH="5.22"
 BLACKBOX_EXPORTER_VERSION="v0.28.0"
 
-CEPH_RELEASE="9.0"
+CEPH_RELEASE="9.2"
 export CEPH_VERSION="$CEPH_RELEASE.0-${DATE}"
 
 export IMG_OAUTH_PROXY="$(get_payload_component oauth-proxy)"

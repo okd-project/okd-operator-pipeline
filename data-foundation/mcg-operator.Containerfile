@@ -1,4 +1,4 @@
-FROM quay.io/projectquay/golang:1.24 as builder
+FROM quay.io/projectquay/golang:1.26 as builder
 
 ENV GOFLAGS=''
 
@@ -10,7 +10,7 @@ RUN go version | tee ./go.version
 RUN CGO_ENABLED=0 GOOS=linux go build -a -v -x -o bin/noobaa-operator
 
 # Build stage 2
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
 ENV OPERATOR=/usr/local/bin/noobaa-operator \
     USER_UID=1001 \

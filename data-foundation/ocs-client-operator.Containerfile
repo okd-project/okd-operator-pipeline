@@ -1,7 +1,6 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25 as builder
+FROM registry.access.redhat.com/ubi10/go-toolset:1.26 as builder
 
 ENV GOFLAGS=''
-ENV GOMODCACHE=$GOCACHE/pkg/mod
 
 USER root
 RUN dnf install -y glibc-devel
@@ -11,21 +10,19 @@ COPY --chown=default ./ocs-client-operator .
 
 RUN go version | tee -a ./go.version
 
-RUN GOOS=linux go build -mod=vendor -a -o bin/ocs-client-operator cmd/main.go
-RUN GOOS=linux go build -mod=vendor -a -o ${GOBIN:-bin}/status-reporter ./service/status-report/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o bin/ocs-client-operator cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o bin/status-reporter ./service/status-report/main.go
 
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
 RUN microdnf update -y && \
     microdnf clean all
 
 ENV OPBIN=/ocs-client-operator
-ENV ENTRYPOINT=/entrypoint
 
 COPY --from=builder /opt/app-root/src/bin/ocs-client-operator "$OPBIN"
 COPY --from=builder /opt/app-root/src/bin/status-reporter /status-reporter
-COPY --from=builder /opt/app-root/src/hack/entrypoint.sh "$ENTRYPOINT"
 COPY --from=builder /opt/app-root/src/go.version /go.version
 
 LABEL description="OKD Container Storage client Operator" \
@@ -33,6 +30,6 @@ LABEL description="OKD Container Storage client Operator" \
     io.k8s.display-name="OCS client Operator based on UBI 9" \
     io.k8s.description="OKD Container Storage client Operator based on UBI 9 Image"
 
-RUN chmod +x "$OPBIN" "$ENTRYPOINT"
+RUN chmod +x "$OPBIN"
 
-ENTRYPOINT ["/entrypoint"]
+ENTRYPOINT ["/ocs-client-operator"]

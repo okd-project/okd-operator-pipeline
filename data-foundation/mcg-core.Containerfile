@@ -9,12 +9,11 @@ FROM $IMG_CLI as oc_builder
 
 RUN oc version
 
-FROM quay.io/centos/centos:stream9 as noobaa_builder
+FROM quay.io/centos/centos:stream10 as noobaa_builder
 
 RUN dnf group install -y "Development Tools" && \
     dnf install dnf-plugins-core -y && \
     dnf config-manager --set-enabled crb && \
-    dnf module enable -y nodejs:22 && \
     dnf install -y \
     python3 \
     python-unversioned-command \
@@ -43,9 +42,8 @@ RUN mkdir -p /noobaa_init_files
 #	   different target so it will be clean
 ##############################################################
 
-FROM registry.access.redhat.com/ubi9/ubi:latest as noobaa_tarball
+FROM registry.access.redhat.com/ubi10/ubi:latest as noobaa_tarball
 
-RUN dnf module enable -y nodejs:22 && \
     dnf install -y nodejs-devel \
     patch  && \
     dnf clean all
@@ -79,7 +77,7 @@ RUN tar \
 
 ##############################################################################
 
-FROM quay.io/centos/centos:stream9
+FROM quay.io/centos/centos:stream10
 
 ENV container docker
 ENV PORT 8080
@@ -91,7 +89,6 @@ ENV BG_NODE_OPTIONS ''
 ENV HOSTED_AGENTS_NODE_OPTIONS ''
 ENV ENDPOINT_NODE_OPTIONS ''
 
-RUN dnf module enable -y nodejs:22 && \
     dnf install -y dnf-plugins-core && \
     dnf config-manager --set-enabled crb && \
     dnf install epel-release -y && \

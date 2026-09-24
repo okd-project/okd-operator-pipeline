@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25 as builder
+FROM registry.access.redhat.com/ubi10/go-toolset:1.26 as builder
 
 ARG CI_VERSION
 
@@ -8,12 +8,12 @@ COPY --chown=default ./ocs-operator .
 
 RUN go version | tee ./go.version
 RUN echo "$VER"
-RUN GOOS=linux go build -a -ldflags "-X github.com/red-hat-storage/ocs-operator/v4/version.Version=${CI_VERSION}" -o bin/ocs-operator ./main.go
+RUN GOOS=linux go build -a -ldflags "-X github.com/red-hat-storage/ocs-operator/v4/version.Version=${CI_VERSION}" -o bin/ocs-operator ./cmd/main.go
 RUN GOOS=linux go build -a -ldflags "-X github.com/red-hat-storage/ocs-operator/v4/version.Version=${CI_VERSION}" -o bin/provider-api ./services/provider/main.go
 RUN GOOS=linux go build -a -o bin/onboarding-validation-keys-gen ./onboarding-validation-keys-generator/main.go
 
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
 # Update the image to get the latest CVE updates
 RUN microdnf update -y && \
