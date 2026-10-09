@@ -20,6 +20,10 @@ export IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 
 IMG_BUNDLE="${REGISTRY}/operator-bundle:${OCP_DATE}"
 
+# OKD publishes under its own package name rather than RH's
+# openshift-secondary-scheduler-operator; the CSV name uses the same prefix
+PACKAGE="okd-secondary-scheduler-operator"
+
 CSV="operator/manifests/cluster-secondary-scheduler-operator.clusterserviceversion.yaml"
 ANNOTATIONS="operator/metadata/annotations.yaml"
 
@@ -52,14 +56,13 @@ build_bundle() {
     convert_all_images_to_digest
 
     export ICON="$(base64 -w 0 ../icon.png)"
-    export CSV_NAME="secondaryscheduleroperator.v${OCP_DATE}"
+    export CSV_NAME="${PACKAGE}.v${OCP_DATE}"
     export CSV_VERSION="${OCP_DATE}"
-    export STATUS_DESCRIPTORS="secondary-scheduler-operator.v${OCP_DATE}"
     export CREATED_AT="$(date -I)"
 
     yq e -i '.metadata.name = strenv(CSV_NAME)' "${CSV}"
     yq e -i '.spec.version = strenv(CSV_VERSION)' "${CSV}"
-    yq e -i '.spec.labels["olm-status-descriptors"] = strenv(STATUS_DESCRIPTORS)' "${CSV}"
+    yq e -i '.spec.labels["olm-status-descriptors"] = strenv(CSV_NAME)' "${CSV}"
     yq e -i '.metadata.annotations.containerImage = env(IMG_OPERATOR)' "${CSV}"
     yq e -i '.metadata.annotations.createdAt = strenv(CREATED_AT)' "${CSV}"
     yq e -i '.metadata.annotations.support = "OKD Community"' "${CSV}"
@@ -79,10 +82,12 @@ build_bundle() {
     yq e -i '.spec.install.spec.deployments[0].spec.template.spec.containers[0].image = env(IMG_OPERATOR)' "${CSV}"
     yq e -i '.spec.relatedImages |= map(select(.name == "secondary-scheduler-operator").image = env(IMG_OPERATOR))' "${CSV}"
 
+    yq e -i ".annotations[\"operators.operatorframework.io.bundle.package.v1\"] = \"${PACKAGE}\"" "${ANNOTATIONS}"
     yq e -i ".annotations[\"operators.operatorframework.io.bundle.channels.v1\"] = \"${CHANNEL}\"" "${ANNOTATIONS}"
     yq e -i ".annotations[\"operators.operatorframework.io.bundle.channel.default.v1\"] = \"${DEFAULT_CHANNEL}\"" "${ANNOTATIONS}"
 
     podman build \
+        --label "operators.operatorframework.io.bundle.package.v1=${PACKAGE}" \
         --label "operators.operatorframework.io.bundle.channels.v1=${CHANNEL}" \
         --label "operators.operatorframework.io.bundle.channel.default.v1=${DEFAULT_CHANNEL}" \
         -t "${IMG_BUNDLE}" -f bundle.Containerfile .
