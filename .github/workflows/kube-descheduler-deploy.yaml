@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - "release-4.21"
+    paths:
+      - 'kube-descheduler/**'
+  workflow_dispatch: # Allow manual trigger
+
+name: Deploy Kube-Descheduler
+
+jobs:
+  deploy:
+    name: Deploy Kube-Descheduler
+    uses: ./.github/workflows/operator-deploy.yaml
+    with:
+      operator: kube-descheduler
+    secrets: inherit
