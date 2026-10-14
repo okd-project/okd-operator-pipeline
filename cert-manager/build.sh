@@ -62,8 +62,9 @@ build_bundle() {
      .env |= map(select(.name == \"OPERATOR_IMAGE_VERSION\").value = \"${OCP_DATE}\")
     )" ./config/manager/manager.yaml
 
-    # Upstream's graph targets 1.19, which OKD never published (1.14, 1.15, 1.18),
-    # so the bundle would offer no upgrade edge any okderators user can take.
+    # Upstream's graph starts at Red Hat's previous release, which OKD never
+    # published (1.14, 1.15, 1.18), so the bundle would offer no upgrade edge any
+    # okderators user can take.
     export OLM_SKIP_RANGE=">=1.0.0 <${OCP_DATE}"
     yq e -i '.metadata.annotations["olm.skipRange"] = strenv(OLM_SKIP_RANGE)' "${CSV_BASE}"
     yq e -i 'del(.spec.replaces)' "${CSV_BASE}"
