@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - "main"
+      - "release-4.21"
     paths:
       - 'cert-manager/**'
   workflow_dispatch: # Allow manual trigger
