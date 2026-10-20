@@ -2,7 +2,7 @@
 
 NAMESPACE="cluster-logging"
 export MAJOR=6
-export MINOR=5
+export MINOR=6
 
 source ../common.sh
 
@@ -52,7 +52,7 @@ build_containers() {
     # Build all container images
     podman build -t $IMG_OPERATOR -f operator.Containerfile ../
     podman build -t $IMG_LOG_FILE_METRIC_EXPORTER -f log-file-metric-exporter.Containerfile .
-    podman build -t $IMG_LOKI -f loki.Containerfile --build-arg=VERSION=${OCP_DATE} .
+    podman build -t $IMG_LOKI -f loki.Containerfile --build-arg=SOURCE_GIT_COMMIT=$(git -C loki rev-parse --short HEAD) .
     podman build -t $IMG_LOKI_OPERATOR -f loki-operator.Containerfile .
     podman build -t $IMG_LOKISTACK_GATEWAY -f lokistack-gateway.Containerfile .
     podman build -t $IMG_VECTOR -f vector.Containerfile .

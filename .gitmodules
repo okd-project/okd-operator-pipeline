@@ -37,7 +37,7 @@
 [submodule "cluster-logging/operator"]
 	path = cluster-logging/operator
 	url = https://github.com/openshift/cluster-logging-operator.git
-	branch = release-6.5
+	branch = release-6.6
 [submodule "cluster-logging/opa-openshift"]
 	path = cluster-logging/opa-openshift
 	url = https://github.com/observatorium/opa-openshift.git
@@ -45,7 +45,7 @@
 [submodule "cluster-logging/loki"]
 	path = cluster-logging/loki
 	url = https://github.com/openshift/loki.git
-	branch = release-6.5
+	branch = release-6.6
 [submodule "cluster-logging/log-file-metric-exporter"]
 	path = cluster-logging/log-file-metric-exporter
 	url = https://github.com/ViaQ/log-file-metric-exporter.git

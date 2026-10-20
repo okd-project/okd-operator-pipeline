@@ -1,18 +1,19 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
-ARG VERSION
+ARG SOURCE_GIT_COMMIT
 
 ENV GOEXPERIMENT=strictfipsruntime
 ENV CGO_ENABLED=1
 ENV GOOS=linux
 ENV GOFLAGS="-mod=vendor -p=4"
 
+ENV BUILD_VERSION=3.8.0
 ENV LOKI_VPREFIX="github.com/grafana/loki/v3/pkg/util/build"
 
 COPY --chown=default ./loki .
 
 RUN touch loki-build-image/.uptodate && mkdir -p build
-RUN go build -ldflags "-s -w -X ${LOKI_VPREFIX}.Branch=upstream-v3.6.5 -X ${LOKI_VPREFIX}.Version=v${VERSION} -X ${LOKI_VPREFIX}.Revision=abcdac1 -X ${LOKI_VPREFIX}.BuildDate=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" -tags strictfipsruntime -o cmd/loki/loki ./cmd/loki/
+RUN go build -ldflags "-s -w -X ${LOKI_VPREFIX}.Branch=upstream-v${BUILD_VERSION} -X ${LOKI_VPREFIX}.Version=v${BUILD_VERSION} -X ${LOKI_VPREFIX}.Revision=${SOURCE_GIT_COMMIT} -X ${LOKI_VPREFIX}.BuildDate=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" -tags strictfipsruntime -o cmd/loki/loki ./cmd/loki/
 
 FROM quay.io/centos/centos:stream9
 

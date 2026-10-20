@@ -32,11 +32,17 @@ COPY ./vector /src/
 RUN /src/scripts/environment/install-protoc.sh
 RUN make build
 
+# Strip binary to reduce image size for DaemonSet deployment
+RUN strip --strip-all /src/target/release/vector
+
 FROM quay.io/centos/centos:stream9
 
 # No weak dependencies
-RUN dnf install --setopt=nodocs -y systemd \
+RUN dnf install --setopt=nodocs -y systemd crypto-policies-scripts \
     && dnf clean all
+
+# Copy PQ crypto-policies configuration from builder
+COPY --from=builder /etc/crypto-policies/ /etc/crypto-policies/
 
 COPY --from=builder /src/target/release/vector /usr/bin/
 
