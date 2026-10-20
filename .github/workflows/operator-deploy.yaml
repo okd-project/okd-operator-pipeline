@@ -20,6 +20,11 @@ on:
         type: string
         required: false
         default: "release-5.0"
+      free_disk_space:
+        description: "Remove unused preinstalled toolchains from the runner before building"
+        type: boolean
+        required: false
+        default: false
 
 name: Deploy Operator
 
@@ -34,6 +39,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: false
+
+      - name: Free runner disk
+        if: inputs.free_disk_space
+        # The cluster-logging build peaks near 37 GB; ubuntu-latest has ~14 GB free on /
+        # language=bash
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          if command -v docker >/dev/null; then sudo docker image prune --all --force; fi
+          df -h /
 
       - name: Install dependencies
         # language=bash
