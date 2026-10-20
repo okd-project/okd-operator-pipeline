@@ -1,4 +1,4 @@
-From d690a33da86fee48660af2f86ec83379408a4b79 Mon Sep 17 00:00:00 2001
+From abe5adcaff52540f40bef3d5019a1a256b3897ba Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Tue, 13 May 2025 15:13:08 +0100
 Subject: [PATCH] OKDify
@@ -8,7 +8,7 @@ Subject: [PATCH] OKDify
  1 file changed, 11 insertions(+), 13 deletions(-)
 
 diff --git a/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml b/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
-index 2a1daed60..e39fa6b7b 100644
+index 28353a008..780066af7 100644
 --- a/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
 +++ b/operator/config/manifests/openshift/bases/loki-operator.clusterserviceversion.yaml
 @@ -4,18 +4,18 @@ metadata:
@@ -45,7 +45,7 @@ index 2a1daed60..e39fa6b7b 100644
    labels:
      operatorframework.io/arch.amd64: supported
      operatorframework.io/arch.arm64: supported
-@@ -2541,18 +2539,18 @@ spec:
+@@ -2575,18 +2573,18 @@ spec:
          - urn:alm:descriptor:io.kubernetes.conditions
        version: v1beta1
    description: |
@@ -69,7 +69,7 @@ index 2a1daed60..e39fa6b7b 100644
    install:
      spec:
        deployments: null
-@@ -2578,5 +2576,5 @@ spec:
+@@ -2612,5 +2610,5 @@ spec:
    maturity: alpha
    minKubeVersion: 1.21.1
    provider:
