@@ -2,6 +2,8 @@
 
 NAMESPACE="cluster-logging"
 export MAJOR=6
+# Sources are Red Hat's OpenShift Logging 6.6.1 commits (the submodule gitlinks). common.sh names
+# every build MAJOR.MINOR.0-<DATE>, so images, bundles and CSVs read 6.6.0-<DATE>.
 export MINOR=6
 
 source ../common.sh
