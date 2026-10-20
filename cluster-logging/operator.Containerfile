@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 ENV GOEXPERIMENT=strictfipsruntime
 ENV CGO_ENABLED=1
@@ -12,27 +12,21 @@ RUN make build BUILD_OPTS="-tags strictfipsruntime"
 FROM quay.io/centos/centos:stream9
 
 RUN INSTALL_PKGS=" \
-      openssl \
-      cpio \
       rsync \
       file \
       xz \
-      openshift-clients \
       " && \
     dnf update -y && \
-    dnf install -y --nodocs --setopt=install_weak_deps=0 tar rsync findutils gzip iproute tcpdump pciutils util-linux nftables procps-ng yum-utils && \
-    yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/owenh/micro-okd/repo/centos-stream-9/owenh-micro-okd-centos-stream-9.repo && \
-    dnf install -y $INSTALL_PKGS && \
+    dnf install -y --nodocs --setopt=install_weak_deps=0 $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     dnf clean all && \
     mkdir /tmp/ocp-clo && \
     chmod og+w /tmp/ocp-clo
 
 COPY --from=builder /opt/app-root/src/cluster-logging/operator/bin/cluster-logging-operator /usr/bin/
+COPY --from=builder /opt/app-root/src/cluster-logging/operator/bin/must-gather /usr/bin/
 
-COPY --from=builder /opt/app-root/src/cluster-logging/operator/bundle/manifests /manifests
-
-COPY --from=builder /opt/app-root/src/cluster-logging/operator/must-gather/collection-scripts/* /usr/bin/
+RUN ln -s /usr/bin/must-gather /usr/bin/gather
 
 USER 1000
 
