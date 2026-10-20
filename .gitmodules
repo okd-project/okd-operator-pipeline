@@ -40,7 +40,7 @@
 	branch = release-6.6
 [submodule "cluster-logging/opa-openshift"]
 	path = cluster-logging/opa-openshift
-	url = https://github.com/observatorium/opa-openshift.git
+	url = https://github.com/ViaQ/opa-openshift.git
 	branch = main
 [submodule "cluster-logging/loki"]
 	path = cluster-logging/loki
@@ -52,7 +52,7 @@
 	branch = main
 [submodule "cluster-logging/observatorium-api"]
 	path = cluster-logging/observatorium-api
-	url = https://github.com/observatorium/api.git
+	url = https://github.com/ViaQ/observatorium-api.git
 	branch = main
 [submodule "cluster-logging/vector"]
 	path = cluster-logging/vector
@@ -705,3 +705,7 @@
 	path = secondary-scheduler/operator
 	url = https://github.com/openshift/secondary-scheduler-operator.git
 	branch = release-5.0
+[submodule "cluster-logging/loki-server"]
+	path = cluster-logging/loki-server
+	url = https://github.com/openshift/loki.git
+	branch = upstream-v3.7.3
