@@ -623,4 +623,4 @@
 [submodule "gitops/release"]
 	path = gitops/release
 	url = https://github.com/rh-gitops-midstream/release.git
-	branch = release-1.19
+	branch = release-1.22
