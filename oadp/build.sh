@@ -35,6 +35,8 @@ init() {
     submodule_initialize aws-legacy-plugin oadp-${OCP_SHORT}
     submodule_initialize kubevirt-plugin oadp-${OCP_SHORT}
     submodule_initialize must-gather oadp-${OCP_SHORT}
+    submodule_initialize kopia oadp-${OCP_SHORT}
+    submodule_initialize restic oadp-${OCP_SHORT}
 }
 
 deinit() {
@@ -49,6 +51,8 @@ deinit() {
     submodule_reset aws-legacy-plugin oadp-${OCP_SHORT}
     submodule_reset kubevirt-plugin oadp-${OCP_SHORT}
     submodule_reset must-gather oadp-${OCP_SHORT}
+    submodule_reset kopia oadp-${OCP_SHORT}
+    submodule_reset restic oadp-${OCP_SHORT}
 }
 
 update() {
