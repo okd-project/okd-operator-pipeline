@@ -5,8 +5,11 @@ FROM $IMG_CLI AS ose-cli
 FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 
-WORKDIR $HOME/operator
-COPY --chown=default ./operator .
+WORKDIR $HOME/must-gather
+COPY --chown=default ./must-gather/go.mod ./must-gather/go.sum ./
+COPY --chown=default ./must-gather/cmd ./cmd
+COPY --chown=default ./must-gather/pkg ./pkg
+COPY --chown=default ./must-gather/deprecated ./deprecated
 
 # mustgather
 RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=mod -tags strictfipsruntime -o ./gather cmd/main.go
@@ -62,7 +65,8 @@ COPY --from=builder $BUILD_DIR/velero/bin/velero /usr/bin/velero
 COPY --from=builder $BUILD_DIR/restic/bin/restic /usr/bin/restic
 COPY --from=ose-cli /usr/bin/oc /usr/bin/oc
 COPY --from=builder $BUILD_DIR/kopia/kopia /usr/bin/kopia
-COPY --from=builder $BUILD_DIR/operator/gather /usr/bin/gather
+COPY --from=builder $BUILD_DIR/must-gather/gather /usr/bin/gather
+COPY --from=builder $BUILD_DIR/must-gather/deprecated/gather_* /usr/bin/
 
 ENTRYPOINT /usr/bin/gather
 

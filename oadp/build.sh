@@ -34,6 +34,7 @@ init() {
     submodule_initialize gcp-plugin oadp-${OCP_SHORT}
     submodule_initialize aws-legacy-plugin oadp-${OCP_SHORT}
     submodule_initialize kubevirt-plugin oadp-${OCP_SHORT}
+    submodule_initialize must-gather oadp-${OCP_SHORT}
 }
 
 deinit() {
@@ -47,6 +48,7 @@ deinit() {
     submodule_reset gcp-plugin oadp-${OCP_SHORT}
     submodule_reset aws-legacy-plugin oadp-${OCP_SHORT}
     submodule_reset kubevirt-plugin oadp-${OCP_SHORT}
+    submodule_reset must-gather oadp-${OCP_SHORT}
 }
 
 update() {
@@ -64,6 +66,7 @@ update() {
     submodule_update kubevirt-plugin ${BRANCH} https://github.com/migtools/kubevirt-velero-plugin.git
     submodule_update kopia ${BRANCH} https://github.com/migtools/kopia.git
     submodule_update restic ${BRANCH} https://github.com/openshift/restic.git
+    submodule_update must-gather ${BRANCH} https://github.com/openshift/oadp-must-gather.git
 }
 
 build_containers() {
