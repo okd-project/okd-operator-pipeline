@@ -3,8 +3,7 @@
 # Configuration and variable setup
 NAMESPACE="oadp"
 MAJOR="1"
-MINOR="5"
-KUBEVIRT_PLUGIN_RELEASE="0.8"
+MINOR="6"
 source ../common.sh
 
 # Image definitions
@@ -34,7 +33,7 @@ init() {
     submodule_initialize non-admin oadp-${OCP_SHORT}
     submodule_initialize gcp-plugin oadp-${OCP_SHORT}
     submodule_initialize aws-legacy-plugin oadp-${OCP_SHORT}
-    submodule_initialize kubevirt-plugin release-v0.8
+    submodule_initialize kubevirt-plugin oadp-${OCP_SHORT}
 }
 
 deinit() {
@@ -47,12 +46,11 @@ deinit() {
     submodule_reset non-admin oadp-${OCP_SHORT}
     submodule_reset gcp-plugin oadp-${OCP_SHORT}
     submodule_reset aws-legacy-plugin oadp-${OCP_SHORT}
-    submodule_reset kubevirt-plugin release-v0.8
+    submodule_reset kubevirt-plugin oadp-${OCP_SHORT}
 }
 
 update() {
     BRANCH="oadp-${OCP_SHORT}"
-    KUBEVIRT_BRANCH="release-v${KUBEVIRT_PLUGIN_RELEASE}"
 
     submodule_update velero ${BRANCH} https://github.com/openshift/velero.git
     submodule_update operator ${BRANCH} https://github.com/openshift/oadp-operator.git
@@ -63,7 +61,7 @@ update() {
     submodule_update aws-plugin ${BRANCH} https://github.com/openshift/velero-plugin-for-aws.git
     submodule_update aws-legacy-plugin ${BRANCH} https://github.com/openshift/velero-plugin-for-legacy-aws.git
     submodule_update gcp-plugin ${BRANCH} https://github.com/openshift/velero-plugin-for-gcp.git
-    submodule_update kubevirt-plugin ${KUBEVIRT_BRANCH} https://github.com/migtools/kubevirt-velero-plugin.git
+    submodule_update kubevirt-plugin ${BRANCH} https://github.com/migtools/kubevirt-velero-plugin.git
     submodule_update kopia ${BRANCH} https://github.com/migtools/kopia.git
     submodule_update restic ${BRANCH} https://github.com/openshift/restic.git
 }
