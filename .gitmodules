@@ -569,6 +569,30 @@
 	path = oadp/must-gather
 	url = https://github.com/openshift/oadp-must-gather.git
 	branch = oadp-1.6
+[submodule "oadp/vm-file-restore"]
+	path = oadp/vm-file-restore
+	url = https://github.com/migtools/oadp-vm-file-restore.git
+	branch = oadp-1.6
+[submodule "oadp/filebrowser"]
+	path = oadp/filebrowser
+	url = https://github.com/migtools/filebrowser.git
+	branch = oadp-1.6
+[submodule "oadp/oadp-cli"]
+	path = oadp/oadp-cli
+	url = https://github.com/migtools/oadp-cli.git
+	branch = oadp-1.6
+[submodule "oadp/oadp-vmdp"]
+	path = oadp/oadp-vmdp
+	url = https://github.com/migtools/oadp-vmdp.git
+	branch = oadp-1.6
+[submodule "oadp/kubevirt-datamover-controller"]
+	path = oadp/kubevirt-datamover-controller
+	url = https://github.com/migtools/kubevirt-datamover-controller.git
+	branch = oadp-1.6
+[submodule "oadp/kubevirt-datamover-plugin"]
+	path = oadp/kubevirt-datamover-plugin
+	url = https://github.com/migtools/kubevirt-datamover-plugin.git
+	branch = oadp-1.6
 [submodule "pf-status-relay/operator"]
 	path = pf-status-relay/operator
 	url = https://github.com/openshift/pf-status-relay-operator.git
