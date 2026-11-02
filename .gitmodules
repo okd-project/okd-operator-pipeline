@@ -565,6 +565,10 @@
 	path = oadp/restic
 	url = https://github.com/openshift/restic.git
 	branch = oadp-1.6
+[submodule "oadp/must-gather"]
+	path = oadp/must-gather
+	url = https://github.com/openshift/oadp-must-gather.git
+	branch = oadp-1.6
 [submodule "pf-status-relay/operator"]
 	path = pf-status-relay/operator
 	url = https://github.com/openshift/pf-status-relay-operator.git
