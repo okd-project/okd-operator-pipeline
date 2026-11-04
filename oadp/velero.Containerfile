@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 #######################################################################
 #######################################################################
@@ -19,7 +19,7 @@ FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
 WORKDIR $HOME/velero/
 COPY --chown=default ./velero .
 ENV GOEXPERIMENT strictfipsruntime
-RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=readonly -ldflags '-X github.com/vmware-tanzu/velero/pkg/buildinfo.Version=v1.16.1-OADP' -tags strictfipsruntime -o ./bin/velero ./cmd/velero
+RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=readonly -ldflags '-X github.com/vmware-tanzu/velero/pkg/buildinfo.Version=v1.18.4-OADP' -tags strictfipsruntime -o ./bin/velero ./cmd/velero
 RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=readonly -tags strictfipsruntime -o ./bin/velero-restore-helper ./cmd/velero-restore-helper
 RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=readonly -tags strictfipsruntime -o ./bin/velero-helper ./cmd/velero-helper
 
