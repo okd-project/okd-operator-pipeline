@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - "main"
+      - "release-4.22"
     paths:
       - 'nmstate/**'
   workflow_dispatch: # Allow manual trigger
@@ -14,4 +14,5 @@ jobs:
     uses: ./.github/workflows/operator-deploy.yaml
     with:
       operator: nmstate
+      catalog_branch: release-4.22
     secrets: inherit
