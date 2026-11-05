@@ -28,7 +28,7 @@ okd-operator-pipeline/
 │       └── operator.patch  # Applied automatically by submodule_initialize()
 ├── cluster-logging/        # Example: independently-versioned (MAJOR=6 MINOR=3)
 ├── service-mesh/           # Example: independently-versioned (MAJOR=3 MINOR=0)
-├── gitops/                 # Example: independently-versioned (MAJOR=1 MINOR=19)
+├── gitops/                 # Example: independently-versioned (MAJOR=1 MINOR=22)
 ├── sandboxed-containers/    # Example: independently-versioned (MAJOR=1 MINOR=13) + Kata RPM in COPR
 │   ├── build.sh            # NAMESPACE="sandboxed-containers"; MAJOR=1 MINOR=13
 │   ├── operator/           # Git submodule (branch: osc-release-v1.13)
