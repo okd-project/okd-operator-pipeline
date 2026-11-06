@@ -3,8 +3,7 @@
 # Configuration and variable setup
 NAMESPACE="oadp"
 MAJOR="1"
-MINOR="5"
-KUBEVIRT_PLUGIN_RELEASE="0.8"
+MINOR="6"
 source ../common.sh
 
 # Image definitions
@@ -19,6 +18,14 @@ export IMG_NON_ADMIN="${REGISTRY}/non-admin:${OCP_DATE}"
 export IMG_HYPERSHIFT_PLUGIN="${REGISTRY}/hypershift-plugin:${OCP_DATE}"
 export IMG_AWS_LEGACY_PLUGIN="${REGISTRY}/aws-legacy-plugin:${OCP_DATE}"
 export IMG_KUBEVIRT_PLUGIN="${REGISTRY}/kubevirt-plugin:${OCP_DATE}"
+export IMG_VM_FILE_RESTORE="${REGISTRY}/vm-file-restore:${OCP_DATE}"
+export IMG_VMFR_ACCESS="${REGISTRY}/vmfr-access:${OCP_DATE}"
+export IMG_VMFR_SSHD="${REGISTRY}/vmfr-sshd:${OCP_DATE}"
+export IMG_VMFR_FILEBROWSER="${REGISTRY}/vmfr-filebrowser:${OCP_DATE}"
+export IMG_CLI_BINARIES="${REGISTRY}/cli-binaries:${OCP_DATE}"
+export IMG_VMDP_BINARIES="${REGISTRY}/vmdp-binaries:${OCP_DATE}"
+export IMG_KUBEVIRT_DATAMOVER_CONTROLLER="${REGISTRY}/kubevirt-datamover-controller:${OCP_DATE}"
+export IMG_KUBEVIRT_DATAMOVER_PLUGIN="${REGISTRY}/kubevirt-datamover-plugin:${OCP_DATE}"
 IMG_BUNDLE="${REGISTRY}/bundle:${OCP_DATE}"
 IMG_CLI="$(get_payload_component "cli")"
 
@@ -34,7 +41,16 @@ init() {
     submodule_initialize non-admin oadp-${OCP_SHORT}
     submodule_initialize gcp-plugin oadp-${OCP_SHORT}
     submodule_initialize aws-legacy-plugin oadp-${OCP_SHORT}
-    submodule_initialize kubevirt-plugin release-v0.8
+    submodule_initialize kubevirt-plugin oadp-${OCP_SHORT}
+    submodule_initialize must-gather oadp-${OCP_SHORT}
+    submodule_initialize kopia oadp-${OCP_SHORT}
+    submodule_initialize restic oadp-${OCP_SHORT}
+    submodule_initialize vm-file-restore oadp-${OCP_SHORT}
+    submodule_initialize filebrowser oadp-${OCP_SHORT}
+    submodule_initialize oadp-cli oadp-${OCP_SHORT}
+    submodule_initialize oadp-vmdp oadp-${OCP_SHORT}
+    submodule_initialize kubevirt-datamover-controller oadp-${OCP_SHORT}
+    submodule_initialize kubevirt-datamover-plugin oadp-${OCP_SHORT}
 }
 
 deinit() {
@@ -47,12 +63,20 @@ deinit() {
     submodule_reset non-admin oadp-${OCP_SHORT}
     submodule_reset gcp-plugin oadp-${OCP_SHORT}
     submodule_reset aws-legacy-plugin oadp-${OCP_SHORT}
-    submodule_reset kubevirt-plugin release-v0.8
+    submodule_reset kubevirt-plugin oadp-${OCP_SHORT}
+    submodule_reset must-gather oadp-${OCP_SHORT}
+    submodule_reset kopia oadp-${OCP_SHORT}
+    submodule_reset restic oadp-${OCP_SHORT}
+    submodule_reset vm-file-restore oadp-${OCP_SHORT}
+    submodule_reset filebrowser oadp-${OCP_SHORT}
+    submodule_reset oadp-cli oadp-${OCP_SHORT}
+    submodule_reset oadp-vmdp oadp-${OCP_SHORT}
+    submodule_reset kubevirt-datamover-controller oadp-${OCP_SHORT}
+    submodule_reset kubevirt-datamover-plugin oadp-${OCP_SHORT}
 }
 
 update() {
     BRANCH="oadp-${OCP_SHORT}"
-    KUBEVIRT_BRANCH="release-v${KUBEVIRT_PLUGIN_RELEASE}"
 
     submodule_update velero ${BRANCH} https://github.com/openshift/velero.git
     submodule_update operator ${BRANCH} https://github.com/openshift/oadp-operator.git
@@ -63,9 +87,16 @@ update() {
     submodule_update aws-plugin ${BRANCH} https://github.com/openshift/velero-plugin-for-aws.git
     submodule_update aws-legacy-plugin ${BRANCH} https://github.com/openshift/velero-plugin-for-legacy-aws.git
     submodule_update gcp-plugin ${BRANCH} https://github.com/openshift/velero-plugin-for-gcp.git
-    submodule_update kubevirt-plugin ${KUBEVIRT_BRANCH} https://github.com/migtools/kubevirt-velero-plugin.git
+    submodule_update kubevirt-plugin ${BRANCH} https://github.com/migtools/kubevirt-velero-plugin.git
     submodule_update kopia ${BRANCH} https://github.com/migtools/kopia.git
     submodule_update restic ${BRANCH} https://github.com/openshift/restic.git
+    submodule_update must-gather ${BRANCH} https://github.com/openshift/oadp-must-gather.git
+    submodule_update vm-file-restore ${BRANCH} https://github.com/migtools/oadp-vm-file-restore.git
+    submodule_update filebrowser ${BRANCH} https://github.com/migtools/filebrowser.git
+    submodule_update oadp-cli ${BRANCH} https://github.com/migtools/oadp-cli.git
+    submodule_update oadp-vmdp ${BRANCH} https://github.com/migtools/oadp-vmdp.git
+    submodule_update kubevirt-datamover-controller ${BRANCH} https://github.com/migtools/kubevirt-datamover-controller.git
+    submodule_update kubevirt-datamover-plugin ${BRANCH} https://github.com/migtools/kubevirt-datamover-plugin.git
 }
 
 build_containers() {
@@ -80,6 +111,14 @@ build_containers() {
     podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_AWS_LEGACY_PLUGIN -f aws-legacy-plugin.Containerfile .
     podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_KUBEVIRT_PLUGIN -f kubevirt-plugin.Containerfile .
     podman build --build-arg VELERO_IMG=$IMG_VELERO -t $IMG_MUST_GATHER --build-arg IMG_CLI=$IMG_CLI -f must-gather.Containerfile .
+    podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_VM_FILE_RESTORE -f vm-file-restore.Containerfile .
+    podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_VMFR_ACCESS -f vmfr-access.Containerfile .
+    podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_VMFR_SSHD -f vmfr-sshd.Containerfile .
+    podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_VMFR_FILEBROWSER -f vmfr-filebrowser.Containerfile .
+    podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_CLI_BINARIES -f cli-binaries.Containerfile .
+    podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_VMDP_BINARIES -f vmdp-binaries.Containerfile .
+    podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_KUBEVIRT_DATAMOVER_CONTROLLER -f kubevirt-datamover-controller.Containerfile .
+    podman build --build-arg CI_VERSION=${OCP_DATE} -t $IMG_KUBEVIRT_DATAMOVER_PLUGIN -f kubevirt-datamover-plugin.Containerfile .
 }
 
 push_containers() {
@@ -99,7 +138,15 @@ build_bundle() {
      .env |= map(select(.name == \"RELATED_IMAGE_HYPERSHIFT_VELERO_PLUGIN\").value = \"${IMG_HYPERSHIFT_PLUGIN}\") |
      .env |= map(select(.name == \"RELATED_IMAGE_VELERO_PLUGIN_FOR_LEGACY_AWS\").value = \"${IMG_AWS_LEGACY_PLUGIN}\") |
      .env |= map(select(.name == \"RELATED_IMAGE_KUBEVIRT_VELERO_PLUGIN\").value = \"${IMG_KUBEVIRT_PLUGIN}\") |
-     .env |= map(select(.name == \"RELATED_IMAGE_MUSTGATHER\").value = \"${IMG_MUST_GATHER}\")
+     .env |= map(select(.name == \"RELATED_IMAGE_MUSTGATHER\").value = \"${IMG_MUST_GATHER}\") |
+     .env |= map(select(.name == \"RELATED_IMAGE_VM_FILE_RESTORE_CONTROLLER\").value = \"${IMG_VM_FILE_RESTORE}\") |
+     .env |= map(select(.name == \"RELATED_IMAGE_VM_FILE_RESTORE_ACCESS\").value = \"${IMG_VMFR_ACCESS}\") |
+     .env |= map(select(.name == \"RELATED_IMAGE_VM_FILE_RESTORE_SSH\").value = \"${IMG_VMFR_SSHD}\") |
+     .env |= map(select(.name == \"RELATED_IMAGE_VM_FILE_RESTORE_BROWSER\").value = \"${IMG_VMFR_FILEBROWSER}\") |
+     .env |= map(select(.name == \"RELATED_IMAGE_CONSOLE_CLI_DOWNLOAD\").value = \"${IMG_CLI_BINARIES}\") |
+     .env |= map(select(.name == \"RELATED_IMAGE_VMDP_CLI_DOWNLOAD\").value = \"${IMG_VMDP_BINARIES}\") |
+     .env |= map(select(.name == \"RELATED_IMAGE_KUBEVIRT_DATAMOVER_CONTROLLER\").value = \"${IMG_KUBEVIRT_DATAMOVER_CONTROLLER}\") |
+     .env |= map(select(.name == \"RELATED_IMAGE_KUBEVIRT_DATAMOVER_PLUGIN\").value = \"${IMG_KUBEVIRT_DATAMOVER_PLUGIN}\")
     )" ./config/manager/manager.yaml
 
     # Replace CSV icon
