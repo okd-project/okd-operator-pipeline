@@ -75,12 +75,17 @@ submodule_reset() {
     git -C "${name}" checkout -f "$recorded_hash"
     git -C "${name}" reset --hard "$recorded_hash"
 
-    # Recursively handle nested submodules with the same steps
+    # Recursively handle nested submodules with the same steps. The snippet
+    # runs under plain sh (no `local`), inside each visited submodule; the
+    # visited submodule's recorded hash lives in its immediate superproject
+    # ($toplevel), keyed by its path within that superproject ($sm_path).
+    # rev-parse prints the failed pathspec to stdout on error, so validate
+    # that the result is a real 40-char hash rather than checking non-empty.
     git -C "${name}" submodule foreach --recursive '
       git clean -fdx;
       git checkout -- .;
-      local nested_hash=$(git rev-parse HEAD:"$path" 2>/dev/null || echo "");
-      if [ -n "$nested_hash" ]; then
+      nested_hash=$(git -C "$toplevel" rev-parse HEAD:"$sm_path" 2>/dev/null || echo "");
+      if echo "$nested_hash" | grep -qE "^[0-9a-f]{40}$"; then
         git checkout -f "$nested_hash";
         git reset --hard "$nested_hash";
       fi
