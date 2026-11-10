@@ -1,11 +1,11 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 ENV GOEXPERIMENT=strictfipsruntime
 ENV CGO_ENABLED=1
 
 COPY --chown=default ./log-file-metric-exporter .
 
-RUN make build LDFLAGS="-tags strictfipsruntime"
+RUN make build LDFLAGS="-tags strictfipsruntime -ldflags '-s -w'"
 
 FROM quay.io/centos/centos:stream9
 
