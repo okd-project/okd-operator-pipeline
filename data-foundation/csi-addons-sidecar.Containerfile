@@ -2,6 +2,11 @@ FROM registry.access.redhat.com/ubi10/go-toolset:1.26 as builder
 
 ARG CI_VERSION
 
+# Keep the module cache out of the source tree: HOME is /opt/app-root/src, and
+# `make build` runs `go fmt ./...`, which fails on a module cache under ./go
+# (go1.26.10 fetches a golang.org/fips140 snapshot there).
+ENV GOPATH=/tmp/go
+
 COPY --chown=default ./kubernetes-csi-addons .
 
 RUN go version | tee -a ./go.version

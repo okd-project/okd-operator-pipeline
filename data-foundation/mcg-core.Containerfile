@@ -25,10 +25,16 @@ RUN dnf group install -y "Development Tools" && \
     dnf clean all
 
 ENV NPM_CONFIG_NODEDIR=/usr
+# gcc 14.4 (Stream 10) flags the GPFS zero-length-array memcpy in fs_napi.cpp as
+# -Warray-bounds; noobaa's warnings.gypi builds with -Werror.
+ENV CXXFLAGS="-Wno-error=array-bounds"
 
 WORKDIR /opt/app-root/src
 
 COPY ./noobaa-core .
+
+# s3select.gyp links the EL9 boost 1.75 soname by absolute path; EL10 ships 1.83.
+RUN sed -i "s|'/lib64/libboost_thread.so.1.75.0'|'-lboost_thread'|" src/native/s3select/s3select.gyp
 
 RUN npm --nodedir=/usr rebuild --omit=dev && \
     npm --nodedir=/usr install --omit=dev --python=/usr/bin/python3 && \
@@ -44,7 +50,7 @@ RUN mkdir -p /noobaa_init_files
 
 FROM registry.access.redhat.com/ubi10/ubi:latest as noobaa_tarball
 
-    dnf install -y nodejs-devel \
+RUN dnf install -y nodejs-devel \
     patch  && \
     dnf clean all
 
@@ -89,7 +95,7 @@ ENV BG_NODE_OPTIONS ''
 ENV HOSTED_AGENTS_NODE_OPTIONS ''
 ENV ENDPOINT_NODE_OPTIONS ''
 
-    dnf install -y dnf-plugins-core && \
+RUN dnf install -y dnf-plugins-core && \
     dnf config-manager --set-enabled crb && \
     dnf install epel-release -y && \
     dnf install -y \
