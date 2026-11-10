@@ -58,6 +58,10 @@ build_bundle() {
      "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" MANIFEST_BASES_DIR=manifests/bases MONITORING_NAMESPACE=openshift-monitoring \
      HANDLER_NAMESPACE=$namespace OPERATOR_NAMESPACE=$namespace PLUGIN_NAMESPACE=$namespace
 
+    # Remove ImageStream — it's an OpenShift build artifact not supported by OKD's OLM.
+    # Upstream writes it as manifests/image-references, with no .yaml extension, so match on content, not name.
+    find manifests/stable/manifests -type f -exec grep -q '^kind: ImageStream' {} \; -delete
+
     podman build -f manifests/stable/bundle.Dockerfile -t "${IMG_BUNDLE}" .
     podman push "${IMG_BUNDLE}"
 
