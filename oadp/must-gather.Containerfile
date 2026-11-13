@@ -2,11 +2,14 @@ ARG IMG_CLI
 
 FROM $IMG_CLI AS ose-cli
 
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 
-WORKDIR $HOME/operator
-COPY --chown=default ./operator .
+WORKDIR $HOME/must-gather
+COPY --chown=default ./must-gather/go.mod ./must-gather/go.sum ./
+COPY --chown=default ./must-gather/cmd ./cmd
+COPY --chown=default ./must-gather/pkg ./pkg
+COPY --chown=default ./must-gather/deprecated ./deprecated
 
 # mustgather
 RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=mod -tags strictfipsruntime -o ./gather cmd/main.go
@@ -36,7 +39,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=mod -tags strictfipsruntime -o ./k
 WORKDIR $HOME/velero
 COPY --chown=default ./velero .
 ENV GOEXPERIMENT strictfipsruntime
-RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=mod -ldflags '-X github.com/vmware-tanzu/velero/pkg/buildinfo.Version=v1.16.1-OADP' -tags strictfipsruntime -o ./bin/velero ./cmd/velero
+RUN CGO_ENABLED=1 GOOS=linux go build -a -mod=mod -ldflags '-X github.com/vmware-tanzu/velero/pkg/buildinfo.Version=v1.18.4-OADP' -tags strictfipsruntime -o ./bin/velero ./cmd/velero
 
 # restic
 WORKDIR $HOME/restic
@@ -62,7 +65,8 @@ COPY --from=builder $BUILD_DIR/velero/bin/velero /usr/bin/velero
 COPY --from=builder $BUILD_DIR/restic/bin/restic /usr/bin/restic
 COPY --from=ose-cli /usr/bin/oc /usr/bin/oc
 COPY --from=builder $BUILD_DIR/kopia/kopia /usr/bin/kopia
-COPY --from=builder $BUILD_DIR/operator/gather /usr/bin/gather
+COPY --from=builder $BUILD_DIR/must-gather/gather /usr/bin/gather
+COPY --from=builder $BUILD_DIR/must-gather/deprecated/gather_* /usr/bin/
 
 ENTRYPOINT /usr/bin/gather
 
