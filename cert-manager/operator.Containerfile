@@ -1,9 +1,17 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
 COPY --chown=default operator .
 COPY --chown=default operator/LICENSE /licenses/
 
-RUN make build --warn-undefined-variables
+# `make build` depends on `generate`, which needs k8s.io/code-generator -- not
+# vendored, so it fails under -mod=vendor. The generated code is already
+# committed. Build directly instead, as Red Hat's operand Dockerfiles do.
+ENV GO_BUILD_TAGS=strictfipsruntime,openssl
+ENV GOEXPERIMENT=strictfipsruntime
+ENV CGO_ENABLED=1
+ENV GOFLAGS=""
+
+RUN go build -o cert-manager-operator -ldflags '-w -s' -tags "${GO_BUILD_TAGS}" main.go
 
 FROM quay.io/centos/centos:stream9
 
