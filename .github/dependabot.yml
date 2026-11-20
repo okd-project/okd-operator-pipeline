@@ -1,0 +1,8 @@
+  - package-ecosystem: "github-actions" # See documentation for possible values
+    directories:
+      - "/*"
+    schedule:
+      interval: "cron"
+      cronjob: "0 23 * * 0" # Runs at 23:00 UTC every Sunday
+    cooldown:
+      default-days: 2
