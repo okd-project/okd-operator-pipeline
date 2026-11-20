@@ -58,6 +58,15 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Install OKD oc CLI
+        run: |
+          OKD_VERSION=$(curl -sL "https://api.github.com/repos/okd-project/okd/releases/latest" | jq -r '.tag_name')
+          export ARCH=x86_64
+          curl -L https://github.com/okd-project/okd/releases/download/${OKD_VERSION}/openshift-client-linux-${OKD_VERSION}.tar.gz -o oc.tar.gz
+          tar -xvf oc.tar.gz oc
+          rm -rf oc.tar.gz
+          oc version --client
+
       - name: Update operator submodules
         id: update
         # language=bash
