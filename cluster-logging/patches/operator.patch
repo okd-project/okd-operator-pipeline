@@ -1,4 +1,4 @@
-From b00fe370d2010eba465a341b2a3a85e0dcb4bf43 Mon Sep 17 00:00:00 2001
+From eb55b97f709188632a6c6da298e51531badc601a Mon Sep 17 00:00:00 2001
 From: Owen Howard <owen@ziax.com>
 Date: Sun, 25 May 2025 18:18:42 +0100
 Subject: [PATCH] OKDify
@@ -99,5 +99,5 @@ index c105acde5..5faeecec7 100644
 +    name: OKD Community
    version: 6.6.0
 -- 
-2.54.0
+2.56.0
 
