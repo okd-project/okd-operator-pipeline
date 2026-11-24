@@ -20,7 +20,7 @@ IMG_BUNDLE_LOKI="${REGISTRY}/loki-operator-bundle:${OCP_DATE}"
 
 init() {
     submodule_initialize loki release-${OCP_SHORT}
-    submodule_initialize loki-server upstream-v3.7.3
+    submodule_initialize loki-server upstream-v3.7.9
     submodule_initialize operator release-${OCP_SHORT}
     submodule_initialize log-file-metric-exporter main
     submodule_initialize opa-openshift main
@@ -31,7 +31,7 @@ init() {
 
 deinit() {
     submodule_reset loki release-${OCP_SHORT}
-    submodule_reset loki-server upstream-v3.7.3
+    submodule_reset loki-server upstream-v3.7.9
     submodule_reset operator release-${OCP_SHORT}
     submodule_reset log-file-metric-exporter main
     submodule_reset opa-openshift main
@@ -42,7 +42,7 @@ deinit() {
 
 update() {
     submodule_update loki release-${OCP_SHORT} https://github.com/openshift/loki.git
-    submodule_update loki-server upstream-v3.7.3 https://github.com/openshift/loki.git
+    submodule_update loki-server upstream-v3.7.9 https://github.com/openshift/loki.git
     submodule_update operator release-${OCP_SHORT} https://github.com/openshift/cluster-logging-operator.git
     submodule_update log-file-metric-exporter main https://github.com/ViaQ/log-file-metric-exporter.git
     submodule_update opa-openshift main https://github.com/ViaQ/opa-openshift.git
