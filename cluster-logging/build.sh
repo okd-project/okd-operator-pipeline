@@ -114,6 +114,11 @@ build_bundle() {
     GONOSUMDB=* GOFLAGS=-mod=mod make bundle VARIANT=openshift VERSION=${OCP_DATE} IMG=${IMG_LOKI} "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" \
      BUNDLE_IMG=${IMG_BUNDLE_LOKI}
 
+    # The source CSV still carries skipRange '>=6.0.0-0 <6.2.0'. Cover the 6.2-6.5 releases, as the
+    # cluster-logging CSV does, so a subscription on any of them can upgrade to this build.
+    export LOKI_SKIP_RANGE='>=6.2.0-0 <6.6.0'
+    yq e -i '.metadata.annotations["olm.skipRange"] = strenv(LOKI_SKIP_RANGE)' ./bundle/openshift/manifests/loki-operator.clusterserviceversion.yaml
+
     pushd bundle/openshift
     podman build -t $IMG_BUNDLE_LOKI -f bundle.Dockerfile .
     podman push $IMG_BUNDLE_LOKI
