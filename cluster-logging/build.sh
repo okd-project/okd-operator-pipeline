@@ -2,8 +2,6 @@
 
 NAMESPACE="cluster-logging"
 export MAJOR=6
-# Sources are Red Hat's OpenShift Logging 6.6.1 commits (the submodule gitlinks). common.sh names
-# every build MAJOR.MINOR.0-<DATE>, so images, bundles and CSVs read 6.6.0-<DATE>.
 export MINOR=6
 
 source ../common.sh
@@ -15,7 +13,6 @@ IMG_LOKI_OPERATOR="${REGISTRY}/loki-operator:${OCP_DATE}"
 IMG_LOKISTACK_GATEWAY="${REGISTRY}/lokistack-gateway:${OCP_DATE}"
 IMG_VECTOR="${REGISTRY}/vector:${OCP_DATE}"
 IMG_OPA_OPENSHIFT="${REGISTRY}/opa-openshift:${OCP_DATE}"
-IMG_PASSTHROUGH_GATEWAY="${REGISTRY}/passthrough-gateway:${OCP_DATE}"
 IMG_EVENT_ROUTER="${REGISTRY}/eventrouter:latest"
 
 IMG_BUNDLE="${REGISTRY}/operator-bundle:${OCP_DATE}"
@@ -23,7 +20,7 @@ IMG_BUNDLE_LOKI="${REGISTRY}/loki-operator-bundle:${OCP_DATE}"
 
 init() {
     submodule_initialize loki release-${OCP_SHORT}
-    submodule_initialize loki-operand upstream-v3.7.3
+    submodule_initialize loki-server upstream-v3.7.3
     submodule_initialize operator release-${OCP_SHORT}
     submodule_initialize log-file-metric-exporter main
     submodule_initialize opa-openshift main
@@ -34,7 +31,7 @@ init() {
 
 deinit() {
     submodule_reset loki release-${OCP_SHORT}
-    submodule_reset loki-operand upstream-v3.7.3
+    submodule_reset loki-server upstream-v3.7.3
     submodule_reset operator release-${OCP_SHORT}
     submodule_reset log-file-metric-exporter main
     submodule_reset opa-openshift main
@@ -45,7 +42,7 @@ deinit() {
 
 update() {
     submodule_update loki release-${OCP_SHORT} https://github.com/openshift/loki.git
-    submodule_update loki-operand upstream-v3.7.3 https://github.com/openshift/loki.git
+    submodule_update loki-server upstream-v3.7.3 https://github.com/openshift/loki.git
     submodule_update operator release-${OCP_SHORT} https://github.com/openshift/cluster-logging-operator.git
     submodule_update log-file-metric-exporter main https://github.com/ViaQ/log-file-metric-exporter.git
     submodule_update opa-openshift main https://github.com/ViaQ/opa-openshift.git
@@ -58,12 +55,11 @@ build_containers() {
     # Build all container images
     podman build -t $IMG_OPERATOR -f operator.Containerfile ../
     podman build -t $IMG_LOG_FILE_METRIC_EXPORTER -f log-file-metric-exporter.Containerfile .
-    podman build -t $IMG_LOKI -f loki.Containerfile .
+    podman build -t $IMG_LOKI -f loki.Containerfile --build-arg=SOURCE_GIT_COMMIT=$(git -C loki-server rev-parse HEAD) .
     podman build -t $IMG_LOKI_OPERATOR -f loki-operator.Containerfile .
     podman build -t $IMG_LOKISTACK_GATEWAY -f lokistack-gateway.Containerfile .
     podman build -t $IMG_VECTOR -f vector.Containerfile .
     podman build -t $IMG_OPA_OPENSHIFT -f opa-openshift.Containerfile .
-    podman build -t $IMG_PASSTHROUGH_GATEWAY -f passthrough-gateway.Containerfile .
     podman build -t $IMG_EVENT_ROUTER -f eventrouter.Containerfile .
 }
 
@@ -75,7 +71,6 @@ push_containers() {
     podman push $IMG_LOKISTACK_GATEWAY
     podman push $IMG_VECTOR
     podman push $IMG_OPA_OPENSHIFT
-    podman push $IMG_PASSTHROUGH_GATEWAY
     podman push $IMG_EVENT_ROUTER
 }
 
@@ -88,7 +83,6 @@ build_bundle() {
     export LOG_FILE_METRIC_EXPORTER_IMAGE=$IMG_LOG_FILE_METRIC_EXPORTER
     export LOKISTACK_GATEWAY_IMAGE=$IMG_LOKISTACK_GATEWAY
     export OPA_OPENSHIFT_IMAGE=$IMG_OPA_OPENSHIFT
-    export PASSTHROUGH_GATEWAY_IMAGE=$IMG_PASSTHROUGH_GATEWAY
     export KUBE_RBAC_PROXY_IMAGE=$(get_payload_component kube-rbac-proxy)
 
     # loki/pkg/push is a local module whose pseudo-version commit is not available
@@ -106,8 +100,7 @@ build_bundle() {
       .env |= map(select(.name == \"VECTOR_IMAGE\").value = env(VECTOR_IMAGE)) |
       .env |= map(select(.name == \"LOG_FILE_METRIC_EXPORTER_IMAGE\").value = env(LOG_FILE_METRIC_EXPORTER_IMAGE)) |
       .env |= map(select(.name == \"RELATED_IMAGE_GATEWAY\").value = env(LOKISTACK_GATEWAY_IMAGE)) |
-      .env |= map(select(.name == \"RELATED_IMAGE_OPA\").value = env(OPA_OPENSHIFT_IMAGE)) |
-      .env |= map(select(.name == \"RELATED_IMAGE_PASSTHROUGH_GATEWAY\").value = env(PASSTHROUGH_GATEWAY_IMAGE))
+      .env |= map(select(.name == \"RELATED_IMAGE_OPA\").value = env(OPA_OPENSHIFT_IMAGE))
     )" ./config/overlays/openshift/manager_related_image_patch.yaml
     yq e -i "with(.spec.template.spec ;
       .containers[] | select(.name == \"kube-rbac-proxy\").image = env(KUBE_RBAC_PROXY_IMAGE)

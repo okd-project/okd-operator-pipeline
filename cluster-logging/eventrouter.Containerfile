@@ -1,11 +1,11 @@
 FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
 
-ENV GOEXPERIMENT=strictfipsruntime
-ENV CGO_ENABLED=1
+COPY --chown=default ./eventrouter/go.mod ./eventrouter/go.sum ./
+RUN go mod download
+COPY --chown=default ./eventrouter/Makefile ./eventrouter/*.go ./
+COPY --chown=default ./eventrouter/sinks ./sinks
 
-COPY --chown=default ./eventrouter .
-
-RUN go build -tags strictfipsruntime -mod=mod -o eventrouter
+RUN make build
 
 FROM quay.io/centos/centos:stream9-minimal
 
