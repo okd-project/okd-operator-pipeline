@@ -14,4 +14,5 @@ jobs:
     uses: ./.github/workflows/operator-deploy.yaml
     with:
       operator: cert-manager
+      catalog_branch: release-4.22
     secrets: inherit
