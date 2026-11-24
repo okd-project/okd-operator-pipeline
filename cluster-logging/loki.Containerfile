@@ -5,7 +5,7 @@ ENV CGO_ENABLED=1
 ENV GOOS=linux
 ENV GOFLAGS="-mod=vendor -p=4"
 
-ENV BUILD_VERSION=3.7.3
+ENV BUILD_VERSION=3.7.9
 ARG SOURCE_GIT_COMMIT
 ENV LOKI_VPREFIX="github.com/grafana/loki/v3/pkg/util/build"
 
