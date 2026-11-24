@@ -53,10 +53,12 @@ build_bundle() {
     namespace=openshift-nmstate
     export VERSION="${OCP_DATE}"
 
+    # stdin from /dev/null: operator-sdk generate bundle (run by make bundle) reads stdin when it is a pipe,
+    # as in a GitHub Actions run step, and then rejects the --deploy-dir/--crds-dir the Makefile passes.
     make ocp-update-bundle-manifests KUBE_RBAC_PROXY_IMAGE=$IMG_KUBE_RBAC_PROXY HANDLER_IMAGE=${IMG_HANDLER} \
      PLUGIN_IMAGE=${IMG_CONSOLE_PLUGIN} OPERATOR_IMAGE=${IMG_OPERATOR} BUNDLE_IMG=${IMG_BUNDLE} \
      "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" MANIFEST_BASES_DIR=manifests/bases MONITORING_NAMESPACE=openshift-monitoring \
-     HANDLER_NAMESPACE=$namespace OPERATOR_NAMESPACE=$namespace PLUGIN_NAMESPACE=$namespace
+     HANDLER_NAMESPACE=$namespace OPERATOR_NAMESPACE=$namespace PLUGIN_NAMESPACE=$namespace < /dev/null
 
     # Remove ImageStream — it's an OpenShift build artifact not supported by OKD's OLM.
     # Upstream writes it as manifests/image-references, with no .yaml extension, so match on content, not name.
