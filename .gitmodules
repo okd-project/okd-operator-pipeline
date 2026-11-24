@@ -520,51 +520,79 @@
 [submodule "oadp/velero"]
 	path = oadp/velero
 	url = https://github.com/openshift/velero.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/operator"]
 	path = oadp/operator
 	url = https://github.com/openshift/oadp-operator.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/non-admin"]
 	path = oadp/non-admin
 	url = https://github.com/migtools/oadp-non-admin.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/microsoft-azure-plugin"]
 	path = oadp/microsoft-azure-plugin
 	url = https://github.com/openshift/velero-plugin-for-microsoft-azure.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/openshift-plugin"]
 	path = oadp/openshift-plugin
 	url = https://github.com/openshift/openshift-velero-plugin.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/hypershift-plugin"]
 	path = oadp/hypershift-plugin
 	url = https://github.com/openshift/hypershift-oadp-plugin.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/aws-plugin"]
 	path = oadp/aws-plugin
 	url = https://github.com/openshift/velero-plugin-for-aws.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/gcp-plugin"]
 	path = oadp/gcp-plugin
 	url = https://github.com/openshift/velero-plugin-for-gcp.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/kubevirt-plugin"]
 	path = oadp/kubevirt-plugin
 	url = https://github.com/migtools/kubevirt-velero-plugin.git
-	branch = release-v0.8
+	branch = oadp-1.6
 [submodule "oadp/aws-legacy-plugin"]
 	path = oadp/aws-legacy-plugin
 	url = https://github.com/openshift/velero-plugin-for-legacy-aws.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/kopia"]
 	path = oadp/kopia
 	url = https://github.com/migtools/kopia.git
-	branch = oadp-1.5
+	branch = oadp-1.6
 [submodule "oadp/restic"]
 	path = oadp/restic
 	url = https://github.com/openshift/restic.git
-	branch = oadp-1.5
+	branch = oadp-1.6
+[submodule "oadp/must-gather"]
+	path = oadp/must-gather
+	url = https://github.com/openshift/oadp-must-gather.git
+	branch = oadp-1.6
+[submodule "oadp/vm-file-restore"]
+	path = oadp/vm-file-restore
+	url = https://github.com/migtools/oadp-vm-file-restore.git
+	branch = oadp-1.6
+[submodule "oadp/filebrowser"]
+	path = oadp/filebrowser
+	url = https://github.com/migtools/filebrowser.git
+	branch = oadp-1.6
+[submodule "oadp/oadp-cli"]
+	path = oadp/oadp-cli
+	url = https://github.com/migtools/oadp-cli.git
+	branch = oadp-1.6
+[submodule "oadp/oadp-vmdp"]
+	path = oadp/oadp-vmdp
+	url = https://github.com/migtools/oadp-vmdp.git
+	branch = oadp-1.6
+[submodule "oadp/kubevirt-datamover-controller"]
+	path = oadp/kubevirt-datamover-controller
+	url = https://github.com/migtools/kubevirt-datamover-controller.git
+	branch = oadp-1.6
+[submodule "oadp/kubevirt-datamover-plugin"]
+	path = oadp/kubevirt-datamover-plugin
+	url = https://github.com/migtools/kubevirt-datamover-plugin.git
+	branch = oadp-1.6
 [submodule "pf-status-relay/operator"]
 	path = pf-status-relay/operator
 	url = https://github.com/openshift/pf-status-relay-operator.git
