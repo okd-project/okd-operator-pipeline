@@ -6,7 +6,6 @@ RUN INSTALL_PKGS=" \
       make \
       git \
       perl \
-      unzip \
       openssl-devel \
       llvm-toolset \
       cyrus-sasl \
@@ -42,8 +41,8 @@ FROM quay.io/centos/centos:stream9
 RUN dnf install --setopt=nodocs -y systemd crypto-policies-scripts \
     && dnf clean all
 
-# Enable post-quantum cryptography, as the builder does
-RUN update-crypto-policies --set DEFAULT:PQ
+# Copy PQ crypto-policies configuration from builder
+COPY --from=builder /etc/crypto-policies/ /etc/crypto-policies/
 
 COPY --from=builder /src/target/release/vector /usr/bin/
 

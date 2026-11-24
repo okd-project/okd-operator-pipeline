@@ -16,7 +16,6 @@ RUN INSTALL_PKGS=" \
       file \
       xz \
       " && \
-    dnf update -y && \
     dnf install -y --nodocs --setopt=install_weak_deps=0 $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     dnf clean all && \
@@ -30,7 +29,6 @@ RUN ln -s /usr/bin/must-gather /usr/bin/gather
 
 USER 1000
 
-# this is required because the operator invokes a script as `bash scripts/cert_generation.sh`
 WORKDIR /usr/bin
 CMD ["/usr/bin/cluster-logging-operator"]
 

@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 AS builder
+FROM registry.access.redhat.com/ubi10/go-toolset:1.26 AS builder
 
 ARG CI_VERSION
 
@@ -11,7 +11,7 @@ COPY --chown=default blackbox-exporter .
 RUN go version | tee ./go.version
 RUN CGO_ENABLED=0 GOOS=linux go build -a -o bin/blackbox-exporter main.go
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
 ENV EXBIN=/usr/local/bin/blackbox-exporter
 

@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-20 AS builder
+FROM registry.access.redhat.com/ubi10/nodejs-22 AS builder
 
 ARG VERSION
 
@@ -27,10 +27,11 @@ ENV SKIP_SASS_BINARY_DOWNLOAD_FOR_CI=true
 ENV CHROMEDRIVER_SKIP_DOWNLOAD=true
 ENV PLUGIN_VERSION="${VERSION}"
 
-RUN yarn install --prod=true --frozen-lockfile
+# odf-console 5.0 pins Yarn 4 via .yarnrc.yml yarnPath (the global yarn delegates to it)
+RUN yarn workspaces focus --all --production
 RUN yarn build-mco
 
-FROM registry.access.redhat.com/ubi9/nginx-120
+FROM registry.access.redhat.com/ubi10/nginx-126
 
 COPY --from=builder /opt/app-root/src/default.conf "${NGINX_CONFIGURATION_PATH}"
 COPY --from=builder /opt/app-root/src/plugins/mco/dist .

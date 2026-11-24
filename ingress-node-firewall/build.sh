@@ -39,9 +39,6 @@ build_bundle() {
       .env |= map(select(.name == \"DAEMONSET_IMAGE\").value = env(IMG_DAEMON)) |
       .env |= map(select(.name == \"KUBE_RBAC_PROXY_IMAGE\").value = env(IMG_KUBE_RBAC_PROXY))
     )" ./config/manager/env.yaml
-    yq e -i "with(.spec.template.spec ;
-      .containers[] | select(.name == \"kube-rbac-proxy\").image = env(IMG_KUBE_RBAC_PROXY)
-    )" ./config/manager/manager.yaml
 
     make bundle VERSION=${OCP_DATE} CSV_VERSION=${OCP_DATE} IMG=${IMG_OPERATOR} "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" \
      BUNDLE_IMG=${IMG_BUNDLE} NAMESPACE=openshift-ingress-node-firewall DAEMON_IMG=${IMG_DAEMON}

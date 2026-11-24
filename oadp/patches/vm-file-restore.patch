@@ -1,0 +1,105 @@
+From 154f64c3e2f6ae62bc78efa1c202e8442b6a7eaa Mon Sep 17 00:00:00 2001
+From: Vadzim Dziadziulia <vadzim.dziadziulia@keemail.me>
+Date: Mon, 2 Nov 2026 19:29:26 +0100
+Subject: [PATCH] Read the access and sidecar images from the environment
+
+The OADP operator sets VMFR_ACCESS_IMAGE, VMFR_SSH_IMAGE and VMFR_BROWSER_IMAGE
+on this controller from its RELATED_IMAGE_VM_FILE_RESTORE_* variables, but nothing
+read them, so the pods it creates always used the quay.io/konveyor images hard-coded
+here. Use the variables, and those images when they are empty.
+---
+ internal/common/constant/constant.go      |  5 +++++
+ internal/controller/fileserver_helpers.go | 19 ++++++++++++++-----
+ 2 files changed, 19 insertions(+), 5 deletions(-)
+
+diff --git a/internal/common/constant/constant.go b/internal/common/constant/constant.go
+index 634b1dd..a0537e4 100644
+--- a/internal/common/constant/constant.go
++++ b/internal/common/constant/constant.go
+@@ -69,6 +69,11 @@ const (
+ 	LogLevelEnvVar = "LOG_LEVEL"
+ 	// LogFormatEnvVar: Log format, either "json" for structured logging or "text" for human-readable
+ 	LogFormatEnvVar = "LOG_FORMAT"
++	// Images for the file server pods. The OADP operator sets these on the controller's Deployment;
++	// VMFileServerImage, SSHSidecarImage and FileBrowserSidecarImage are the defaults when they are empty.
++	VMFileServerImageEnvVar       = "VMFR_ACCESS_IMAGE"
++	SSHSidecarImageEnvVar         = "VMFR_SSH_IMAGE"
++	FileBrowserSidecarImageEnvVar = "VMFR_BROWSER_IMAGE"
+ )
+ 
+ // Common string constants
+diff --git a/internal/controller/fileserver_helpers.go b/internal/controller/fileserver_helpers.go
+index 3b18f00..5b6d040 100644
+--- a/internal/controller/fileserver_helpers.go
++++ b/internal/controller/fileserver_helpers.go
+@@ -20,6 +20,7 @@ package controller
+ import (
+ 	"encoding/json"
+ 	"fmt"
++	"os"
+ 	"strings"
+ 
+ 	routev1 "github.com/openshift/api/route/v1"
+@@ -593,6 +594,14 @@ func buildDefaultMainContainer(pvcVolumeMounts []corev1.VolumeMount) corev1.Cont
+ 	}
+ }
+ 
++// imageFromEnv returns the image named by envVar, or defaultImage when it is unset or empty.
++func imageFromEnv(envVar, defaultImage string) string {
++	if image := os.Getenv(envVar); image != "" {
++		return image
++	}
++	return defaultImage
++}
++
+ // buildVMFileServerMainContainer creates a VM file server container for mounting VM disk images
+ // This container uses libguestfs/QEMU to mount VM disks and provide file-level access
+ // Based on CONTROLLER_INTEGRATION.md from Issue #6/#7
+@@ -602,7 +611,7 @@ func buildVMFileServerMainContainer(pvcMounts []PVCMountInfo) corev1.Container {
+ 
+ 	return corev1.Container{
+ 		Name:  "vm-file-server",
+-		Image: constant.VMFileServerImage,
++		Image: imageFromEnv(constant.VMFileServerImageEnvVar, constant.VMFileServerImage),
+ 		// Run detect-and-mount.sh to automatically mount all disk images
+ 		Command: []string{"/usr/local/bin/detect-and-mount.sh"},
+ 
+@@ -984,7 +993,7 @@ func buildDefaultHTTPServicePort() corev1.ServicePort {
+ // Uses custom OADP SSH image with chroot environment for enhanced security.
+ //
+ // Implementation details:
+-// - Uses constant.SSHSidecarImage (quay.io/konveyor/oadp-vmfr-access-sshd:oadp-1.6)
++// - Uses the image in VMFR_SSH_IMAGE, by default constant.SSHSidecarImage (quay.io/konveyor/oadp-vmfr-access-sshd:oadp-1.6)
+ // - Runs as root for authentication and chroot (security hardened with capabilities)
+ // - Read-only root filesystem with emptyDir volumes for runtime directories
+ // - Supports public key authentication only
+@@ -999,7 +1008,7 @@ func buildSSHSidecar(
+ 	// This image provides a secure, chroot-based SSH server with read-only access
+ 	container := corev1.Container{
+ 		Name:  "sshd",
+-		Image: constant.SSHSidecarImage,
++		Image: imageFromEnv(constant.SSHSidecarImageEnvVar, constant.SSHSidecarImage),
+ 		Ports: []corev1.ContainerPort{
+ 			{
+ 				Name:          "ssh",
+@@ -1178,7 +1187,7 @@ func buildSSHSidecar(
+ // Uses custom OADP FileBrowser image with TLS support and read-only permissions.
+ //
+ // Implementation details:
+-// - Uses constant.FileBrowserSidecarImage (quay.io/konveyor/oadp-vmfr-access-filebrowser:oadp-1.6)
++// - Uses the image in VMFR_BROWSER_IMAGE, by default constant.FileBrowserSidecarImage (quay.io/konveyor/oadp-vmfr-access-filebrowser:oadp-1.6)
+ // - Runs as non-root (UID 1000) with read-only root filesystem
+ // - Serves HTTPS on port 8443 with TLS certificates from OpenShift service CA
+ // - Configured with authentication from Secret credentials
+@@ -1199,7 +1208,7 @@ func buildFileBrowserSidecar(
+ 	// This image provides TLS support and read-only configuration
+ 	container := corev1.Container{
+ 		Name:  "filebrowser",
+-		Image: constant.FileBrowserSidecarImage,
++		Image: imageFromEnv(constant.FileBrowserSidecarImageEnvVar, constant.FileBrowserSidecarImage),
+ 		// Command to initialize FileBrowser with credentials from secret
+ 		// The initialization script is defined in sidecar_scripts.go
+ 		Command: []string{"/bin/bash", "-c"},
+-- 
+2.54.0 (Apple Git-157)
+
