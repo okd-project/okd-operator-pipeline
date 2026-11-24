@@ -6,6 +6,11 @@ export MINOR=6
 
 source ../common.sh
 
+# Both source bundles cap olm.maxOpenShiftVersion at the OCP release they target. Lift the cap to the
+# next OKD minor, as kube-descheduler does, so this build does not block the next cluster upgrade.
+export OCP_NEXT="$(echo "${OKD_VERSION}" | cut -d. -f1).$(($(echo "${OKD_VERSION}" | cut -d. -f2) + 1))"
+MAX_OCP_EDIT='.properties = ([.properties[] | select(.type != "olm.maxOpenShiftVersion")] + [{"type": "olm.maxOpenShiftVersion", "value": strenv(OCP_NEXT)}])'
+
 IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 IMG_LOG_FILE_METRIC_EXPORTER="${REGISTRY}/log-file-metric-exporter:${OCP_DATE}"
 IMG_LOKI="${REGISTRY}/loki:${OCP_DATE}"
@@ -118,6 +123,7 @@ build_bundle() {
     # cluster-logging CSV does, so a subscription on any of them can upgrade to this build.
     export LOKI_SKIP_RANGE='>=6.2.0-0 <6.6.0'
     yq e -i '.metadata.annotations["olm.skipRange"] = strenv(LOKI_SKIP_RANGE)' ./bundle/openshift/manifests/loki-operator.clusterserviceversion.yaml
+    yq e -i "${MAX_OCP_EDIT}" ./bundle/openshift/metadata/properties.yaml
 
     pushd bundle/openshift
     podman build -t $IMG_BUNDLE_LOKI -f bundle.Dockerfile .
@@ -143,6 +149,7 @@ build_bundle() {
     popd
 
     kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --version ${OCP_DATE} ${BUNDLE_METADATA_OPTS}
+    yq e -i "${MAX_OCP_EDIT}" ./bundle/metadata/properties.yaml
     operator-sdk bundle validate --verbose ./bundle
 
     podman build -t $IMG_BUNDLE -f bundle.Dockerfile .
