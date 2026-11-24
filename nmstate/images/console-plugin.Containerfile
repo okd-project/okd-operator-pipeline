@@ -1,14 +1,12 @@
 ARG OCP_SHORT
 
 FROM registry.access.redhat.com/ubi9/nodejs-22:latest AS build
-
-# Install yarn
-RUN npm install -g yarn
+ENV CYPRESS_INSTALL_BINARY=0
 
 # Copy app source
 COPY --chown=default . .
 
-RUN yarn install --frozen-lockfile && yarn build
+RUN npm ci && npm run build
 
 # Web server container
 FROM registry.ci.openshift.org/origin/scos-$OCP_SHORT:base-stream9
