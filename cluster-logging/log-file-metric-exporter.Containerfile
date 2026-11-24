@@ -5,7 +5,7 @@ ENV CGO_ENABLED=1
 
 COPY --chown=default ./log-file-metric-exporter .
 
-RUN make build LDFLAGS="-tags strictfipsruntime -ldflags '-s -w'"
+RUN make build LDFLAGS="-tags strictfipsruntime"
 
 FROM quay.io/centos/centos:stream9
 
