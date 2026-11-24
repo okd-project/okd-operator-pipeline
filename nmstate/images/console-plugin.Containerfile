@@ -6,7 +6,12 @@ ENV CYPRESS_INSTALL_BINARY=0
 # Copy app source
 COPY --chown=default . .
 
-RUN npm ci && npm run build
+# prevent npm registry timeouts (matches upstream Dockerfile)
+RUN npm config set fetch-timeout 600000 && \
+    npm config set fetch-retries 9 && \
+    npm config set fetch-retry-factor 2
+
+RUN npm clean-install --ignore-scripts --no-audit && npm run build
 
 # Web server container
 FROM registry.ci.openshift.org/origin/scos-$OCP_SHORT:base-stream9

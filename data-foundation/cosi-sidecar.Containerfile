@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25 as builder
+FROM registry.access.redhat.com/ubi10/go-toolset:1.26 as builder
 
 ENV GOFLAGS=''
 
@@ -8,7 +8,7 @@ RUN go version | tee ./go.version
 RUN GOOS=linux go build -a -o bin/objectstorage-sidecar ./cmd/objectstorage-sidecar
 
 # Build stage 2
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
 # Update the image to get the latest CVE updates
 RUN microdnf update -y && \

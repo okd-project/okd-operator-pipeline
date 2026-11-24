@@ -3,15 +3,13 @@
 # Configuration and variable setup
 NAMESPACE="gitops"
 MAJOR=1
-MINOR=19
+MINOR=22
 source ../common.sh
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export IMG_OPERATOR="${REGISTRY}/operator:${OCP_DATE}"
 export IMG_ARGOCD="${REGISTRY}/argocd:${OCP_DATE}"
-export IMG_CLI="${REGISTRY}/cli:${OCP_DATE}"
-export IMG_AGENTCTL="${REGISTRY}/agentctl:${OCP_DATE}"
 export IMG_AGENT="${REGISTRY}/agent:${OCP_DATE}"
 export IMG_IMAGE_UPDATER="${REGISTRY}/image-updater:${OCP_DATE}"
 export IMG_DEX="${REGISTRY}/dex:${OCP_DATE}"
@@ -20,11 +18,13 @@ export IMG_ROLLOUTS="${REGISTRY}/rollouts:${OCP_DATE}"
 export IMG_CONSOLE_PLUGIN="${REGISTRY}/console-plugin:${OCP_DATE}"
 export IMG_BACKEND="${REGISTRY}/backend:${OCP_DATE}"
 export IMG_MUST_GATHER="${REGISTRY}/must-gather:${OCP_DATE}"
+export IMG_PROMOTER="${REGISTRY}/promoter:${OCP_DATE}"
+export IMG_PROMOTER_EXTENSION="${REGISTRY}/promoter-extension:${OCP_DATE}"
 IMG_BUNDLE="${REGISTRY}/operator-bundle:${OCP_DATE}"
 
-export IMG_KUBE_RBAC_PROXY=$(get_payload_component kube-rbac-proxy)
 export IMG_HAPROXY_ROUTER=$(get_payload_component haproxy-router)
-export IMG_REDIS="quay.io/sclorg/redis-7-c9s:latest"
+# quay.io/sclorg/redis-7-c9s:latest (also tagged c9s, 20250108), resolved 2026-10-22
+export IMG_REDIS="quay.io/sclorg/redis-7-c9s@sha256:d772acab11507231a2b152850f47c8b9b859dedb6652ca624949e97cb28c5e6f"
 
 init() {
     submodule_initialize release release-${OCP_SHORT}
@@ -55,23 +55,22 @@ build_containers() {
     CI_DEX_VERSION="$(git -C sources/dex describe --tags --exact-match 2>/dev/null || true)"
     CI_DEX_COMMIT="$(git -C sources/dex rev-parse HEAD)"
     CI_GITOPS_BACKEND_COMMIT="$(git -C sources/gitops-backend rev-parse HEAD)"
-
-    # CLI images
-    podman build -t "${IMG_CLI}" -f clis/argocd/Dockerfile \
-      --build-arg CI_ARGO_CD_VERSION="${CI_ARGO_CD_VERSION}" --build-arg CI_ARGO_CD_COMMIT="${CI_ARGO_CD_COMMIT}" \
-      --build-arg CI_VERSION="${OCP_DATE}" .
-    podman build -t "${IMG_AGENTCTL}" -f clis/argocd-agentctl/Dockerfile .
+    CI_ARGOCD_AGENT_COMMIT="$(git -C sources/argocd-agent rev-parse HEAD)"
+    CI_ROLLOUT_EXTENSION_VERSION="$(git -C sources/rollout-extension describe --tags --exact-match 2>/dev/null || true)"
+    CI_GITOPS_PROMOTER_VERSION="$(git -C sources/gitops-promoter describe --tags --exact-match 2>/dev/null || true)"
 
     # Build the images
     podman build -t "${IMG_ROLLOUTS}" -f containers/argo-rollouts/Dockerfile \
       --build-arg CI_ARGO_ROLLOUTS_VERSION="${CI_ARGO_ROLLOUTS_VERSION}" \
       --build-arg CI_ARGO_ROLLOUTS_COMMIT="${CI_ARGO_ROLLOUTS_COMMIT}" --build-arg CI_GIT_LFS_COMMIT="${CI_GIT_LFS_COMMIT}" .
-    podman build -t ${IMG_AGENT} -f containers/argocd-agent/Dockerfile .
-    podman build -t ${IMG_EXTENSIONS} -f containers/argocd-extensions/Dockerfile .
+    podman build -t ${IMG_AGENT} -f containers/argocd-agent/Dockerfile \
+      --build-arg CI_ARGOCD_AGENT_COMMIT="${CI_ARGOCD_AGENT_COMMIT}" .
+    podman build -t ${IMG_EXTENSIONS} -f containers/argocd-extensions/Dockerfile \
+      --build-arg CI_ROLLOUT_EXTENSION_VERSION="${CI_ROLLOUT_EXTENSION_VERSION}" .
     podman build -t ${IMG_IMAGE_UPDATER} -f containers/argocd-image-updater/Dockerfile \
       --build-arg CI_ARGOCD_IMAGE_UPDATER_VERSION="${CI_ARGOCD_IMAGE_UPDATER_VERSION}" \
       --build-arg CI_ARGOCD_IMAGE_UPDATER_COMMIT="${CI_ARGOCD_IMAGE_UPDATER_COMMIT}" .
-    podman build -t ${IMG_ARGOCD} -f containers/argocd-rhel9/Dockerfile \
+    podman build -t ${IMG_ARGOCD} -f containers/argocd/Dockerfile \
       --build-arg CI_ARGO_CD_VERSION="${CI_ARGO_CD_VERSION}" --build-arg CI_ARGO_CD_COMMIT="${CI_ARGO_CD_COMMIT}" \
       --build-arg CI_GIT_LFS_COMMIT="${CI_GIT_LFS_COMMIT}" --build-arg ARGO_VERSION="${CI_ARGO_CD_VERSION}" \
       --build-arg CI_VERSION="${OCP_DATE}" --build-arg BUILD_ALL_CLIS=false \
@@ -84,14 +83,15 @@ build_containers() {
       --build-arg CI_GITOPS_BACKEND_COMMIT="${CI_GITOPS_BACKEND_COMMIT}" .
     podman build -t ${IMG_OPERATOR} -f containers/gitops-operator/Dockerfile .
     podman build -t ${IMG_MUST_GATHER} --from "$(get_payload_component "must-gather")" -f containers/must-gather/Dockerfile .
+    podman build -t ${IMG_PROMOTER} -f containers/gitops-promoter/Dockerfile .
+    podman build -t ${IMG_PROMOTER_EXTENSION} -f containers/argocd-promoter-extension/Dockerfile \
+      --build-arg CI_GITOPS_PROMOTER_VERSION="${CI_GITOPS_PROMOTER_VERSION}" .
 
     popd
 }
 
 push_containers() {
     # Push the images
-    podman push ${IMG_CLI}
-    podman push ${IMG_AGENTCTL}
     podman push ${IMG_ROLLOUTS}
     podman push ${IMG_AGENT}
     podman push ${IMG_EXTENSIONS}
@@ -102,6 +102,8 @@ push_containers() {
     podman push ${IMG_BACKEND}
     podman push ${IMG_OPERATOR}
     podman push ${IMG_MUST_GATHER}
+    podman push ${IMG_PROMOTER}
+    podman push ${IMG_PROMOTER_EXTENSION}
 }
 
 build_bundle() {
@@ -124,13 +126,21 @@ build_bundle() {
     # Inject ENV_VARS YAML into manager.yaml
     yq e -i 'select(.kind == "Deployment").spec.template.spec.containers[0].env += env(ENV_OVERRIDES)' config/manager/manager.yaml
     yq e -i ".metadata.annotations.containerImage = \"${IMG_OPERATOR}\"" config/manifests/bases/gitops-operator.clusterserviceversion.yaml
-    yq e -i '.spec.template.spec.containers[0].image = env(IMG_KUBE_RBAC_PROXY)' config/default/manager_auth_proxy_patch.yaml
 
+    # The upstream base CSV replaces gitops-operator.v1.7.3, which okderators never
+    # published. Offer an edge from every earlier okderators release instead.
+    export OLM_SKIP_RANGE=">=1.0.0 <${OCP_DATE}"
+    yq e -i '.metadata.annotations["olm.skipRange"] = strenv(OLM_SKIP_RANGE)' config/manifests/bases/gitops-operator.clusterserviceversion.yaml
+    yq e -i 'del(.spec.replaces)' config/manifests/bases/gitops-operator.clusterserviceversion.yaml
+    yq e -i 'del(.spec.skips)' config/manifests/bases/gitops-operator.clusterserviceversion.yaml
+
+    # The Makefile otherwise downloads its own operator-sdk into bin/
+    OPERATOR_SDK_BIN="$(command -v operator-sdk)"
     make bundle IMG=${IMG_OPERATOR} \
       "BUNDLE_METADATA_OPTS=${BUNDLE_METADATA_OPTS}" \
       BUNDLE_IMG=${IMG_BUNDLE} \
       VERSION="${OCP_DATE}" \
-      IMG=${IMG_OPERATOR}
+      OPERATOR_SDK="${OPERATOR_SDK_BIN}"
 
     # Build and push the bundle image
     podman build -f bundle.Dockerfile -t ${IMG_BUNDLE} .

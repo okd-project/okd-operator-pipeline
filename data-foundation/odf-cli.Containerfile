@@ -1,5 +1,5 @@
 # Build stage 1---> Build cli
-FROM registry.access.redhat.com/ubi9/go-toolset:1.26 AS builder
+FROM registry.access.redhat.com/ubi10/go-toolset:1.26 AS builder
 
 # Override GOFLAGS
 ENV GOFLAGS=''
@@ -37,7 +37,7 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build -o odf-cli-native -ldflags="-s -w" ./c
     GOOS=linux GOARCH=s390x CGO_ENABLED=0 GO111MODULE=on go build -o odf-cli-s390x -ldflags="-s -w" ./cmd/odf/main.go
 
 # Build stage 2
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
 ENV MCG=/usr/share/mcg/
 ENV ODF=/usr/share/odf/

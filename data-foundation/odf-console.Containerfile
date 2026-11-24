@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-20 AS builder
+FROM registry.access.redhat.com/ubi10/nodejs-22 AS builder
 
 ARG CI_VERSION
 
@@ -29,17 +29,19 @@ ENV CHROMEDRIVER_SKIP_DOWNLOAD=true
 ENV PLUGIN_VERSION="${CI_VERSION}"
 
 WORKDIR /opt/app-root/src/odf-console
-RUN yarn install --prod=true --frozen-lockfile
+# odf-console 5.0 pins Yarn 4 via .yarnrc.yml yarnPath (the global yarn delegates to it)
+RUN yarn workspaces focus --all --production
 RUN yarn build
 
 # Update the version for compatibility build
 ENV PLUGIN_VERSION="${CI_VERSION}-compatibility"
 WORKDIR /opt/app-root/src/odf-console-compatibility
-RUN yarn install --prod=true --frozen-lockfile
+# odf-console 5.0 pins Yarn 4 via .yarnrc.yml yarnPath (the global yarn delegates to it)
+RUN yarn workspaces focus --all --production
 RUN yarn build
 
 
-FROM registry.access.redhat.com/ubi9/nginx-120
+FROM registry.access.redhat.com/ubi10/nginx-126
 
 COPY --from=builder /opt/app-root/src/odf-console/plugins/odf/dist .
 COPY --from=builder /opt/app-root/src/odf-console-compatibility/plugins/odf/dist ./compatibility

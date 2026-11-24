@@ -17,7 +17,7 @@ WORKDIR /src/data-foundation/ceph-csi
 
 RUN go version | tee -a ./go.version
 
-RUN CGO_ENABLED=1 GO111MODULE=on GOOS=linux go build -mod=mod -tags=squid,ceph_preview -a -ldflags \
+RUN CGO_ENABLED=1 GO111MODULE=on GOOS=linux go build -mod=mod -tags=tentacle,ceph_preview -a -ldflags \
     "-X $IMPORT_PATH/internal/util.GitCommit=$(git rev-parse HEAD) -X $IMPORT_PATH/internal/util.DriverVersion=${CI_VERSION} " -o bin/cephcsi "./cmd/"
 
 
