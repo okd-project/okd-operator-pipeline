@@ -736,4 +736,4 @@
 [submodule "cluster-logging/loki-server"]
 	path = cluster-logging/loki-server
 	url = https://github.com/openshift/loki.git
-	branch = upstream-v3.7.3
+	branch = upstream-v3.7.9
